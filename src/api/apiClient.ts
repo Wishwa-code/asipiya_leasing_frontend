@@ -2,7 +2,7 @@ import axios from "axios";
 import Cookies from "js-cookie";
 import { handleLogout } from "./services/authService";
 
-const baseURL = import.meta.env.VITE_APP_API_URL || "http://localhost:8000/api/";
+const baseURL = import.meta.env.VITE_APP_API_URL || "http://localhost:8084/";
 
 const instance = axios.create({
   baseURL: baseURL,

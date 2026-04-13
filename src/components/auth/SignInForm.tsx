@@ -1,14 +1,66 @@
-import { useState } from "react";
-import { Link } from "react-router";
+import { useState, FormEvent } from "react";
+import { Link, useNavigate } from "react-router";
 import { ChevronLeftIcon, EyeCloseIcon, EyeIcon } from "../../icons";
 import Label from "../form/Label";
 import Input from "../form/input/InputField";
 import Checkbox from "../form/input/Checkbox";
 import Button from "../ui/button/Button";
+import { instance as apiClient } from "../../api/apiClient";
+import { ROUTES } from "../../routes/paths";
 
 export default function SignInForm() {
   const [showPassword, setShowPassword] = useState(false);
   const [isChecked, setIsChecked] = useState(false);
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
+  const [error, setError] = useState<string | null>(null);
+  const [fieldErrors, setFieldErrors] = useState<Record<string, string[]>>({});
+  const [isLoading, setIsLoading] = useState(false);
+  const navigate = useNavigate();
+
+  const handleSubmit = async (e: FormEvent) => {
+    e.preventDefault();
+    setError(null);
+    setFieldErrors({});
+    setIsLoading(true);
+
+    try {
+      const response = await apiClient.post("login", {
+        username: email, // Backend expects 'username', mapping email state to it
+        password: password,
+      });
+
+      const { access_token, refresh_token } = response.data;
+
+      if (access_token) {
+        console.log('received access token', access_token);
+        localStorage.setItem("auth_token", access_token);
+        localStorage.setItem("refresh_token", refresh_token);
+        navigate(ROUTES.DASHBOARD);
+      } else {
+        setError("Login failed: No token received");
+      }
+    } catch (err: unknown) {
+      if (err && typeof err === "object" && "response" in err) {
+        const axiosError = err as any;
+        if (axiosError.response && axiosError.response.data) {
+          if (axiosError.response.data.errors) {
+            setFieldErrors(axiosError.response.data.errors);
+          } else if (axiosError.response.data.error) {
+            setError(axiosError.response.data.error);
+          } else {
+            setError("An error occurred. Please try again.");
+          }
+        }
+      } else {
+        setError("Network error. Please check your connection.");
+      }
+      console.error(err);
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
   return (
     <div className="flex flex-col flex-1">
       <div className="w-full max-w-md pt-10 mx-auto">
@@ -49,7 +101,7 @@ export default function SignInForm() {
                     fill="#34A853"
                   />
                   <path
-                    d="M5.10014 11.7305C4.91165 11.186 4.80257 10.6027 4.80257 9.99992C4.80257 9.3971 4.91165 8.81379 5.09022 8.26935L5.08523 8.1534L2.29464 6.02954L2.20333 6.0721C1.5982 7.25823 1.25098 8.5902 1.25098 9.99992C1.25098 11.4096 1.5982 12.7415 2.20333 13.9277L5.10014 11.7305Z"
+                    d="M5.10014 11.7305C4.91165 11.186 4.80257 10.6027 4.80257 9.3971 4.91165 8.81379 5.09022 8.26935L5.08523 8.1534L2.29464 6.02954L2.20333 6.0721C1.5982 7.25823 1.25098 8.5902 1.25098 9.99992C1.25098 11.4096 1.5982 12.7415 2.20333 13.9277L5.10014 11.7305Z"
                     fill="#FBBC05"
                   />
                   <path
@@ -83,13 +135,22 @@ export default function SignInForm() {
                 </span>
               </div>
             </div>
-            <form>
+            <form onSubmit={handleSubmit}>
               <div className="space-y-6">
                 <div>
                   <Label>
                     Email <span className="text-error-500">*</span>{" "}
                   </Label>
-                  <Input placeholder="info@gmail.com" />
+                  <Input
+                    placeholder="info@gmail.com"
+                    value={email}
+                    onChange={(e) => setEmail(e.target.value)}
+                  />
+                  {fieldErrors.username && (
+                    <p className="mt-1 text-xs text-error-500">
+                      {fieldErrors.username[0]}
+                    </p>
+                  )}
                 </div>
                 <div>
                   <Label>
@@ -99,6 +160,8 @@ export default function SignInForm() {
                     <Input
                       type={showPassword ? "text" : "password"}
                       placeholder="Enter your password"
+                      value={password}
+                      onChange={(e) => setPassword(e.target.value)}
                     />
                     <span
                       onClick={() => setShowPassword(!showPassword)}
@@ -111,6 +174,11 @@ export default function SignInForm() {
                       )}
                     </span>
                   </div>
+                  {fieldErrors.password && (
+                    <p className="mt-1 text-xs text-error-500">
+                      {fieldErrors.password[0]}
+                    </p>
+                  )}
                 </div>
                 <div className="flex items-center justify-between">
                   <div className="flex items-center gap-3">
@@ -127,10 +195,14 @@ export default function SignInForm() {
                   </Link>
                 </div>
                 <div>
-                  <Button className="w-full" size="sm">
-                    Sign in
+                  <Button className="w-full" size="sm" disabled={isLoading}>
+                    {isLoading ? "Signing in..." : "Sign in"}
                   </Button>
                 </div>
+
+                {error && (
+                  <p className="text-sm text-center text-error-500">{error}</p>
+                )}
               </div>
             </form>
 
