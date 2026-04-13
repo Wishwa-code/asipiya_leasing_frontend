@@ -25,37 +25,52 @@ export default function SignInForm() {
     setIsLoading(true);
 
     try {
+      console.log("Attempting login to:", apiClient.defaults.baseURL + "login");
       const response = await apiClient.post("login", {
-        username: email, // Backend expects 'username', mapping email state to it
+        username: email,
         password: password,
       });
 
-      const { access_token, refresh_token } = response.data;
+      console.log("Login Response Status:", response.status);
+      console.log("Login Response Data:", response.data);
+
+      // Extract tokens from the nested structure based on your logs: { tokens: { access_token, refresh_token }, user: { ... } }
+      const access_token = response.data?.tokens?.access_token || response.data?.access_token;
+      const refresh_token = response.data?.tokens?.refresh_token || response.data?.refresh_token;
 
       if (access_token) {
-        console.log('received access token', access_token);
+        console.log("Success! Access token received.");
         localStorage.setItem("auth_token", access_token);
-        localStorage.setItem("refresh_token", refresh_token);
+        localStorage.setItem("refresh_token", refresh_token || "");
+        
+        console.log("Tokens stored in localStorage. Navigating to dashboard...");
         navigate(ROUTES.DASHBOARD);
       } else {
-        setError("Login failed: No token received");
+        console.warn("Successful status but no access_token in body");
+        setError("Login failed: No access token received from server.");
       }
     } catch (err: unknown) {
+      console.error("Login Error Caught:", err);
+      
       if (err && typeof err === "object" && "response" in err) {
         const axiosError = err as any;
-        if (axiosError.response && axiosError.response.data) {
-          if (axiosError.response.data.errors) {
-            setFieldErrors(axiosError.response.data.errors);
-          } else if (axiosError.response.data.error) {
-            setError(axiosError.response.data.error);
-          } else {
-            setError("An error occurred. Please try again.");
-          }
+        const status = axiosError.response?.status;
+        const data = axiosError.response?.data;
+        
+        console.error(`Backend returned status ${status}:`, data);
+
+        if (data && data.errors) {
+          setFieldErrors(data.errors);
+        } else if (data && data.error) {
+          setError(data.error);
+        } else if (status === 401) {
+          setError("Unauthorized: Invalid username or password.");
+        } else {
+          setError("An unexpected error occurred. Please try again.");
         }
       } else {
-        setError("Network error. Please check your connection.");
+        setError("Network error. Please check if your backend is running at http://localhost:8084/");
       }
-      console.error(err);
     } finally {
       setIsLoading(false);
     }
@@ -101,7 +116,7 @@ export default function SignInForm() {
                     fill="#34A853"
                   />
                   <path
-                    d="M5.10014 11.7305C4.91165 11.186 4.80257 10.6027 4.80257 9.3971 4.91165 8.81379 5.09022 8.26935L5.08523 8.1534L2.29464 6.02954L2.20333 6.0721C1.5982 7.25823 1.25098 8.5902 1.25098 9.99992C1.25098 11.4096 1.5982 12.7415 2.20333 13.9277L5.10014 11.7305Z"
+                    d="M5.10014 11.7305C4.91165 11.186 4.80257 10.6027 4.80257 9.99992C4.80257 9.3971 4.91165 8.81379 5.09022 8.26935L5.08523 8.1534L2.29464 6.02954L2.20333 6.0721C1.5982 7.25823 1.25098 8.5902 1.25098 9.99992C1.25098 11.4096 1.5982 12.7415 2.20333 13.9277L5.10014 11.7305Z"
                     fill="#FBBC05"
                   />
                   <path
