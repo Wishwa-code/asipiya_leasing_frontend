@@ -18,9 +18,9 @@ export default function UserDropdown() {
     <div className="relative">
       <button
         onClick={toggleDropdown}
-        className="flex items-center gap-3 px-3 py-2 bg-gray-50 dark:bg-white/[0.03] border border-gray-200 dark:border-gray-800 rounded-xl hover:bg-gray-100 dark:hover:bg-white/[0.05] transition-colors group"
+        className="flex items-center gap-3 px-2 py-1.5 transition-colors group"
       >
-        <div className="relative overflow-hidden rounded-full h-10 w-10 border border-gray-200 dark:border-gray-700">
+        <div className="relative overflow-hidden rounded-full h-10 w-10 border border-gray-200 dark:border-gray-800">
           <img 
             src={user?.logo || "/assets/images/users/avatar-1.jpg"} 
             className="w-full h-full object-cover" 
@@ -28,33 +28,29 @@ export default function UserDropdown() {
           />
         </div>
 
-        <div className="flex flex-col items-start leading-none text-left hidden sm:flex">
-          <span className="block font-bold text-gray-900 dark:text-white text-theme-sm uppercase tracking-wide">
-            {user?.full_name || "User"}
+        <div className="flex items-center gap-2 text-left hidden sm:flex">
+          <span className="block font-bold text-gray-800 dark:text-white/90 text-sm">
+            {user?.full_name?.split(' ')[0] || "User"}
           </span>
-          <span className="block mt-1 text-[10px] text-gray-500 truncate max-w-[150px]">
-            {user?.email || "user@example.com"}
-          </span>
+          <svg
+            className={`stroke-gray-500 dark:stroke-gray-400 transition-transform duration-200 ${
+              isOpen ? "rotate-180" : ""
+            }`}
+            width="16"
+            height="16"
+            viewBox="0 0 16 16"
+            fill="none"
+            xmlns="http://www.w3.org/2000/svg"
+          >
+            <path
+              d="M4 6L8 10L12 6"
+              stroke="currentColor"
+              strokeWidth="1.5"
+              strokeLinecap="round"
+              strokeLinejoin="round"
+            />
+          </svg>
         </div>
-
-        <svg
-          className={`stroke-gray-500 dark:stroke-gray-400 transition-transform duration-200 ${
-            isOpen ? "rotate-180" : ""
-          }`}
-          width="18"
-          height="18"
-          viewBox="0 0 18 18"
-          fill="none"
-          xmlns="http://www.w3.org/2000/svg"
-        >
-          <path
-            d="M4.5 6.75L9 11.25L13.5 6.75"
-            stroke="currentColor"
-            strokeWidth="1.5"
-            strokeLinecap="round"
-            strokeLinejoin="round"
-          />
-        </svg>
       </button>
 
       <Dropdown
