@@ -10,13 +10,24 @@ import SelectInputs from "../../components/form/form-elements/SelectInputs";
 import TextAreaInput from "../../components/form/form-elements/TextAreaInput";
 import InputStates from "../../components/form/form-elements/InputStates";
 import PageMeta from "../../components/common/PageMeta";
+import { useAuth } from "../../context/AuthContext";
 
 export default function FormElements() {
+  const { user } = useAuth();
+  const pageTitle = user?.company_name 
+    ? `${user.company_name} | Form Elements` 
+    : user?.full_name 
+    ? `${user.full_name} | Form Elements` 
+    : "Asipiya | Form Elements";
+  
+  const pageIcon = user?.logo || "https://accountcenter.asipiya.com/asipiya.svg";
+
   return (
     <div>
       <PageMeta
-        title="React.js Form Elements Dashboard | TailAdmin - React.js Admin Dashboard Template"
-        description="This is React.js Form Elements  Dashboard page for TailAdmin - React.js Tailwind CSS Admin Dashboard Template"
+        title={pageTitle}
+        description="This is React.js Form Elements Dashboard page for Asipiya - React.js Tailwind CSS Admin Dashboard Template"
+        icon={pageIcon}
       />
       <PageBreadcrumb pageTitle="Form Elements" />
       <div className="grid grid-cols-1 gap-6 xl:grid-cols-2">
