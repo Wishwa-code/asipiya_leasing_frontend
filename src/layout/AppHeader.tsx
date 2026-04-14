@@ -3,7 +3,7 @@ import { useSidebar } from "../context/SidebarContext";
 import { ThemeToggleButton } from "../components/common/ThemeToggleButton";
 import NotificationDropdown from "../components/header/NotificationDropdown";
 import UserDropdown from "../components/header/UserDropdown";
-import HeaderActions from "../components/header/HeaderActions";
+
 import SystemsButton from "../components/header/SystemsButton";
 import BranchSwitcher from "../components/header/BranchSwitcher";
 

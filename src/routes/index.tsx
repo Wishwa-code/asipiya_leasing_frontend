@@ -7,7 +7,8 @@ const UserProfiles = lazy(() => import("../pages/UserProfiles"));
 const Calendar = lazy(() => import("../pages/Calendar"));
 const Blank = lazy(() => import("../pages/Blank"));
 
-// Forms
+// Products
+const CreateProduct = lazy(() => import("../pages/Products/CreateProduct"));
 const FormElements = lazy(() => import("../pages/Forms/FormElements"));
 
 // Tables
@@ -61,6 +62,10 @@ export const privateRoutes = [
   {
     path: ROUTES.BLANK,
     element: <Blank />,
+  },
+  {
+    path: ROUTES.CREATE_PRODUCT,
+    element: <CreateProduct />,
   },
   {
     path: ROUTES.FORM_ELEMENTS,

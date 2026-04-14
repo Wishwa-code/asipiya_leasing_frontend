@@ -10,7 +10,8 @@ export const ROUTES = {
   CALENDAR: "/calendar",
   BLANK: "/blank",
 
-  // Forms
+  // Forms & Products
+  CREATE_PRODUCT: "/products/create",
   FORM_ELEMENTS: "/form-elements",
 
   // Tables

@@ -1,4 +1,4 @@
-import React, { createContext, useContext, useState, useEffect } from "react";
+import React, { createContext, useContext, useState } from "react";
 import Cookies from "js-cookie";
 import { User } from "../types/user";
 
@@ -43,30 +43,35 @@ const DEV_USER: User = {
 // ------------------------------
 
 export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
-  const [user, setUser] = useState<User | null>(null);
-  const [currentBranchId, setCurrentBranchId] = useState<number | null>(null);
-
-  useEffect(() => {
-    if (DEV_MODE) {
-      setUser(DEV_USER);
-      const savedBranchId = Cookies.get("current_branch_id");
-      setCurrentBranchId(savedBranchId ? parseInt(savedBranchId) : DEV_USER.branch_id);
-      return;
+  const [user, setUser] = useState<User | null>(() => {
+    if (DEV_MODE) return DEV_USER;
+    const savedUser = Cookies.get("user_data");
+    if (savedUser) {
+      try {
+        return JSON.parse(savedUser);
+      } catch (e) {
+        console.error("Failed to parse user data from cookies", e);
+        return null;
+      }
     }
+    return null;
+  });
 
+  const [currentBranchId, setCurrentBranchId] = useState<number | null>(() => {
+    const savedBranchId = Cookies.get("current_branch_id");
+    if (savedBranchId) return parseInt(savedBranchId);
+    
+    if (DEV_MODE) return DEV_USER.branch_id;
+    
     const savedUser = Cookies.get("user_data");
     if (savedUser) {
       try {
         const parsedUser = JSON.parse(savedUser);
-        setUser(parsedUser);
-
-        const savedBranchId = Cookies.get("current_branch_id");
-        setCurrentBranchId(savedBranchId ? parseInt(savedBranchId) : parsedUser.branch_id);
-      } catch (e) {
-        console.error("Failed to parse user data from cookies", e);
-      }
+        return parsedUser.branch_id;
+      } catch (e) {}
     }
-  }, []);
+    return null;
+  });
 
   const login = (userData: User, token: string, refreshToken?: string) => {
     if (DEV_MODE) return;

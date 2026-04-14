@@ -1,14 +1,14 @@
 import React from "react";
 import { Navigate, Outlet } from "react-router";
 import { ROUTES } from "../../routes/paths";
-import Cookies from "js-cookie";
+import { useAuth } from "../../context/AuthContext";
 
 /**
  * AuthGuard: Protects routes that require authentication.
  * Redirects to sign-in if no token is found.
  */
 export const AuthGuard: React.FC = () => {
-  const isAuthenticated = !!Cookies.get("auth_token");
+  const { isAuthenticated } = useAuth();
 
   if (!isAuthenticated) {
     return <Navigate to={ROUTES.SIGNIN} replace />;
@@ -22,7 +22,7 @@ export const AuthGuard: React.FC = () => {
  * Redirects to dashboard if a token is found.
  */
 export const GuestGuard: React.FC = () => {
-  const isAuthenticated = !!Cookies.get("auth_token");
+  const { isAuthenticated } = useAuth();
 
   if (isAuthenticated) {
     return <Navigate to={ROUTES.DASHBOARD} replace />;
