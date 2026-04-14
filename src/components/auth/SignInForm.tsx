@@ -7,6 +7,7 @@ import Checkbox from "../form/input/Checkbox";
 import Button from "../ui/button/Button";
 import { instance as apiClient } from "../../api/apiClient";
 import { ROUTES } from "../../routes/paths";
+import { useAuth } from "../../context/AuthContext";
 
 export default function SignInForm() {
   const [showPassword, setShowPassword] = useState(false);
@@ -17,6 +18,7 @@ export default function SignInForm() {
   const [fieldErrors, setFieldErrors] = useState<Record<string, string[]>>({});
   const [isLoading, setIsLoading] = useState(false);
   const navigate = useNavigate();
+  const { login } = useAuth();
 
   const handleSubmit = async (e: FormEvent) => {
     e.preventDefault();
@@ -40,10 +42,23 @@ export default function SignInForm() {
 
       if (access_token) {
         console.log("Success! Access token received.");
-        localStorage.setItem("auth_token", access_token);
-        localStorage.setItem("refresh_token", refresh_token || "");
         
-        console.log("Tokens stored in localStorage. Navigating to dashboard...");
+        // Construct user object from response data
+        const userData = {
+          id: response.data.user?.id || 0,
+          full_name: response.data.user?.full_name || "User",
+          email: response.data.user?.email || email,
+          branch_id: response.data.user?.branch_id || response.data.branch_id || 0,
+          head_branch_id: response.data.user?.head_branch_id || response.data.head_branch_id || 0,
+          branch_name: response.data.user?.branch_name || response.data.branch_name || "N/A",
+          privileges: response.data.user?.privileges || response.data.privileges || [],
+          logo: response.data.user?.company?.Logo || response.data.company_logo,
+          company_name: response.data.user?.company?.Company_Name || response.data.company_name,
+        };
+
+        login(userData, access_token, refresh_token);
+        
+        console.log("Tokens and user data stored in cookies. Navigating to dashboard...");
         navigate(ROUTES.DASHBOARD);
       } else {
         console.warn("Successful status but no access_token in body");
