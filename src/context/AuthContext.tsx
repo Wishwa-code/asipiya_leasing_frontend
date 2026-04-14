@@ -14,17 +14,52 @@ interface AuthContextType {
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
+// --- DEV MODE CONFIGURATION ---
+const DEV_MODE = true; // Set to true to use hardcoded values
+const DEV_USER: User = {
+  id: 1,
+  full_name: "Admin",
+  email: "admin@asipiya.lk",
+  branch_id: 1,
+  head_branch_id: 2,
+  branch_name: "Head Office",
+  privileges: [
+    "VIEW_PRODUCT", "ADD_PRODUCT", "VIEW_CUSTOMER", "ADD_CUSTOMER",
+    "VIEW_BLACKLIST_CUSTOMER", "CUSTOMER_SAVING_ACC", "INSURANCE",
+    "PENDING_LOAN", "CREATE_LOAN", "LOAN_DISBURSEMENT", "CURRENT_LOANS",
+    "LOAN_RESCHEDULE", "FULL_LOAN_DETAIL", "VIEW_PAYMENT", "ADD_REPAYMENT",
+    "BULK_REPAYMENT", "LOAN_SETTLEMENT", "MAIN_REPORTS_DASHBOARD",
+    "LOAN_DISBURSEMENT_PERFORMANCE"
+  ],
+  logo: "/assets/images/users/avatar-1.jpg",
+  company_name: "Asipiya",
+  branches: [
+    { idBranch: 1, Name: "Head Office" },
+    { idBranch: 2, Name: "Kandy Branch" },
+    { idBranch: 3, Name: "Colombo Branch" }
+  ],
+  branch_access: 1
+};
+// ------------------------------
+
 export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const [user, setUser] = useState<User | null>(null);
   const [currentBranchId, setCurrentBranchId] = useState<number | null>(null);
 
   useEffect(() => {
+    if (DEV_MODE) {
+      setUser(DEV_USER);
+      const savedBranchId = Cookies.get("current_branch_id");
+      setCurrentBranchId(savedBranchId ? parseInt(savedBranchId) : DEV_USER.branch_id);
+      return;
+    }
+
     const savedUser = Cookies.get("user_data");
     if (savedUser) {
       try {
         const parsedUser = JSON.parse(savedUser);
         setUser(parsedUser);
-        
+
         const savedBranchId = Cookies.get("current_branch_id");
         setCurrentBranchId(savedBranchId ? parseInt(savedBranchId) : parsedUser.branch_id);
       } catch (e) {
@@ -34,6 +69,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   }, []);
 
   const login = (userData: User, token: string, refreshToken?: string) => {
+    if (DEV_MODE) return;
     setUser(userData);
     setCurrentBranchId(userData.branch_id);
     Cookies.set("auth_token", token, { expires: 7, secure: true, sameSite: "strict" });
@@ -50,6 +86,11 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   };
 
   const logout = () => {
+    if (DEV_MODE) {
+      setUser(null);
+      setCurrentBranchId(null);
+      return;
+    }
     setUser(null);
     setCurrentBranchId(null);
     Cookies.remove("auth_token");

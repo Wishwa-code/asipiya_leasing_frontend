@@ -35,7 +35,7 @@ const AppSidebar: React.FC = () => {
     type: string;
     index: number;
   } | null>(null);
-  
+
   const subMenuRefs = useRef<Record<string, HTMLDivElement | null>>({});
   const [subMenuHeight, setSubMenuHeight] = useState<Record<string, number>>({});
 
@@ -126,7 +126,7 @@ const AppSidebar: React.FC = () => {
       });
 
       items.push({
-        name: "Collections and Payments",
+        name: "Payments",
         icon: <DollarLineIcon />,
         privilege: 'VIEW_PAYMENT',
         subItems: [
@@ -259,7 +259,7 @@ const AppSidebar: React.FC = () => {
       {items.map((nav, index) => {
         // Filter sub-items by privilege
         const visibleSubItems = nav.subItems?.filter(sub => hasPrivilege(sub.privilege));
-        
+
         if (nav.subItems && (!visibleSubItems || visibleSubItems.length === 0)) return null;
 
         return (
@@ -327,9 +327,9 @@ const AppSidebar: React.FC = () => {
       <div className="lg:hidden p-4 border-b mb-2 bg-gray-50 dark:bg-gray-800/50 rounded-2xl mx-1 mt-4 shadow-sm">
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-3">
-            <img 
-              src={user?.logo || "/assets/images/users/avatar-1.jpg"} 
-              className="rounded-full border-2 border-white shadow-sm w-12 h-12 object-cover" 
+            <img
+              src={user?.logo || "/assets/images/users/avatar-1.jpg"}
+              className="rounded-full border-2 border-white shadow-sm w-12 h-12 object-cover"
               alt="Profile"
             />
             <div className="overflow-hidden">
@@ -337,8 +337,8 @@ const AppSidebar: React.FC = () => {
               <span className="text-gray-500 text-[11px]">Admin User</span>
             </div>
           </div>
-          <button 
-            type="button" 
+          <button
+            type="button"
             onClick={toggleMobileSidebar}
             className="p-2 text-gray-500 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-full transition-colors"
           >
@@ -355,7 +355,7 @@ const AppSidebar: React.FC = () => {
               <PlusIcon className="w-4 h-4 text-brand-600" />
               <span className="text-xs font-bold text-brand-600 uppercase">Active Branch</span>
             </div>
-            <select 
+            <select
               className="w-full bg-transparent border-none text-sm font-medium text-gray-900 dark:text-white focus:ring-0 p-0 cursor-pointer"
               value={currentBranchId || ""}
               onChange={(e) => switchBranch(parseInt(e.target.value))}
@@ -381,7 +381,7 @@ const AppSidebar: React.FC = () => {
         <Link to="/" className="flex items-center gap-3 overflow-hidden">
           <div className="min-w-[42px]">
             <img
-              src={user?.logo || "/images/logo/logo-icon.svg"}
+              src="https://accountcenter.asipiya.com/asipiya.svg"
               alt="Logo"
               className="w-[42px] h-[42px] rounded-full shadow-sm"
             />

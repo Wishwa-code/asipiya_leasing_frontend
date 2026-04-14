@@ -55,7 +55,14 @@ import { ReactComponent as MoreDotIcon } from "./moredot.svg?react";
 import { ReactComponent as AlertHexaIcon } from "./alert-hexa.svg?react";
 import { ReactComponent as ErrorHexaIcon } from "./info-hexa.svg?react";
 
+import { ReactComponent as BuildingIcon } from "./building.svg?react";
+import { ReactComponent as TransferIcon } from "./transfer.svg?react";
+import { ReactComponent as ApprovalIcon } from "./approval.svg?react";
+
 export {
+  BuildingIcon,
+  TransferIcon,
+  ApprovalIcon,
   ErrorHexaIcon,
   AlertHexaIcon,
   MoreDotIcon,
