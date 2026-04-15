@@ -67,7 +67,7 @@ const AppSidebar: React.FC = () => {
         privilege: 'VIEW_PRODUCT',
         subItems: [
           { name: "Create Product", path: ROUTES.CREATE_PRODUCT, privilege: 'ADD_PRODUCT' },
-          { name: "Product List", path: ROUTES.FORM_ELEMENTS, privilege: 'VIEW_PRODUCT' },
+          { name: "Product List", path: ROUTES.PRODUCTS_LIST, privilege: 'VIEW_PRODUCT' },
         ],
       });
 
@@ -145,7 +145,7 @@ const AppSidebar: React.FC = () => {
         privilege: 'VIEW_PRODUCT',
         subItems: [
           { name: "Create Product", path: ROUTES.CREATE_PRODUCT, privilege: 'ADD_PRODUCT' },
-          { name: "Product List", path: ROUTES.FORM_ELEMENTS, privilege: 'VIEW_PRODUCT' },
+          { name: "Product List", path: ROUTES.PRODUCTS_LIST, privilege: 'VIEW_PRODUCT' },
         ],
       });
 

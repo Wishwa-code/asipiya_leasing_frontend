@@ -9,6 +9,7 @@ const Blank = lazy(() => import("../pages/Blank"));
 
 // Products
 const CreateProduct = lazy(() => import("../pages/Products/CreateProduct"));
+const ProductList = lazy(() => import("../pages/Products/ProductList"));
 const FormElements = lazy(() => import("../pages/Forms/FormElements"));
 
 // Tables
@@ -66,6 +67,10 @@ export const privateRoutes = [
   {
     path: ROUTES.CREATE_PRODUCT,
     element: <CreateProduct />,
+  },
+  {
+    path: ROUTES.PRODUCTS_LIST,
+    element: <ProductList />,
   },
   {
     path: ROUTES.FORM_ELEMENTS,
