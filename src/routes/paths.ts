@@ -15,6 +15,9 @@ export const ROUTES = {
   PRODUCTS_LIST: "/products",
   FORM_ELEMENTS: "/form-elements",
 
+  // Customers
+  CREATE_CUSTOMER: "/customers/create",
+
   // Tables
   BASIC_TABLES: "/basic-tables",
 

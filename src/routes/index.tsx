@@ -7,9 +7,12 @@ const UserProfiles = lazy(() => import("../pages/UserProfiles"));
 const Calendar = lazy(() => import("../pages/Calendar"));
 const Blank = lazy(() => import("../pages/Blank"));
 
-// Products
 const CreateProduct = lazy(() => import("../pages/Products/CreateProduct"));
 const ProductList = lazy(() => import("../pages/Products/ProductList"));
+
+// Customers
+const CreateCustomer = lazy(() => import("../pages/Customers/CreateCustomer"));
+
 const FormElements = lazy(() => import("../pages/Forms/FormElements"));
 
 // Tables
@@ -71,6 +74,10 @@ export const privateRoutes = [
   {
     path: ROUTES.PRODUCTS_LIST,
     element: <ProductList />,
+  },
+  {
+    path: ROUTES.CREATE_CUSTOMER,
+    element: <CreateCustomer />,
   },
   {
     path: ROUTES.FORM_ELEMENTS,
