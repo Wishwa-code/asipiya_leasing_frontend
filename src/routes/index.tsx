@@ -20,6 +20,12 @@ const FormElements = lazy(() => import("../pages/Forms/FormElements"));
 
 // Leasing Partners
 const SuppliersManagement = lazy(() => import("../pages/Partners/SuppliersManagement"));
+const SeizersManagement = lazy(() => import("../pages/Partners/SeizersManagement"));
+const IntroducersManagement = lazy(() => import("../pages/Partners/IntroducersManagement"));
+const ValuationCompaniesManagement = lazy(() => import("../pages/Partners/ValuationCompaniesManagement"));
+const InsuranceCompaniesManagement = lazy(() => import("../pages/Partners/InsuranceCompaniesManagement"));
+const AuctionCompaniesManagement = lazy(() => import("../pages/Partners/AuctionCompaniesManagement"));
+const VehicleYardsManagement = lazy(() => import("../pages/Partners/VehicleYardsManagement"));
 
 // Tables
 const BasicTables = lazy(() => import("../pages/Tables/BasicTables"));
@@ -96,6 +102,30 @@ export const privateRoutes = [
   {
     path: ROUTES.SUPPLIERS,
     element: <SuppliersManagement />,
+  },
+  {
+    path: ROUTES.SEIZERS,
+    element: <SeizersManagement />,
+  },
+  {
+    path: ROUTES.INTRODUCERS,
+    element: <IntroducersManagement />,
+  },
+  {
+    path: ROUTES.VALUATION_COMPANIES,
+    element: <ValuationCompaniesManagement />,
+  },
+  {
+    path: ROUTES.INSURANCE_COMPANIES,
+    element: <InsuranceCompaniesManagement />,
+  },
+  {
+    path: ROUTES.AUCTION_COMPANIES,
+    element: <AuctionCompaniesManagement />,
+  },
+  {
+    path: ROUTES.VEHICLE_YARDS,
+    element: <VehicleYardsManagement />,
   },
   {
     path: ROUTES.BASIC_TABLES,

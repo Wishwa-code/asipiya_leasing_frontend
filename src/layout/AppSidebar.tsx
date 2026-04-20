@@ -92,11 +92,12 @@ const AppSidebar: React.FC = () => {
         privilege: 'PENDING_LOAN',
         subItems: [
           { name: "Suppliers", path: ROUTES.SUPPLIERS, privilege: 'CREATE_LOAN' },
-          { name: "Introducers/Brokers", path: ROUTES.FORM_ELEMENTS, privilege: 'CREATE_LOAN' },
-          { name: "Valuation Companies", path: ROUTES.FORM_ELEMENTS, privilege: 'CREATE_LOAN' },
-          { name: "Insurance Companies", path: ROUTES.FORM_ELEMENTS, privilege: 'CREATE_LOAN' },
-          { name: "Auction Companies", path: ROUTES.FORM_ELEMENTS, privilege: 'CREATE_LOAN' },
-          { name: "Vehicle Yards", path: ROUTES.FORM_ELEMENTS, privilege: 'CREATE_LOAN' },
+          { name: "Seizers", path: ROUTES.SEIZERS, privilege: 'CREATE_LOAN' },
+          { name: "Introducers/Brokers", path: ROUTES.INTRODUCERS, privilege: 'CREATE_LOAN' },
+          { name: "Valuation Companies", path: ROUTES.VALUATION_COMPANIES, privilege: 'CREATE_LOAN' },
+          { name: "Insurance Companies", path: ROUTES.INSURANCE_COMPANIES, privilege: 'CREATE_LOAN' },
+          { name: "Auction Companies", path: ROUTES.AUCTION_COMPANIES, privilege: 'CREATE_LOAN' },
+          { name: "Vehicle Yards", path: ROUTES.VEHICLE_YARDS, privilege: 'CREATE_LOAN' },
         ],
       });
 
