@@ -15,6 +15,11 @@ export const ROUTES = {
   PRODUCTS_LIST: "/products",
   FORM_ELEMENTS: "/form-elements",
 
+  // Leasing
+  CREATE_LEASE: "/leasing/create",
+  DRAFT_LEASES: "/leasing/drafts",
+  SUPPLIERS: "/leasing-partners/suppliers",
+
   // Customers
   CREATE_CUSTOMER: "/customers/create",
 

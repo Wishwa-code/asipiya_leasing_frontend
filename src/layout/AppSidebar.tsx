@@ -91,8 +91,7 @@ const AppSidebar: React.FC = () => {
         icon: <PlugInIcon />,
         privilege: 'PENDING_LOAN',
         subItems: [
-          { name: "Suppliers", path: ROUTES.FORM_ELEMENTS, privilege: 'CREATE_LOAN' },
-          { name: "Seizers", path: ROUTES.FORM_ELEMENTS, privilege: 'CREATE_LOAN' },
+          { name: "Suppliers", path: ROUTES.SUPPLIERS, privilege: 'CREATE_LOAN' },
           { name: "Introducers/Brokers", path: ROUTES.FORM_ELEMENTS, privilege: 'CREATE_LOAN' },
           { name: "Valuation Companies", path: ROUTES.FORM_ELEMENTS, privilege: 'CREATE_LOAN' },
           { name: "Insurance Companies", path: ROUTES.FORM_ELEMENTS, privilege: 'CREATE_LOAN' },
@@ -106,8 +105,8 @@ const AppSidebar: React.FC = () => {
         icon: <PlusIcon />,
         privilege: 'PENDING_LOAN',
         subItems: [
-          { name: "New Leasing Application", path: ROUTES.FORM_ELEMENTS, privilege: 'CREATE_LOAN' },
-          { name: "Draft Leasing Application", path: ROUTES.FORM_ELEMENTS, privilege: 'CREATE_LOAN' },
+          { name: "New Leasing Application", path: ROUTES.CREATE_LEASE, privilege: 'CREATE_LOAN' },
+          { name: "Draft Leasing Application", path: ROUTES.DRAFT_LEASES, privilege: 'CREATE_LOAN' },
           { name: "Leasing Approval Queue", path: ROUTES.FORM_ELEMENTS },
           { name: "Leasing Disbursement", path: ROUTES.FORM_ELEMENTS, privilege: 'LOAN_DISBURSEMENT' },
         ],

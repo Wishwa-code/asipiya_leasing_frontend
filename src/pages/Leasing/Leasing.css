@@ -1,0 +1,4 @@
+/* Leasing Page Specific Styles 
+   All styles are currently handled via inline Tailwind classes in the components 
+   to avoid PostCSS @apply conflicts with responsive variants. 
+*/

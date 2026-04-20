@@ -13,7 +13,13 @@ const ProductList = lazy(() => import("../pages/Products/ProductList"));
 // Customers
 const CreateCustomer = lazy(() => import("../pages/Customers/CreateCustomer"));
 
+// Leasing
+const CreateLeasing = lazy(() => import("../pages/Leasing/CreateLeasing"));
+
 const FormElements = lazy(() => import("../pages/Forms/FormElements"));
+
+// Leasing Partners
+const SuppliersManagement = lazy(() => import("../pages/Partners/SuppliersManagement"));
 
 // Tables
 const BasicTables = lazy(() => import("../pages/Tables/BasicTables"));
@@ -80,8 +86,16 @@ export const privateRoutes = [
     element: <CreateCustomer />,
   },
   {
+    path: ROUTES.CREATE_LEASE,
+    element: <CreateLeasing />,
+  },
+  {
     path: ROUTES.FORM_ELEMENTS,
     element: <FormElements />,
+  },
+  {
+    path: ROUTES.SUPPLIERS,
+    element: <SuppliersManagement />,
   },
   {
     path: ROUTES.BASIC_TABLES,
