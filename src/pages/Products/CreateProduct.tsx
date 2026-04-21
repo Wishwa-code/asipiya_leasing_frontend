@@ -162,8 +162,21 @@ export default function CreateProduct() {
         collection_period_type: generalForm.collectionPeriodType,
         collection_date_strategy: generalForm.collectionDateStrategy,
         guarantors_required: generalForm.globalGuarantors ? parseInt(generalForm.globalGuarantors) : 0,
-        configurations: subProducts,
-        charges: charges,
+        configurations: subProducts.map(sp => ({
+          ...sp,
+          minLoan: parseFloat(sp.minLoan) || 0,
+          maxLoan: parseFloat(sp.maxLoan) || 0,
+          minInt: parseFloat(sp.minInt) || 0,
+          maxInt: parseFloat(sp.maxInt) || 0,
+          penaltyRate: parseFloat(sp.penaltyRate) || 0,
+          minPeriod: parseInt(sp.minPeriod, 10) || 0,
+          maxPeriod: parseInt(sp.maxPeriod, 10) || 0,
+          guarantors: parseInt(sp.guarantors, 10) || 0,
+        })),
+        charges: charges.map(c => ({
+          ...c,
+          amount: parseFloat(c.amount) || 0,
+        })),
         documents: documents
       };
 
