@@ -16,15 +16,15 @@ const instance = axios.create({
 // Request Interceptor
 instance.interceptors.request.use(
   (config) => {
-    const token = localStorage.getItem("auth_token");
+    const token = Cookies.get("auth_token");
     const xsrfToken = Cookies.get("laravel_session");
 
     if (token) {
-      config.headers.Authorization = `Bearer ${token}`;
+      config.headers.set("Authorization", `Bearer ${token}`);
     }
 
     if (xsrfToken) {
-      config.headers["X-XSRF-TOKEN"] = xsrfToken;
+      config.headers.set("X-XSRF-TOKEN", xsrfToken);
     }
 
     return config;
@@ -49,7 +49,7 @@ instance.interceptors.response.use(
       originalRequest._retry = true;
 
       try {
-        const refreshToken = localStorage.getItem("refresh_token");
+        const refreshToken = Cookies.get("refresh_token");
 
         // Call backend refresh endpoint
         // Note: We use axios directly here, not 'instance', to avoid interceptor loops
@@ -63,11 +63,11 @@ instance.interceptors.response.use(
           const refresh_token = res.data?.tokens?.refresh_token || res.data?.refresh_token;
 
           // 1. Save new tokens
-          localStorage.setItem("auth_token", access_token);
-          localStorage.setItem("refresh_token", refresh_token || "");
+          Cookies.set("auth_token", access_token, { expires: 7, secure: true, sameSite: "strict" });
+          Cookies.set("refresh_token", refresh_token || "", { expires: 7, secure: true, sameSite: "strict" });
 
           // 2. Update the header for the original request
-          originalRequest.headers["Authorization"] = `Bearer ${access_token}`;
+          originalRequest.headers.set("Authorization", `Bearer ${access_token}`);
 
           // 3. Retry the original request with the new token
           return instance(originalRequest);
@@ -75,7 +75,7 @@ instance.interceptors.response.use(
       } catch (refreshError) {
         // If refresh fails, the refresh token is likely expired too
         console.error("Refresh token expired or invalid", refreshError);
-        handleLogout();
+        // handleLogout();
       }
     }
 

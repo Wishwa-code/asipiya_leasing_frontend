@@ -22,7 +22,7 @@ export default function UserDropdown() {
       >
         <div className="relative overflow-hidden rounded-full h-10 w-10 border border-gray-200 dark:border-gray-800">
           <img 
-            src={user?.logo || "/assets/images/users/avatar-1.jpg"} 
+            src={user?.logo || "/images/user/user-01.jpg"} 
             className="w-full h-full object-cover" 
             alt="User" 
           />

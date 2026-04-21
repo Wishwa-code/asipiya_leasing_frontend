@@ -202,6 +202,7 @@ export default function CreateProduct() {
           <div className="flex flex-col w-full sm:w-auto items-end gap-3">
             <div className="flex w-full sm:w-auto items-center gap-3">
               <button
+                type="button"
                 onClick={handleSaveProduct}
                 disabled={isSubmitting}
                 className={`flex-1 sm:flex-none flex items-center justify-center gap-2 px-6 py-2.5 bg-brand-500 hover:bg-brand-600 text-white font-semibold rounded-xl transition-colors shadow-sm ${isSubmitting ? 'opacity-70 cursor-not-allowed' : ''}`}

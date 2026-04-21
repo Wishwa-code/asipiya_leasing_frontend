@@ -31,7 +31,7 @@ const DEV_USER: User = {
     "BULK_REPAYMENT", "LOAN_SETTLEMENT", "MAIN_REPORTS_DASHBOARD",
     "LOAN_DISBURSEMENT_PERFORMANCE"
   ],
-  logo: "/assets/images/users/avatar-1.jpg",
+  logo: "/images/user/user-01.jpg",
   company_name: "Asipiya",
   branches: [
     { idBranch: 1, Name: "Head Office" },
@@ -60,15 +60,15 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const [currentBranchId, setCurrentBranchId] = useState<number | null>(() => {
     const savedBranchId = Cookies.get("current_branch_id");
     if (savedBranchId) return parseInt(savedBranchId);
-    
+
     if (DEV_MODE) return DEV_USER.branch_id;
-    
+
     const savedUser = Cookies.get("user_data");
     if (savedUser) {
       try {
         const parsedUser = JSON.parse(savedUser);
         return parsedUser.branch_id;
-      } catch (e) {}
+      } catch (e) { }
     }
     return null;
   });
