@@ -221,7 +221,7 @@ export default function CustomerList() {
                 </tr>
               ) : (
                 customers.map((customer, idx) => (
-                  <tr key={customer.id} className="group hover:bg-gray-50/50 dark:hover:bg-gray-900/30 transition-colors">
+                  <tr key={`${customer.id}-${idx}`} className="group hover:bg-gray-50/50 dark:hover:bg-gray-900/30 transition-colors">
                     <td className="px-6 py-5 text-center font-bold text-gray-400">{idx + 1}</td>
                     <td className="px-6 py-5">
                       <div className="flex items-center gap-3">

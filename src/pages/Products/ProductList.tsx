@@ -138,7 +138,7 @@ export default function ProductList() {
                 </tr>
               ) : (
                 filteredProducts.map((product, idx) => (
-                  <tr key={product.id} className="hover:bg-gray-50 dark:hover:bg-gray-800/80 transition-colors">
+                  <tr key={`${product.id}-${idx}`} className="hover:bg-gray-50 dark:hover:bg-gray-800/80 transition-colors">
                     <td className="px-5 py-4 font-semibold text-gray-900 dark:text-gray-200">{idx + 1}</td>
                     <td className="px-5 py-4 font-bold text-gray-900 dark:text-white uppercase">{product.product_name}</td>
                     <td className="px-5 py-4"><span className="px-2 py-1 bg-gray-100 dark:bg-gray-700 rounded text-xs font-bold text-gray-600 dark:text-gray-300">{product.product_code}</span></td>

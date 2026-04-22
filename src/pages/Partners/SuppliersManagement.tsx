@@ -287,7 +287,7 @@ export default function SuppliersManagement() {
                 </tr>
               ) : (
                 filteredSuppliers.map((supplier, idx) => (
-                  <tr key={supplier.id} className="hover:bg-gray-50 dark:hover:bg-gray-800/80 transition-colors">
+                  <tr key={`${supplier.id}-${idx}`} className="group hover:bg-gray-50 dark:hover:bg-gray-800/80 transition-colors">
                     <td className="px-5 py-4 font-semibold text-gray-900 dark:text-gray-200">{idx + 1}</td>
                     <td className="px-5 py-4 font-bold text-gray-900 dark:text-white capitalize">{supplier.name || '-'}</td>
                     <td className="px-5 py-4 font-medium">{supplier.nic || '-'}</td>
