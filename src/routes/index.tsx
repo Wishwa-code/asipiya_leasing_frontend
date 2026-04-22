@@ -84,6 +84,10 @@ export const privateRoutes = [
     element: <CreateProduct />,
   },
   {
+    path: ROUTES.EDIT_PRODUCT,
+    element: <CreateProduct />,
+  },
+  {
     path: ROUTES.PRODUCTS_LIST,
     element: <ProductList />,
   },

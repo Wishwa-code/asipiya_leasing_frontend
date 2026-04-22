@@ -1,9 +1,10 @@
 import { useState, useEffect } from "react";
 import PageMeta from "../../components/common/PageMeta";
-import { Link } from "react-router";
-import { PlusIcon, EyeIcon } from "../../icons";
+import { Link, useNavigate } from "react-router";
+import { PlusIcon, EyeIcon, PencilIcon } from "../../icons";
 import apiClient from "../../api/apiClient";
 import ViewProductModal from "./components/ViewProductModal";
+import { ROUTES } from "../../routes/paths";
 
 // Simplified type for the list view
 type ProductListItem = {
@@ -18,6 +19,7 @@ type ProductListItem = {
 };
 
 export default function ProductList() {
+  const navigate = useNavigate();
   const [products, setProducts] = useState<ProductListItem[]>([]);
   const [loading, setLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState("");
@@ -164,13 +166,22 @@ export default function ProductList() {
                       </label>
                     </td>
                     <td className="px-5 py-4 text-right">
-                      <button
-                        onClick={() => setSelectedProductId(product.id)}
-                        className="p-2 bg-gray-100 hover:bg-brand-50 hover:text-brand-600 dark:bg-gray-700 dark:hover:bg-brand-500/20 text-gray-500 rounded-lg transition-colors inline-block"
-                        aria-label="View Product"
-                      >
-                        <EyeIcon className="w-4 h-4" />
-                      </button>
+                      <div className="flex justify-end gap-2">
+                        <button
+                          onClick={() => setSelectedProductId(product.id)}
+                          className="p-2 bg-gray-100 hover:bg-brand-50 hover:text-brand-600 dark:bg-gray-700 dark:hover:bg-brand-500/20 text-gray-500 rounded-lg transition-colors inline-block"
+                          aria-label="View Product"
+                        >
+                          <EyeIcon className="w-4 h-4 fill-current" />
+                        </button>
+                        <button
+                          onClick={() => navigate(ROUTES.EDIT_PRODUCT.replace(':id', product.id.toString()))}
+                          className="p-2 bg-gray-100 hover:bg-brand-50 hover:text-brand-600 dark:bg-gray-700 dark:hover:bg-brand-500/20 text-gray-500 rounded-lg transition-colors inline-block"
+                          aria-label="Edit Product"
+                        >
+                          <PencilIcon className="w-4 h-4 fill-current" />
+                        </button>
+                      </div>
                     </td>
                   </tr>
                 ))

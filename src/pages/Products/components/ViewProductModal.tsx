@@ -56,12 +56,12 @@ export default function ViewProductModal({ productId, onClose }: ViewProductModa
   let minLoanLimit = 0;
   let maxLoanLimit = 0;
   
-  if (product && product.configurations && product.configurations.length > 0) {
+  if (product && product.product_has_items && product.product_has_items.length > 0) {
     let min = Infinity;
     let max = -Infinity;
-    product.configurations.forEach((item: Record<string, any>) => {
-      const imin = Number(item.min_loan_amount) || 0;
-      const imax = Number(item.max_loan_amount) || 0;
+    product.product_has_items.forEach((item: Record<string, any>) => {
+      const imin = Number(item.minimum_loan_amount) || 0;
+      const imax = Number(item.maximum_loan_amount) || 0;
       if (imin < min) min = imin;
       if (imax > max) max = imax;
     });
@@ -107,7 +107,7 @@ export default function ViewProductModal({ productId, onClose }: ViewProductModa
                   </div>
                   <div className="flex-1">
                     <div className="flex justify-between items-center mb-2">
-                       <h2 className="text-2xl font-bold text-gray-900 dark:text-white">{product.name || product.product_name}</h2>
+                       <h2 className="text-2xl font-bold text-gray-900 dark:text-white">{product.product_name}</h2>
                        {product.status === 'active' ? (
                           <span className="px-3 py-1 bg-success-50 dark:bg-success-500/10 text-success-600 dark:text-success-400 rounded-full text-xs font-bold border border-success-200 dark:border-success-800">Active</span>
                        ) : (
@@ -116,11 +116,11 @@ export default function ViewProductModal({ productId, onClose }: ViewProductModa
                     </div>
                     <div className="flex items-center gap-4 text-sm text-gray-500 dark:text-gray-400">
                       <span className="flex items-center gap-2 bg-gray-100 dark:bg-gray-700 px-3 py-1.5 rounded-lg font-bold text-gray-700 dark:text-gray-300">
-                        Code: {product.code || product.product_code}
+                        Code: {product.product_code}
                       </span>
                       <span className="flex items-center gap-1.5">
                         <CalendarIcon className="w-4 h-4" />
-                        Created: <span className="font-medium">{product.created_at ? new Date(product.created_at).toLocaleDateString() : 'N/A'}</span>
+                        Created: <span className="font-medium">{product.CreatedAt ? new Date(product.CreatedAt).toLocaleDateString() : 'N/A'}</span>
                       </span>
                     </div>
                   </div>
@@ -164,7 +164,7 @@ export default function ViewProductModal({ productId, onClose }: ViewProductModa
                     Sub Products (Configuration)
                   </h3>
                   <span className="px-3 py-1 bg-brand-100 text-brand-600 dark:bg-brand-500/10 dark:text-brand-400 rounded-full text-xs font-bold">
-                    {product.configurations?.length || 0} Items
+                    {product.product_has_items?.length || 0} Items
                   </span>
                 </div>
                 <div className="overflow-x-auto">
@@ -178,25 +178,25 @@ export default function ViewProductModal({ productId, onClose }: ViewProductModa
                        </tr>
                      </thead>
                      <tbody className="divide-y divide-gray-100 dark:divide-gray-700">
-                       {!product.configurations || product.configurations.length === 0 ? (
+                       {!product.product_has_items || product.product_has_items.length === 0 ? (
                          <tr><td colSpan={4} className="px-6 py-8 text-center text-gray-400">No items configured for this product.</td></tr>
-                       ) : product.configurations.map((cfg: Record<string, any>, idx: number) => (
+                       ) : product.product_has_items.map((cfg: Record<string, any>, idx: number) => (
                          <tr key={idx} className="hover:bg-gray-50 dark:hover:bg-gray-800/50">
                            <td className="px-6 py-4">
-                             <p className="font-bold text-gray-900 dark:text-gray-200">{cfg.label}</p>
+                             <p className="font-bold text-gray-900 dark:text-gray-200">{cfg.product_item_name}</p>
                            </td>
                            <td className="px-6 py-4 font-medium text-gray-900 dark:text-gray-300">
-                             {formatCurrency(cfg.min_loan_amount)} - {formatCurrency(cfg.max_loan_amount)}
+                             {formatCurrency(cfg.minimum_loan_amount)} - {formatCurrency(cfg.maximum_loan_amount)}
                            </td>
                            <td className="px-6 py-4">
-                             <p className="font-bold text-gray-900 dark:text-gray-200">{cfg.min_interest_rate}% - {cfg.max_interest_rate}%</p>
-                             <p className="text-xs text-gray-400 mt-0.5">{cfg.min_period} - {cfg.max_period} {formatText(product.loan_period_type)}</p>
+                             <p className="font-bold text-gray-900 dark:text-gray-200">{cfg.minimum_interest}% - {cfg.maximum_interest}%</p>
+                             <p className="text-xs text-gray-400 mt-0.5">{cfg.minimum_loan_period} - {cfg.maximum_loan_period} {formatText(product.loan_period_type)}</p>
                            </td>
                            <td className="px-6 py-4 text-right">
-                             {cfg.penalty_rate > 0 ? (
+                             {cfg.penalty_percentage > 0 ? (
                                <>
-                                 <p className="text-error-500 font-bold">{cfg.penalty_rate}%</p>
-                                 <p className="text-xs text-gray-400 mt-0.5">{formatText(cfg.penalty_type)}</p>
+                                 <p className="text-error-500 font-bold">{cfg.penalty_percentage}%</p>
+                                 <p className="text-xs text-gray-400 mt-0.5">{formatText(cfg.penalty_apply_type)}</p>
                                </>
                              ) : (
                                <span className="text-gray-400 font-medium">No penalty</span>
@@ -228,15 +228,15 @@ export default function ViewProductModal({ productId, onClose }: ViewProductModa
                             <th className="px-4 py-2 text-right">Type</th>
                          </tr>
                       </thead>
-                      <tbody className="divide-y divide-gray-100 dark:divide-gray-700/50">
-                        {!product.charges || product.charges.length === 0 ? (
+                       <tbody className="divide-y divide-gray-100 dark:divide-gray-700/50">
+                        {!product.additional_charges || product.additional_charges.length === 0 ? (
                            <tr><td colSpan={3} className="px-4 py-6 text-center text-gray-400">No additional charges.</td></tr>
-                        ) : product.charges.map((charge: Record<string, any>, idx: number) => (
+                        ) : product.additional_charges.map((charge: Record<string, any>, idx: number) => (
                            <tr key={idx}>
                              <td className="px-4 py-3 font-semibold text-gray-900 dark:text-gray-200">{charge.description}</td>
-                             <td className="px-4 py-3 font-bold">{formatCurrency(charge.amount)}{charge.type === 'percentage' ? '%' : ''}</td>
+                             <td className="px-4 py-3 font-bold">{formatCurrency(charge.value)}{charge.value_type === 'percentage' ? '%' : ''}</td>
                              <td className="px-4 py-3 text-right">
-                               {charge.type === 'percentage' ? (
+                               {charge.value_type === 'percentage' ? (
                                  <span className="px-2 py-0.5 bg-info-50 text-info-600 dark:bg-info-500/10 dark:text-info-400 text-xs font-bold rounded">Percentage</span>
                                ) : (
                                  <span className="px-2 py-0.5 bg-brand-50 text-brand-600 dark:bg-brand-500/10 dark:text-brand-400 text-xs font-bold rounded">Fixed</span>
@@ -257,10 +257,10 @@ export default function ViewProductModal({ productId, onClose }: ViewProductModa
                     </h3>
                   </div>
                   <div className="flex-1 p-4">
-                    <ul className="space-y-2">
-                      {!product.documents || product.documents.length === 0 ? (
+                     <ul className="space-y-2">
+                      {!product.required_documents || product.required_documents.length === 0 ? (
                         <li className="text-center py-4 text-gray-400 text-sm">No documents required.</li>
-                      ) : product.documents.map((doc: Record<string, any>, idx: number) => (
+                      ) : product.required_documents.map((doc: Record<string, any>, idx: number) => (
                          <li key={idx} className="flex items-center gap-3 p-3 bg-gray-50 dark:bg-gray-700/30 rounded-xl">
                             <div className="w-6 h-6 shrink-0 bg-success-100 dark:bg-success-500/20 text-success-500 rounded-full flex justify-center items-center">
                                <CheckLineIcon className="w-3.5 h-3.5" />

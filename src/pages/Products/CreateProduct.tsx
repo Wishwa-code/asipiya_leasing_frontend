@@ -1,6 +1,6 @@
 import { useState, useEffect, useRef } from "react";
 import PageMeta from "../../components/common/PageMeta";
-import { Link } from "react-router";
+import { Link, useParams } from "react-router";
 import {
   CheckCircleIcon,
   CloseLineIcon,
@@ -38,8 +38,11 @@ type DocumentItem = {
 };
 
 export default function CreateProduct() {
+  const { id } = useParams();
+  const isEdit = !!id;
   const [activeTab, setActiveTab] = useState("general");
   const [isScrolled, setIsScrolled] = useState(false);
+  const [loading, setLoading] = useState(isEdit);
 
   const sectionRefs = {
     general: useRef<HTMLDivElement>(null),
@@ -89,6 +92,70 @@ export default function CreateProduct() {
   });
 
   // Scroll spy logic
+  useEffect(() => {
+    if (isEdit) {
+      fetchProductForEdit();
+    }
+  }, [id]);
+
+  const fetchProductForEdit = async () => {
+    try {
+      setLoading(true);
+      const res = await apiClient.get(`/api/leasing/products/${id}`);
+      const data = res.data?.data || res.data;
+
+      if (data) {
+        setGeneralForm({
+          name: data.product_name || "",
+          code: data.product_code || "",
+          interestMethod: data.interest_method || "flat_rate",
+          loanPeriodType: data.loan_period_type || "months",
+          interestPeriodType: data.interest_period_type || "per_month",
+          collectionPeriodType: data.collection_period_type || "daily",
+          collectionDateStrategy: data.collection_date_strategy || data.collection_date_type || "same_as_installment",
+          globalGuarantors: data.guarantors_required?.toString() || data.guarantee_count?.toString() || ""
+        });
+
+        if (data.product_has_items) {
+          setSubProducts(data.product_has_items.map((item: any) => ({
+            label: item.product_item_name || "",
+            minLoan: item.minimum_loan_amount?.toString() || "",
+            maxLoan: item.maximum_loan_amount?.toString() || "",
+            minInt: item.minimum_interest?.toString() || "",
+            maxInt: item.maximum_interest?.toString() || "",
+            minPeriod: item.minimum_loan_period?.toString() || "",
+            maxPeriod: item.maximum_loan_period?.toString() || "",
+            guarantors: item.required_guarantee_count?.toString() || "",
+            penaltyType: item.penalty_apply_type || "every_installment",
+            penaltyRate: item.penalty_percentage?.toString() || "",
+            savingsAmount: item.saving_amount?.toString() || ""
+          })));
+        }
+
+        if (data.additional_charges) {
+          setCharges(data.additional_charges.map((c: any) => ({
+            description: c.description || "",
+            amount: c.value?.toString() || c.amount?.toString() || "",
+            type: c.value_type || c.type || "fixed",
+            deduction: c.deduction_type || c.deduction || "on_loan_disbursement"
+          })));
+        }
+
+        if (data.required_documents) {
+          setDocuments(data.required_documents.map((d: any) => ({
+            name: d.name || "",
+            status: d.status || "Required"
+          })));
+        }
+      }
+    } catch (err) {
+      console.error("Failed to fetch product", err);
+      setSubmitError("Failed to load product details.");
+    } finally {
+      setLoading(false);
+    }
+  };
+
   useEffect(() => {
     const isClickScrolling = false;
     const handleScroll = () => {
@@ -181,8 +248,13 @@ export default function CreateProduct() {
       };
 
       // Assuming apiClient is configured with standard baseUrl interceptors
-      await apiClient.post("/api/leasing/products", payload);
-      setSubmitSuccess("Product successfully created!");
+      if (isEdit) {
+        await apiClient.put(`/api/leasing/products/${id}`, payload);
+        setSubmitSuccess("Product successfully updated!");
+      } else {
+        await apiClient.post("/api/leasing/products", payload);
+        setSubmitSuccess("Product successfully created!");
+      }
 
       // Optionally reset form if needed...
     } catch (err) {
@@ -209,8 +281,8 @@ export default function CreateProduct() {
         {/* Action Header */}
         <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-5">
           <div>
-            <h1 className="text-xl sm:text-2xl font-bold text-gray-900 dark:text-white">Create Product</h1>
-            <p className="text-sm text-gray-500 dark:text-gray-400">Define financial rules and collection cycles</p>
+            <h1 className="text-xl sm:text-2xl font-bold text-gray-900 dark:text-white">{isEdit ? 'Edit Product' : 'Create Product'}</h1>
+            <p className="text-sm text-gray-500 dark:text-gray-400">{isEdit ? 'Modify existing financial rules' : 'Define financial rules and collection cycles'}</p>
           </div>
           <div className="flex flex-col w-full sm:w-auto items-end gap-3">
             <div className="flex w-full sm:w-auto items-center gap-3">
@@ -225,7 +297,7 @@ export default function CreateProduct() {
                 ) : (
                   <CheckCircleIcon className="w-5 h-5" />
                 )}
-                {isSubmitting ? 'Saving...' : 'Save Product'}
+                {isSubmitting ? 'Saving...' : isEdit ? 'Update Product' : 'Save Product'}
               </button>
               <Link to="/" className="flex-1 sm:flex-none flex items-center justify-center gap-2 px-6 py-2.5 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-700 text-gray-700 dark:text-gray-300 font-semibold rounded-xl transition-colors shadow-sm">
                 <CloseLineIcon className="w-5 h-5" />
@@ -268,7 +340,13 @@ export default function CreateProduct() {
       </div>
 
       {/* Main Content Areas */}
-      <div className="space-y-6 mt-6">
+      {loading ? (
+        <div className="flex flex-col items-center justify-center py-20 text-brand-500 bg-white dark:bg-gray-800 rounded-2xl border border-gray-200 dark:border-gray-700 mt-6 shadow-sm">
+          <span className="w-8 h-8 border-4 border-brand-500/30 border-t-brand-500 rounded-full animate-spin mb-4"></span>
+          <p className="font-semibold text-sm">Loading product details...</p>
+        </div>
+      ) : (
+        <div className="space-y-6 mt-6">
 
         {/* General Section */}
         <div ref={sectionRefs.general} className={`p-5 sm:p-7 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-2xl shadow-sm transition-all ${activeTab === 'general' ? 'ring-2 ring-brand-500/10' : ''}`}>
@@ -543,8 +621,8 @@ export default function CreateProduct() {
           </div>
 
         </div>
-
       </div>
-    </div>
+    )}
+  </div>
   );
 }

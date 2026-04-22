@@ -12,6 +12,7 @@ export const ROUTES = {
 
   // Forms & Products
   CREATE_PRODUCT: "/products/create",
+  EDIT_PRODUCT: "/products/edit/:id",
   PRODUCTS_LIST: "/products",
   FORM_ELEMENTS: "/form-elements",
 
