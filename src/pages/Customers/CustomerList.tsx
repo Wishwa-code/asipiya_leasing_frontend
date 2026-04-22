@@ -6,10 +6,10 @@ import apiClient from "../../api/apiClient";
 import { ROUTES } from "../../routes/paths";
 import ViewCustomerModal from "./components/ViewCustomerModal";
 import LocationModal from "./components/LocationModal";
-import { HorizontaLDots as MapPinIcon } from "../../icons"; // Using as placeholder if no pin
+import { MapIcon as MapPinIcon } from "../../icons"; // Assuming we'll add MapIcon or use placeholder
 
 type CustomerListItem = {
-  id: number;
+  ID: number;
   customer_code: string;
   full_name: string;
   first_name: string;
@@ -72,12 +72,12 @@ export default function CustomerList() {
 
   const toggleStatus = async (id: number, currentStatus: string) => {
     const newStatus = currentStatus === 'active' ? 'inactive' : 'active';
-    setCustomers(customers.map(c => c.id === id ? { ...c, status: newStatus } : c));
+    setCustomers(customers.map(c => c.ID === id ? { ...c, status: newStatus } : c));
     try {
       await apiClient.post(`/customers/${id}/status`, { status: newStatus });
     } catch (err) {
       console.error("Failed to update status", err);
-      setCustomers(customers.map(c => c.id === id ? { ...c, status: currentStatus } : c));
+      setCustomers(customers.map(c => c.ID === id ? { ...c, status: currentStatus } : c));
     }
   };
 
@@ -221,7 +221,7 @@ export default function CustomerList() {
                 </tr>
               ) : (
                 customers.map((customer, idx) => (
-                  <tr key={`${customer.id}-${idx}`} className="group hover:bg-gray-50/50 dark:hover:bg-gray-900/30 transition-colors">
+                  <tr key={`${customer.ID}-${idx}`} className="group hover:bg-gray-50/50 dark:hover:bg-gray-900/30 transition-colors">
                     <td className="px-6 py-5 text-center font-bold text-gray-400">{idx + 1}</td>
                     <td className="px-6 py-5">
                       <div className="flex items-center gap-3">
@@ -244,7 +244,7 @@ export default function CustomerList() {
                             type="checkbox" 
                             className="sr-only peer" 
                             checked={customer.status === 'active'} 
-                            onChange={() => toggleStatus(customer.id, customer.status)}
+                            onChange={() => toggleStatus(customer.ID, customer.status)}
                           />
                           <div className="w-11 h-6 bg-gray-200 peer-focus:outline-none rounded-full peer dark:bg-gray-700 peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all dark:border-gray-600 peer-checked:bg-brand-500"></div>
                         </label>
@@ -284,14 +284,14 @@ export default function CustomerList() {
                           <MapPinIcon className="w-4 h-4" />
                         </button>
                         <button 
-                          onClick={() => setSelectedCustomerId(customer.id)}
+                          onClick={() => setSelectedCustomerId(customer.ID)}
                           className="p-2.5 bg-gray-50 hover:bg-brand-50 text-gray-400 hover:text-brand-500 dark:bg-gray-900 dark:hover:bg-brand-500/10 rounded-xl transition-all shadow-sm border border-gray-100 dark:border-gray-700"
                           title="View Details"
                         >
                           <EyeIcon className="w-4 h-4" />
                         </button>
                         <button 
-                          onClick={() => navigate(ROUTES.EDIT_CUSTOMER.replace(':id', customer.id.toString()))}
+                          onClick={() => navigate(ROUTES.EDIT_CUSTOMER.replace(':id', customer.ID.toString()))}
                           className="p-2.5 bg-gray-50 hover:bg-brand-50 text-gray-400 hover:text-brand-500 dark:bg-gray-900 dark:hover:bg-brand-500/10 rounded-xl transition-all shadow-sm border border-gray-100 dark:border-gray-700"
                           title="Edit Record"
                         >
@@ -328,7 +328,7 @@ export default function CustomerList() {
 
       {selectedLocationCus && (
         <LocationModal 
-          customerId={selectedLocationCus.id}
+          customerId={selectedLocationCus.ID}
           initialLat={selectedLocationCus.latitude}
           initialLng={selectedLocationCus.longitude}
           onClose={() => setSelectedLocationCus(null)}

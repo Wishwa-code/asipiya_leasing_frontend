@@ -101,6 +101,10 @@ export const privateRoutes = [
     element: <CustomerList />,
   },
   {
+    path: ROUTES.EDIT_CUSTOMER,
+    element: <CreateCustomer />,
+  },
+  {
     path: ROUTES.CREATE_LEASE,
     element: <CreateLeasing />,
   },

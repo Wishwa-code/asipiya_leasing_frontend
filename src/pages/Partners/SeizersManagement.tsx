@@ -4,18 +4,20 @@ import { PlusIcon } from "../../icons";
 import apiClient from "../../api/apiClient";
 
 type Seizer = {
-  id: number;
+  ID: number;
   seizer_type: string;
   company_name: string | null;
   company_registration: string | null;
   company_contact_no: string | null;
-  NIC: string | null;
+  nic: string | null;
   seizer_contact_no: string | null;
   mobile_no: string | null;
   address: string | null;
   remarks: string | null;
-  status: number;
-  created_at: string;
+  status: string;
+  CreatedAt?: string;
+  UpdatedAt?: string;
+  DeletedAt?: string | null;
 };
 
 export default function SeizersManagement() {
@@ -31,12 +33,12 @@ export default function SeizersManagement() {
     company_name: "",
     company_registration: "",
     company_contact_no: "",
-    NIC: "",
+    nic: "",
     seizer_contact_no: "",
     mobile_no: "",
     address: "",
     remarks: "",
-    status: 1
+    status: "Active"
   });
   const [errors, setErrors] = useState<Record<string, string[]>>({});
   const [isSaving, setIsSaving] = useState(false);
@@ -54,8 +56,8 @@ export default function SeizersManagement() {
       console.error("Failed to fetch seizers", err);
       // Fallback frontend testing data
       setSeizers([
-        { id: 1, seizer_type: "Company", company_name: "Recovery Pros", company_registration: "REG123", company_contact_no: "0112345678", NIC: null, seizer_contact_no: null, mobile_no: null, address: "Colombo", remarks: "Good service", status: 1, created_at: "2026-04-10 10:00" },
-        { id: 2, seizer_type: "Personal", company_name: null, company_registration: null, company_contact_no: null, NIC: "987654321V", seizer_contact_no: "0771234567", mobile_no: "0711234567", address: "Galle", remarks: null, status: 1, created_at: "2026-04-11 11:30" },
+        { ID: 1, seizer_type: "Company", company_name: "Recovery Pros", company_registration: "REG123", company_contact_no: "0112345678", nic: null, seizer_contact_no: null, mobile_no: null, address: "Colombo", remarks: "Good service", status: "Active", CreatedAt: "2026-04-10 10:00" },
+        { ID: 2, seizer_type: "Personal", company_name: null, company_registration: null, company_contact_no: null, nic: "987654321V", seizer_contact_no: "0771234567", mobile_no: "0711234567", address: "Galle", remarks: null, status: "Active", CreatedAt: "2026-04-11 11:30" },
       ]);
     } finally {
       setLoading(false);
@@ -67,7 +69,7 @@ export default function SeizersManagement() {
     let finalValue: string | number | boolean = value;
 
     if (type === 'checkbox') {
-      finalValue = (e.target as HTMLInputElement).checked ? 1 : 0;
+      finalValue = (e.target as HTMLInputElement).checked ? "Active" : "Inactive";
     }
 
     setFormData(prev => ({ ...prev, [name]: finalValue }));
@@ -84,25 +86,25 @@ export default function SeizersManagement() {
     setEditSeizerId(null);
     setFormData({
       seizer_type: "", company_name: "", company_registration: "", company_contact_no: "",
-      NIC: "", seizer_contact_no: "", mobile_no: "", address: "", remarks: "", status: 1
+      nic: "", seizer_contact_no: "", mobile_no: "", address: "", remarks: "", status: "Active"
     });
     setErrors({});
     setIsModalOpen(true);
   };
 
   const openEditModal = (seizer: Seizer) => {
-    setEditSeizerId(seizer.id);
+    setEditSeizerId(seizer.ID);
     setFormData({
       seizer_type: seizer.seizer_type || "",
       company_name: seizer.company_name || "",
       company_registration: seizer.company_registration || "",
       company_contact_no: seizer.company_contact_no || "",
-      NIC: seizer.NIC || "",
+      nic: seizer.nic || "",
       seizer_contact_no: seizer.seizer_contact_no || "",
       mobile_no: seizer.mobile_no || "",
       address: seizer.address || "",
       remarks: seizer.remarks || "",
-      status: seizer.status !== undefined ? seizer.status : 1
+      status: seizer.status || "Inactive"
     });
     setErrors({});
     setIsModalOpen(true);
@@ -143,7 +145,7 @@ export default function SeizersManagement() {
 
   const filteredSeizers = seizers.filter(s =>
     (s.company_name && s.company_name.toLowerCase().includes(searchQuery.toLowerCase())) ||
-    (s.NIC && s.NIC.toLowerCase().includes(searchQuery.toLowerCase())) ||
+    (s.nic && s.nic.toLowerCase().includes(searchQuery.toLowerCase())) ||
     (s.seizer_type && s.seizer_type.toLowerCase().includes(searchQuery.toLowerCase()))
   );
 
@@ -214,11 +216,11 @@ export default function SeizersManagement() {
                   </tr>
                 ) : (
                   filteredSeizers.map((s, idx) => (
-                    <tr key={s.id} className="hover:bg-gray-50 dark:hover:bg-gray-800/80 transition-colors">
+                    <tr key={s.ID} className="hover:bg-gray-50 dark:hover:bg-gray-800/80 transition-colors">
                       <td className="px-5 py-4 text-gray-600 dark:text-gray-400 font-medium">{idx + 1}</td>
                       <td className="px-5 py-4">
                         <div className="font-semibold text-gray-900 dark:text-white">
-                          {s.seizer_type === 'Company' ? s.company_name : s.NIC} <span className="text-xs font-medium bg-gray-100 text-gray-600 px-2 py-0.5 rounded-md ml-2">{s.seizer_type}</span>
+                          {s.company_name || s.nic || 'N/A'} <span className="text-xs font-medium bg-gray-100 text-gray-600 px-2 py-0.5 rounded-md ml-2">{s.seizer_type}</span>
                         </div>
                         <div className="text-gray-500 text-xs mt-1">
                           {s.seizer_type === 'Company' ? `Reg: ${s.company_registration || 'N/A'}` : `M: ${s.mobile_no || 'N/A'}`}
@@ -230,8 +232,8 @@ export default function SeizersManagement() {
                         </div>
                       </td>
                       <td className="px-5 py-4 text-center">
-                        <span className={`px-2.5 py-1 rounded-full text-xs font-medium ${s.status === 1 ? 'bg-green-100 text-green-700' : 'bg-red-100 text-red-700'}`}>
-                          {s.status === 1 ? 'Active' : 'Inactive'}
+                        <span className={`px-2.5 py-1 rounded-full text-xs font-medium ${s.status === 'Active' ? 'bg-green-100 text-green-700' : 'bg-red-100 text-red-700'}`}>
+                          {s.status}
                         </span>
                       </td>
                       <td className="px-5 py-4 text-center">
@@ -239,7 +241,7 @@ export default function SeizersManagement() {
                           <button onClick={() => openEditModal(s)} className="p-1.5 text-blue-600 hover:bg-blue-50 focus:bg-blue-50 rounded-lg transition-colors" title="Edit">
                             <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" /></svg>
                           </button>
-                          <button onClick={() => handleDelete(s.id)} className="p-1.5 text-red-600 hover:bg-red-50 focus:bg-red-50 rounded-lg transition-colors" title="Delete">
+                          <button onClick={() => handleDelete(s.ID)} className="p-1.5 text-red-600 hover:bg-red-50 focus:bg-red-50 rounded-lg transition-colors" title="Delete">
                             <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" /></svg>
                           </button>
                         </div>
@@ -313,7 +315,7 @@ export default function SeizersManagement() {
               <div className="grid grid-cols-1 md:grid-cols-3 gap-5 mb-5 text-sm">
                 <div>
                   <label className="mb-1.5 block font-medium text-gray-700 dark:text-gray-300">NIC Number</label>
-                  <input type="text" name="NIC" value={formData.NIC} onChange={handleInputChange} className="w-full rounded-xl border border-gray-200 bg-white px-4 py-2.5 outline-none focus:border-brand-500 dark:border-gray-700 dark:bg-gray-800" placeholder="NIC" />
+                  <input type="text" name="nic" value={formData.nic} onChange={handleInputChange} className="w-full rounded-xl border border-gray-200 bg-white px-4 py-2.5 outline-none focus:border-brand-500 dark:border-gray-700 dark:bg-gray-800" placeholder="NIC" />
                 </div>
                 <div>
                   <label className="mb-1.5 block font-medium text-gray-700 dark:text-gray-300">Seizer Contact No</label>
@@ -338,7 +340,7 @@ export default function SeizersManagement() {
 
               <div className="flex items-center mt-6">
                 <label className="relative inline-flex items-center cursor-pointer">
-                  <input type="checkbox" name="status" checked={formData.status === 1} onChange={handleInputChange} className="sr-only peer" />
+                  <input type="checkbox" name="status" checked={formData.status === 'Active'} onChange={handleInputChange} className="sr-only peer" />
                   <div className="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-brand-300 dark:peer-focus:ring-brand-800 rounded-full peer dark:bg-gray-700 peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all dark:border-gray-600 peer-checked:bg-brand-500"></div>
                   <span className="ml-3 text-sm font-medium text-gray-900 dark:text-gray-300">Seizer is Active</span>
                 </label>
