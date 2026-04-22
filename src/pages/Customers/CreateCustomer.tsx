@@ -187,7 +187,7 @@ export default function CreateCustomer() {
         occupations,
         bank_accounts: banks,
       };
-      await apiClient.post("/api/customers", payload);
+      await apiClient.post("/customers", payload);
       setSubmitSuccess("Customer registered successfully!");
     } catch {
       setSubmitError("Failed to register customer. Please check the details and try again.");

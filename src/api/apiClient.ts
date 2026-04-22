@@ -2,7 +2,8 @@ import axios from "axios";
 import Cookies from "js-cookie";
 import { handleLogout } from "./services/authService";
 
-const baseURL = import.meta.env.VITE_APP_API_URL || "http://localhost:8084/";
+const serverURL = import.meta.env.VITE_APP_API_URL || "http://localhost:8084/";
+const baseURL = serverURL.endsWith("/") ? `${serverURL}api/v1/` : `${serverURL}/api/v1/`;
 
 const instance = axios.create({
   baseURL: baseURL,
@@ -53,7 +54,7 @@ instance.interceptors.response.use(
 
         // Call backend refresh endpoint
         // Note: We use axios directly here, not 'instance', to avoid interceptor loops
-        const res = await axios.post(`${baseURL}refresh`, {
+        const res = await axios.post(`${serverURL.endsWith("/") ? serverURL : serverURL + "/"}refresh`, {
           refresh_token: refreshToken,
         });
 
@@ -83,5 +84,5 @@ instance.interceptors.response.use(
   }
 );
 
-export { instance, baseURL };
+export { instance, baseURL, serverURL };
 export default instance;

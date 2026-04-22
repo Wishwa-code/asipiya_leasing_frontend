@@ -12,6 +12,7 @@ const ProductList = lazy(() => import("../pages/Products/ProductList"));
 
 // Customers
 const CreateCustomer = lazy(() => import("../pages/Customers/CreateCustomer"));
+const CustomerList = lazy(() => import("../pages/Customers/CustomerList"));
 
 // Leasing
 const CreateLeasing = lazy(() => import("../pages/Leasing/CreateLeasing"));
@@ -94,6 +95,10 @@ export const privateRoutes = [
   {
     path: ROUTES.CREATE_CUSTOMER,
     element: <CreateCustomer />,
+  },
+  {
+    path: ROUTES.CUSTOMERS_LIST,
+    element: <CustomerList />,
   },
   {
     path: ROUTES.CREATE_LEASE,

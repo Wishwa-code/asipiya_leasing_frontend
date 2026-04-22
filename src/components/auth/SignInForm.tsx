@@ -5,7 +5,7 @@ import Label from "../form/Label";
 import Input from "../form/input/InputField";
 import Checkbox from "../form/input/Checkbox";
 import Button from "../ui/button/Button";
-import { instance as apiClient } from "../../api/apiClient";
+import { instance as apiClient, serverURL } from "../../api/apiClient";
 import { ROUTES } from "../../routes/paths";
 import { useAuth } from "../../context/AuthContext";
 
@@ -27,8 +27,9 @@ export default function SignInForm() {
     setIsLoading(true);
 
     try {
-      console.log("Attempting login to:", apiClient.defaults.baseURL + "login");
-      const response = await apiClient.post("login", {
+      const loginURL = serverURL.endsWith("/") ? `${serverURL}login` : `${serverURL}/login`;
+      console.log("Attempting login to:", loginURL);
+      const response = await apiClient.post(loginURL, {
         username: email,
         password: password,
       });

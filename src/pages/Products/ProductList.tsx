@@ -34,7 +34,7 @@ export default function ProductList() {
   const fetchProducts = async () => {
     setLoading(true);
     try {
-      const res = await apiClient.get('/api/leasing/products');
+      const res = await apiClient.get('/leasing/products');
       // For now, depending on API response, we assume res.data holds the array or res.data.data
       setProducts(res.data?.data || res.data || []);
     } catch (err) {
@@ -50,7 +50,7 @@ export default function ProductList() {
     setProducts(products.map(p => p.id === id ? { ...p, status: newStatus } : p));
 
     try {
-      await apiClient.post('/api/leasing/products/status', {
+      await apiClient.post('/leasing/products/status', {
         id,
         status: newStatus
       });

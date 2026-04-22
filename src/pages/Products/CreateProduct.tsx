@@ -101,7 +101,7 @@ export default function CreateProduct() {
   const fetchProductForEdit = async () => {
     try {
       setLoading(true);
-      const res = await apiClient.get(`/api/leasing/products/${id}`);
+      const res = await apiClient.get(`/leasing/products/${id}`);
       const data = res.data?.data || res.data;
 
       if (data) {
@@ -249,10 +249,10 @@ export default function CreateProduct() {
 
       // Assuming apiClient is configured with standard baseUrl interceptors
       if (isEdit) {
-        await apiClient.put(`/api/leasing/products/${id}`, payload);
+        await apiClient.put(`/leasing/products/${id}`, payload);
         setSubmitSuccess("Product successfully updated!");
       } else {
-        await apiClient.post("/api/leasing/products", payload);
+        await apiClient.post("/leasing/products", payload);
         setSubmitSuccess("Product successfully created!");
       }
 

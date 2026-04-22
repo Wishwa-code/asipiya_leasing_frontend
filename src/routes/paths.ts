@@ -31,6 +31,8 @@ export const ROUTES = {
 
   // Customers
   CREATE_CUSTOMER: "/customers/create",
+  CUSTOMERS_LIST: "/customers",
+  EDIT_CUSTOMER: "/customers/edit/:id",
 
   // Tables
   BASIC_TABLES: "/basic-tables",

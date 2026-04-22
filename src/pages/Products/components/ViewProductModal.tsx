@@ -29,7 +29,7 @@ export default function ViewProductModal({ productId, onClose }: ViewProductModa
     try {
       setLoading(true);
       // Depending on backend preference, this could be /api/leasing/products/:id 
-      const res = await apiClient.get(`/api/leasing/products/${productId}`);
+      const res = await apiClient.get(`/leasing/products/${productId}`);
        // API might wrap inside data or response.data.product
       setProduct(res.data?.data || res.data?.product || res.data);
     } catch (error) {
