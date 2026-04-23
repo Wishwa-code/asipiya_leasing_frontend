@@ -4,7 +4,7 @@ import { PlusIcon } from "../../icons";
 import apiClient from "../../api/apiClient";
 
 type Introducer = {
-  id: number;
+  ID: number;
   introducer_type: string;
   name: string;
   registration_no: string | null;
@@ -17,7 +17,7 @@ type Introducer = {
   bank_details: string | null;
   remarks: string | null;
   status: number;
-  created_at: string;
+  CreatedAt?: string;
 };
 
 export default function IntroducersManagement() {
@@ -58,7 +58,7 @@ export default function IntroducersManagement() {
       console.error("Failed to fetch introducers", err);
       // Fallback frontend testing data
       setIntroducers([
-        { id: 1, introducer_type: "Individual", name: "John Doe Broker", registration_no: "123456789V", contact_person: null, primary_contact: "0771122334", secondary_contact: null, email: "john@example.com", address: "Colombo", commission_rate: "5%", bank_details: "HNB - 112233", remarks: "Good broker", status: 1, created_at: "2026-04-10 10:00" },
+        { ID: 1, introducer_type: "Individual", name: "John Doe Broker", registration_no: "123456789V", contact_person: null, primary_contact: "0771122334", secondary_contact: null, email: "john@example.com", address: "Colombo", commission_rate: "5%", bank_details: "HNB - 112233", remarks: "Good broker", status: 1, CreatedAt: "2026-04-10 10:00" },
       ]);
     } finally {
       setLoading(false);
@@ -94,7 +94,7 @@ export default function IntroducersManagement() {
   };
 
   const openEditModal = (introducer: Introducer) => {
-    setEditIntroducerId(introducer.id);
+    setEditIntroducerId(introducer.ID);
     setFormData({
       introducer_type: introducer.introducer_type || "",
       name: introducer.name || "",
@@ -220,7 +220,7 @@ export default function IntroducersManagement() {
                   </tr>
                 ) : (
                   filteredIntroducers.map((s, idx) => (
-                    <tr key={s.id} className="hover:bg-gray-50 dark:hover:bg-gray-800/80 transition-colors">
+                    <tr key={s.ID} className="hover:bg-gray-50 dark:hover:bg-gray-800/80 transition-colors">
                       <td className="px-5 py-4 text-gray-600 dark:text-gray-400 font-medium">{idx + 1}</td>
                       <td className="px-5 py-4">
                         <div className="font-semibold text-gray-900 dark:text-white">
@@ -251,7 +251,7 @@ export default function IntroducersManagement() {
                           <button onClick={() => openEditModal(s)} className="p-1.5 text-blue-600 hover:bg-blue-50 focus:bg-blue-50 rounded-lg transition-colors" title="Edit">
                             <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" /></svg>
                           </button>
-                          <button onClick={() => handleDelete(s.id)} className="p-1.5 text-red-600 hover:bg-red-50 focus:bg-red-50 rounded-lg transition-colors" title="Delete">
+                          <button onClick={() => handleDelete(s.ID)} className="p-1.5 text-red-600 hover:bg-red-50 focus:bg-red-50 rounded-lg transition-colors" title="Delete">
                             <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" /></svg>
                           </button>
                         </div>

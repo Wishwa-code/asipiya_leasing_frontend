@@ -4,7 +4,7 @@ import { PlusIcon } from "../../icons";
 import apiClient from "../../api/apiClient";
 
 type InsuranceCompany = {
-  id: number;
+  ID: number;
   company_code: string | null;
   company_name: string;
   head_office_address: string | null;
@@ -19,7 +19,7 @@ type InsuranceCompany = {
   bank_account_name: string | null;
   bank_name: string | null;
   status: number | null;
-  created_at: string;
+  CreatedAt?: string;
 };
 
 export default function InsuranceCompaniesManagement() {
@@ -62,7 +62,7 @@ export default function InsuranceCompaniesManagement() {
       console.error("Failed to fetch insurance companies", err);
       // Fallback
       setCompanies([
-        { id: 1, company_name: "SafeLife Insurance", company_code: "SL001", head_office_address: "Colombo", contact_person: "John Doe", contact_mobile: "0771234567", contact_email: "john@safelife.com", contact_person2: null, contact_person2_mobile: null, contact_person2_email: null, commision_rate: "5%", bank_account_no: "112233", bank_account_name: "SafeLife PVT", bank_name: "BOC", status: 1, created_at: "2026-04-10 10:00" },
+        { ID: 1, company_name: "SafeLife Insurance", company_code: "SL001", head_office_address: "Colombo", contact_person: "John Doe", contact_mobile: "0771234567", contact_email: "john@safelife.com", contact_person2: null, contact_person2_mobile: null, contact_person2_email: null, commision_rate: "5%", bank_account_no: "112233", bank_account_name: "SafeLife PVT", bank_name: "BOC", status: 1, CreatedAt: "2026-04-10 10:00" },
       ]);
     } finally {
       setLoading(false);
@@ -100,7 +100,7 @@ export default function InsuranceCompaniesManagement() {
   };
 
   const openEditModal = (c: InsuranceCompany) => {
-    setEditId(c.id);
+    setEditId(c.ID);
     setFormData({
       company_code: c.company_code || "",
       company_name: c.company_name || "",
@@ -224,7 +224,7 @@ export default function InsuranceCompaniesManagement() {
                   </tr>
                 ) : (
                   filteredData.map((c, idx) => (
-                    <tr key={c.id} className="hover:bg-gray-50 dark:hover:bg-gray-800/80 transition-colors">
+                    <tr key={c.ID} className="hover:bg-gray-50 dark:hover:bg-gray-800/80 transition-colors">
                       <td className="px-5 py-4 text-gray-600 dark:text-gray-400 font-medium">{idx + 1}</td>
                       <td className="px-5 py-4">
                         <div className="font-bold text-gray-900 dark:text-white">
@@ -251,7 +251,7 @@ export default function InsuranceCompaniesManagement() {
                           <button onClick={() => openEditModal(c)} className="p-1.5 text-blue-600 hover:bg-blue-50 focus:bg-blue-50 rounded-lg transition-colors" title="Edit">
                             <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" /></svg>
                           </button>
-                          <button onClick={() => handleDelete(c.id)} className="p-1.5 text-red-600 hover:bg-red-50 focus:bg-red-50 rounded-lg transition-colors" title="Delete">
+                          <button onClick={() => handleDelete(c.ID)} className="p-1.5 text-red-600 hover:bg-red-50 focus:bg-red-50 rounded-lg transition-colors" title="Delete">
                             <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" /></svg>
                           </button>
                         </div>

@@ -19,7 +19,7 @@ const customIcon = new L.Icon({
 });
 
 type Supplier = {
-  id: number;
+  ID: number;
   name: string;
   nic: string;
   latitude: number | null;
@@ -29,7 +29,7 @@ type Supplier = {
   occupation: string;
   income: number | string;
   name_in_cheque: string;
-  created_at: string;
+  CreatedAt?: string;
 };
 
 // Component for picking map location
@@ -106,8 +106,8 @@ export default function SuppliersManagement() {
       console.error("Failed to fetch suppliers", err);
       // Fallback dummy data if endpoint fails (for pure frontend demonstration)
       setSuppliers([
-        { id: 1, name: "Uriel Wolf", nic: "784", latitude: 46.0, longitude: 43.0, address: "Dolores fugit eius", contact_no: "644", occupation: "Est quos ratione num", income: "282.00", name_in_cheque: "Plato Woodard", created_at: "2026-04-08 15:15" },
-        { id: 2, name: "Quemby Byrd", nic: "175", latitude: 39.0, longitude: 24.0, address: "Quis vitae harum sed", contact_no: "436", occupation: "Quis velit est irure", income: "364.00", name_in_cheque: "Cheyenne French", created_at: "2026-03-19 11:54" },
+        { ID: 1, name: "Uriel Wolf", nic: "784", latitude: 46.0, longitude: 43.0, address: "Dolores fugit eius", contact_no: "644", occupation: "Est quos ratione num", income: "282.00", name_in_cheque: "Plato Woodard", CreatedAt: "2026-04-08 15:15" },
+        { ID: 2, name: "Quemby Byrd", nic: "175", latitude: 39.0, longitude: 24.0, address: "Quis vitae harum sed", contact_no: "436", occupation: "Quis velit est irure", income: "364.00", name_in_cheque: "Cheyenne French", CreatedAt: "2026-03-19 11:54" },
       ]);
     } finally {
       setLoading(false);
@@ -137,7 +137,7 @@ export default function SuppliersManagement() {
   };
 
   const openEditModal = (supplier: Supplier) => {
-    setEditSupplierId(supplier.id);
+    setEditSupplierId(supplier.ID);
     setFormData({
       name: supplier.name || "",
       nic: supplier.nic || "",
@@ -287,7 +287,7 @@ export default function SuppliersManagement() {
                 </tr>
               ) : (
                 filteredSuppliers.map((supplier, idx) => (
-                  <tr key={`${supplier.id}-${idx}`} className="group hover:bg-gray-50 dark:hover:bg-gray-800/80 transition-colors">
+                  <tr key={`${supplier.ID}-${idx}`} className="group hover:bg-gray-50 dark:hover:bg-gray-800/80 transition-colors">
                     <td className="px-5 py-4 font-semibold text-gray-900 dark:text-gray-200">{idx + 1}</td>
                     <td className="px-5 py-4 font-bold text-gray-900 dark:text-white capitalize">{supplier.name || '-'}</td>
                     <td className="px-5 py-4 font-medium">{supplier.nic || '-'}</td>
@@ -309,7 +309,7 @@ export default function SuppliersManagement() {
                     <td className="px-5 py-4">{supplier.occupation || '-'}</td>
                     <td className="px-5 py-4 font-medium">{supplier.income ? parseFloat(supplier.income.toString()).toFixed(2) : '-'}</td>
                     <td className="px-5 py-4">{supplier.name_in_cheque || '-'}</td>
-                    <td className="px-5 py-4 text-xs font-medium">{supplier.created_at || '-'}</td>
+                    <td className="px-5 py-4 text-xs font-medium">{supplier.CreatedAt || '-'}</td>
                     <td className="px-5 py-4 text-center">
                       <div className="flex items-center justify-center gap-2">
                         <button onClick={() => openEditModal(supplier)} className="p-1.5 text-brand-500 hover:bg-brand-50 rounded transition-colors" aria-label="Edit">
@@ -317,7 +317,7 @@ export default function SuppliersManagement() {
                             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z" />
                           </svg>
                         </button>
-                        <button onClick={() => handleDelete(supplier.id)} className="p-1.5 text-error-500 hover:bg-error-50 rounded transition-colors" aria-label="Delete">
+                        <button onClick={() => handleDelete(supplier.ID)} className="p-1.5 text-error-500 hover:bg-error-50 rounded transition-colors" aria-label="Delete">
                           <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
                           </svg>

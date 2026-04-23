@@ -4,7 +4,7 @@ import { PlusIcon } from "../../icons";
 import apiClient from "../../api/apiClient";
 
 type VehicleYard = {
-  id: number;
+  ID: number;
   yard_name: string;
   address: string | null;
   province: string | null;
@@ -14,7 +14,7 @@ type VehicleYard = {
   contact_person: string | null;
   mobile_no: string | null;
   status: number | null;
-  created_at: string;
+  CreatedAt?: string;
 };
 
 export default function VehicleYardsManagement() {
@@ -52,7 +52,7 @@ export default function VehicleYardsManagement() {
       console.error("Failed to fetch vehicle yards", err);
       // Fallback
       setYards([
-        { id: 1, yard_name: "Central Yard", address: "123 Main St", province: "Central", district: "Kandy", dsd: "Kandy Kadawath", yard_contact_no: "0812345678", contact_person: "Kamal Perera", mobile_no: "0771122334", status: 1, created_at: "2026-04-10 10:00" },
+        { ID: 1, yard_name: "Central Yard", address: "123 Main St", province: "Central", district: "Kandy", dsd: "Kandy Kadawath", yard_contact_no: "0812345678", contact_person: "Kamal Perera", mobile_no: "0771122334", status: 1, CreatedAt: "2026-04-10 10:00" },
       ]);
     } finally {
       setLoading(false);
@@ -88,7 +88,7 @@ export default function VehicleYardsManagement() {
   };
 
   const openEditModal = (y: VehicleYard) => {
-    setEditId(y.id);
+    setEditId(y.ID);
     setFormData({
       yard_name: y.yard_name || "",
       address: y.address || "",
@@ -208,7 +208,7 @@ export default function VehicleYardsManagement() {
                   </tr>
                 ) : (
                   filteredData.map((y, idx) => (
-                    <tr key={y.id} className="hover:bg-gray-50 dark:hover:bg-gray-800/80 transition-colors">
+                    <tr key={y.ID} className="hover:bg-gray-50 dark:hover:bg-gray-800/80 transition-colors">
                       <td className="px-5 py-4 text-gray-600 dark:text-gray-400 font-medium">{idx + 1}</td>
                       <td className="px-5 py-4 font-bold text-gray-900 dark:text-white">
                         {y.yard_name}
@@ -239,7 +239,7 @@ export default function VehicleYardsManagement() {
                           <button onClick={() => openEditModal(y)} className="p-1.5 text-blue-600 hover:bg-blue-50 focus:bg-blue-50 rounded-lg transition-colors" title="Edit">
                             <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" /></svg>
                           </button>
-                          <button onClick={() => handleDelete(y.id)} className="p-1.5 text-red-600 hover:bg-red-50 focus:bg-red-50 rounded-lg transition-colors" title="Delete">
+                          <button onClick={() => handleDelete(y.ID)} className="p-1.5 text-red-600 hover:bg-red-50 focus:bg-red-50 rounded-lg transition-colors" title="Delete">
                             <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" /></svg>
                           </button>
                         </div>
