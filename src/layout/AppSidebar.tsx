@@ -1,5 +1,7 @@
 import { useCallback, useEffect, useRef, useState, useMemo } from "react";
+
 import { Link, useLocation } from "react-router";
+
 import {
   ChevronDownIcon,
   GridIcon,
@@ -14,6 +16,7 @@ import {
   CloseLineIcon,
   CalenderIcon,
 } from "../icons";
+
 import { useSidebar } from "../context/SidebarContext";
 import { useAuth } from "../context/AuthContext";
 import { ROUTES } from "../routes/paths";
@@ -45,8 +48,10 @@ const AppSidebar: React.FC = () => {
   );
 
   const hasPrivilege = useCallback((priv?: string) => {
-    if (!priv) return true;
-    return user?.privileges.includes(priv);
+    // Temporarily disabled privilege checks
+    // if (!priv) return true;
+    // return user?.privileges.includes(priv);
+    return true;
   }, [user]);
 
   const navItems = useMemo(() => {

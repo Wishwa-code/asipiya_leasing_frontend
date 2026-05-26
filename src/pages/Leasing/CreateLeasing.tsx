@@ -1,4 +1,5 @@
 import React, { useState } from "react";
+import apiClient from "../../api/apiClient";
 import PageMeta from "../../components/common/PageMeta";
 import PageBreadcrumb from "../../components/common/PageBreadCrumb";
 import "./Leasing.css";
@@ -40,7 +41,75 @@ import StepChequeDefine from "../../components/leasing/steps/StepChequeDefine";
 import StepCrDocs from "../../components/leasing/steps/StepCrDocs";
 
 const CreateLeasing: React.FC = () => {
-  const { formData, activeStep, nextStep, prevStep, goToStep, updateFormData } = useLeaseForm();
+  const { formData, activeStep, draftId, stepStatuses, nextStep, prevStep, goToStep, updateFormData, saveDraft, resetForm } = useLeaseForm();
+  const [isSubmitting, setIsSubmitting] = useState(false);
+
+  const submitApplication = async () => {
+    if (!draftId) {
+      alert("No draft found to submit. Please fill the customer details first.");
+      return;
+    }
+    
+    setIsSubmitting(true);
+    try {
+      // Ensure draft is saved
+      await saveDraft();
+
+      // Transform frontend data to match backend expected 'fullData' struct
+      const payload = {
+        Vehicle: {
+          vehicle_type: formData.vehicle_type,
+          vehicle_make: formData.vehicle_make,
+          vehicle_model: formData.vehicle_model,
+          vehicle_status: formData.vehicle_status,
+          engine_cc: formData.engine_cc,
+          chassis_no: formData.chassis_no,
+          manu_year: formData.manu_year,
+          color: formData.color,
+          usage_type: formData.usage_type,
+          manu_country: formData.manu_country,
+          body_type: formData.body_type,
+          equipment: formData.equipment,
+          reg_year: formData.reg_year,
+          reg_no: formData.reg_no,
+          valuation_no: formData.valuation_no,
+          market_value: parseFloat(formData.market_value || "0"),
+          forced_value: parseFloat(formData.forced_value || "0"),
+          invoice_value: parseFloat(formData.invoice_value || "0"),
+          supplier_name: formData.supplier_name,
+          supplier_address: formData.supplier_address,
+          supplier_mobile: formData.supplier_mobile,
+        },
+        Loan: {
+          product_id: parseInt(formData.product_id) || 0,
+          product_item: formData.product_item,
+          loan_amount: parseFloat(formData.loan_amount || "0"),
+          period: parseInt(formData.period) || 0,
+          interest_rate: parseFloat(formData.interest_rate || "0"),
+          installments_total: parseFloat(formData.installments_total || "0"),
+          total_interest: parseFloat(formData.total_interest || "0"),
+          total_payable: parseFloat(formData.total_payable || "0"),
+        },
+        Guarantors: formData.guarantors,
+        PdcSecurity: {
+           // Mapping array to parent struct if needed, keeping simple for now
+           items: formData.pdc_securities
+        },
+        ChequeDefine: {
+           items: formData.cheques
+        }
+      };
+
+      const res = await apiClient.post(`/leasing-applications/${draftId}/submit`, payload);
+      alert(res.data.message || "Application submitted successfully!");
+      resetForm();
+    } catch (err: any) {
+      console.error(err);
+      alert("Failed to submit application: " + (err.response?.data?.error || err.message));
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
 
   const renderStep = () => {
     switch (activeStep) {
@@ -73,7 +142,7 @@ const CreateLeasing: React.FC = () => {
             </h1>
             <div className="flex items-center gap-4 mt-1">
                 <p className="text-xs font-semibold text-gray-500 uppercase tracking-wider">
-                  Draft ID: <span className="text-brand-500 font-bold">LSE-2026-0001</span>
+                  Draft ID: <span className="text-brand-500 font-bold">{draftId ? `LSE-2026-${String(draftId).padStart(4, '0')}` : 'Unsaved'}</span>
                 </p>
                 <span className="w-1 h-1 bg-gray-300 rounded-full"></span>
                 <p className="text-xs font-semibold text-gray-400 uppercase tracking-wider">
@@ -83,11 +152,18 @@ const CreateLeasing: React.FC = () => {
           </div>
 
           <div className="flex items-center gap-3 w-full xl:w-auto">
-            <button className="flex-1 sm:flex-none px-5 py-2.5 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 text-gray-700 dark:text-gray-300 font-semibold rounded-xl hover:bg-gray-50 transition-all shadow-theme-xs flex items-center justify-center gap-2">
+            <button 
+              onClick={() => saveDraft()}
+              className="flex-1 sm:flex-none px-5 py-2.5 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 text-gray-700 dark:text-gray-300 font-semibold rounded-xl hover:bg-gray-50 transition-all shadow-theme-xs flex items-center justify-center gap-2"
+            >
                Save Draft
             </button>
-            <button className="flex-1 sm:flex-none px-6 py-2.5 bg-brand-500 hover:bg-brand-600 text-white font-semibold rounded-xl transition-all shadow-theme-sm border border-brand-600 flex items-center justify-center gap-2">
-               Submit Application
+            <button 
+              onClick={submitApplication}
+              disabled={isSubmitting}
+              className="flex-1 sm:flex-none px-6 py-2.5 bg-brand-500 hover:bg-brand-600 text-white font-semibold rounded-xl transition-all shadow-theme-sm border border-brand-600 flex items-center justify-center gap-2 disabled:opacity-50"
+            >
+               {isSubmitting ? "Submitting..." : "Submit Application"}
             </button>
           </div>
         </div>
@@ -95,7 +171,19 @@ const CreateLeasing: React.FC = () => {
         {/* Stepper Inside Header for better visibility */}
         <div className="mt-6 max-w-[1600px] mx-auto overflow-x-auto no-scrollbar pb-1">
           <div className="flex items-center gap-4 min-w-[1000px]">
-            {STEPS.map((step) => (
+            {STEPS.map((step) => {
+              const status = stepStatuses[step.id] || "";
+              
+              let stepIconBgClass = "bg-gray-100 dark:bg-gray-700 text-gray-500"; // default pristine
+              if (activeStep === step.id) {
+                 stepIconBgClass = "bg-brand-500 text-white shadow-md shadow-brand-500/20";
+              } else if (status === "complete") {
+                 stepIconBgClass = "bg-green-100 text-green-600 dark:bg-green-900/30 dark:text-green-500";
+              } else if (status === "error") {
+                 stepIconBgClass = "bg-orange-100 text-orange-600 dark:bg-orange-900/30 dark:text-orange-500";
+              }
+
+              return (
               <button
                 key={step.id}
                 onClick={() => goToStep(step.id)}
@@ -105,11 +193,7 @@ const CreateLeasing: React.FC = () => {
                   : "opacity-60 hover:opacity-100"
                 }`}
               >
-                <div className={`p-2 rounded-lg ${
-                  activeStep === step.id 
-                  ? "bg-brand-500 text-white shadow-md shadow-brand-500/20" 
-                  : "bg-gray-100 dark:bg-gray-700 text-gray-500"
-                }`}>
+                <div className={`p-2 rounded-lg ${stepIconBgClass}`}>
                   {React.cloneElement(step.icon as React.ReactElement, { className: "w-5 h-5" })}
                 </div>
                 <div className="text-left">
@@ -125,7 +209,7 @@ const CreateLeasing: React.FC = () => {
                   </p>
                 </div>
               </button>
-            ))}
+            )})}
           </div>
         </div>
       </div>

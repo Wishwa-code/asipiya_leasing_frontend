@@ -1,5 +1,6 @@
-import React from "react";
+import React, { useState, useEffect } from "react";
 import { GroupIcon, PlusIcon, TrashBinIcon } from "../../../icons";
+import apiClient from "../../../api/apiClient";
 
 interface StepIntroducerProps {
   formData: any;
@@ -7,8 +8,26 @@ interface StepIntroducerProps {
 }
 
 const StepIntroducer: React.FC<StepIntroducerProps> = ({ formData, updateFormData }) => {
+  const [availableIntroducers, setAvailableIntroducers] = useState<any[]>([]);
+  const [isLoading, setIsLoading] = useState(false);
+
+  useEffect(() => {
+    setIsLoading(true);
+    apiClient.get("/introducers")
+      .then((res) => {
+        setAvailableIntroducers(res.data || []);
+      })
+      .catch((err) => {
+        console.error("Failed to fetch introducers", err);
+      })
+      .finally(() => {
+        setIsLoading(false);
+      });
+  }, []);
+
   const addIntroducer = () => {
     const newIntroducer = {
+      introducer_id: "",
       name: "",
       mobile: "",
       nic: "",
@@ -27,6 +46,27 @@ const StepIntroducer: React.FC<StepIntroducerProps> = ({ formData, updateFormDat
     const newList = [...formData.introducers];
     newList[index] = { ...newList[index], ...fields };
     updateFormData({ introducers: newList });
+  };
+
+  const handleSelectIntroducer = (index: number, introducerId: string) => {
+    const selected = availableIntroducers.find(i => (i.ID || i.id || "").toString() === introducerId);
+    if (selected) {
+      updateIntroducer(index, {
+        introducer_id: introducerId,
+        name: selected.name,
+        mobile: selected.primary_contact,
+        nic: selected.registration_no,
+        address: selected.address,
+      });
+    } else {
+      updateIntroducer(index, {
+        introducer_id: "",
+        name: "",
+        mobile: "",
+        nic: "",
+        address: "",
+      });
+    }
   };
 
   return (
@@ -70,46 +110,50 @@ const StepIntroducer: React.FC<StepIntroducerProps> = ({ formData, updateFormDat
                </div>
                
                <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-                  <div>
-                    <label className="block text-xs font-bold text-gray-500 uppercase mb-1.5 ml-1">Name</label>
-                    <input 
-                      type="text" 
-                      value={intro.name}
-                      onChange={(e) => updateIntroducer(idx, { name: e.target.value })}
-                      placeholder="Full Name"
-                      className="w-full p-2.5 bg-gray-50 dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-xl text-sm focus:border-brand-500 outline-none"
-                    />
-                  </div>
-                  <div>
-                    <label className="block text-xs font-bold text-gray-500 uppercase mb-1.5 ml-1">NIC</label>
-                    <input 
-                      type="text" 
-                      value={intro.nic}
-                      onChange={(e) => updateIntroducer(idx, { nic: e.target.value })}
-                      placeholder="National ID"
-                      className="w-full p-2.5 bg-gray-50 dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-xl text-sm focus:border-brand-500 outline-none"
-                    />
-                  </div>
-                  <div>
-                    <label className="block text-xs font-bold text-gray-500 uppercase mb-1.5 ml-1">Mobile</label>
-                    <input 
-                      type="text" 
-                      value={intro.mobile}
-                      onChange={(e) => updateIntroducer(idx, { mobile: e.target.value })}
-                      placeholder="Contact Number"
-                      className="w-full p-2.5 bg-gray-50 dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-xl text-sm focus:border-brand-500 outline-none"
-                    />
-                  </div>
                   <div className="md:col-span-3">
-                    <label className="block text-xs font-bold text-gray-500 uppercase mb-1.5 ml-1">Address</label>
-                    <input 
-                      type="text" 
-                      value={intro.address}
-                      onChange={(e) => updateIntroducer(idx, { address: e.target.value })}
-                      placeholder="Home Address"
+                    <label className="block text-xs font-bold text-gray-500 uppercase mb-1.5 ml-1">Select Introducer</label>
+                    <select 
+                      value={intro.introducer_id || ""}
+                      onChange={(e) => handleSelectIntroducer(idx, e.target.value)}
                       className="w-full p-2.5 bg-gray-50 dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-xl text-sm focus:border-brand-500 outline-none"
-                    />
+                    >
+                      <option value="" disabled>Select an Introducer</option>
+                      {availableIntroducers.map(opt => (
+                        <option key={opt.ID || opt.id} value={(opt.ID || opt.id).toString()}>
+                          {opt.name} {opt.registration_no ? `- ${opt.registration_no}` : ''}
+                        </option>
+                      ))}
+                    </select>
                   </div>
+
+                  {intro.introducer_id && (
+                    <>
+                      <div>
+                        <label className="block text-xs font-bold text-gray-500 uppercase mb-1.5 ml-1">Name</label>
+                        <div className="w-full p-2.5 bg-gray-100 dark:bg-gray-800/50 border border-gray-200 dark:border-gray-700 rounded-xl text-sm text-gray-700 dark:text-gray-300">
+                          {intro.name || "-"}
+                        </div>
+                      </div>
+                      <div>
+                        <label className="block text-xs font-bold text-gray-500 uppercase mb-1.5 ml-1">NIC</label>
+                        <div className="w-full p-2.5 bg-gray-100 dark:bg-gray-800/50 border border-gray-200 dark:border-gray-700 rounded-xl text-sm text-gray-700 dark:text-gray-300">
+                          {intro.nic || "-"}
+                        </div>
+                      </div>
+                      <div>
+                        <label className="block text-xs font-bold text-gray-500 uppercase mb-1.5 ml-1">Mobile</label>
+                        <div className="w-full p-2.5 bg-gray-100 dark:bg-gray-800/50 border border-gray-200 dark:border-gray-700 rounded-xl text-sm text-gray-700 dark:text-gray-300">
+                          {intro.mobile || "-"}
+                        </div>
+                      </div>
+                      <div className="md:col-span-3">
+                        <label className="block text-xs font-bold text-gray-500 uppercase mb-1.5 ml-1">Address</label>
+                        <div className="w-full p-2.5 bg-gray-100 dark:bg-gray-800/50 border border-gray-200 dark:border-gray-700 rounded-xl text-sm text-gray-700 dark:text-gray-300">
+                          {intro.address || "-"}
+                        </div>
+                      </div>
+                    </>
+                  )}
                </div>
             </div>
           ))

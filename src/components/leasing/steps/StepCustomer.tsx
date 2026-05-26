@@ -1,6 +1,6 @@
-import React, { useState } from "react";
-import InputField from "../../form/input/InputField";
+import React, { useState, useEffect, useRef } from "react";
 import { UserCircleIcon } from "../../../icons";
+import apiClient from "../../../api/apiClient";
 
 interface StepCustomerProps {
   formData: any;
@@ -10,19 +10,88 @@ interface StepCustomerProps {
 const StepCustomer: React.FC<StepCustomerProps> = ({ formData, updateFormData }) => {
   const [searchTerm, setSearchTerm] = useState("");
   const [isSearching, setIsSearching] = useState(false);
+  const [searchResults, setSearchResults] = useState<any[]>([]);
+  const [showDropdown, setShowDropdown] = useState(false);
+  const dropdownRef = useRef<HTMLDivElement>(null);
 
-  const handleSearch = () => {
-    if (!searchTerm) return;
+  // Debounced search on every letter typed
+  useEffect(() => {
+    if (!searchTerm.trim()) {
+      setSearchResults([]);
+      setShowDropdown(false);
+      return;
+    }
+
     setIsSearching(true);
-    // Mocking search logic
-    setTimeout(() => {
-      updateFormData({
-        customer_id: "CUST-001",
-        customer_name: "Jayantha Perera",
-        bank_account_id: "BANK-001"
+    const delayDebounceFn = setTimeout(() => {
+      apiClient.get(`/customers/search?query=${encodeURIComponent(searchTerm)}`)
+        .then((res) => {
+          setSearchResults(res.data.data || []);
+          setShowDropdown(true);
+        })
+        .catch((err) => {
+          console.error("Search failed:", err);
+          setSearchResults([]);
+        })
+        .finally(() => {
+          setIsSearching(false);
+        });
+    }, 400); // 400ms debounce
+
+    return () => clearTimeout(delayDebounceFn);
+  }, [searchTerm]);
+
+  // Handle clicking outside the dropdown to close it
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (dropdownRef.current && !dropdownRef.current.contains(event.target as Node)) {
+        setShowDropdown(false);
+      }
+    };
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => {
+      document.removeEventListener("mousedown", handleClickOutside);
+    };
+  }, []);
+
+  const handleSelectCustomer = (customer: any) => {
+    setShowDropdown(false);
+    setSearchTerm("");
+    
+    // Fetch full customer details including bank accounts
+    const customerId = customer.ID || customer.id;
+    apiClient.get(`/customers/${customerId}`)
+      .then((res) => {
+        const fullCustomer = res.data.data;
+        
+        // Use the first bank account as default if available
+        const defaultBankAccountId = fullCustomer.bank_accounts && fullCustomer.bank_accounts.length > 0 
+          ? fullCustomer.bank_accounts[0].ID || fullCustomer.bank_accounts[0].id 
+          : "";
+
+        updateFormData({
+          customer_db_id: customerId,
+          customer_code: fullCustomer.customer_code || customerId,
+          customer_name: fullCustomer.full_name || fullCustomer.first_name,
+          nic: fullCustomer.new_nic || fullCustomer.old_nic,
+          mobile: fullCustomer.contact_no,
+          address: `${fullCustomer.permanent_address_line1 || fullCustomer.per_address_line_1 || ''}, ${fullCustomer.city || ''}`,
+          bank_account_id: defaultBankAccountId,
+          _fullCustomer: fullCustomer // Store full object just in case we need it
+        });
+      })
+      .catch((err) => {
+        console.error("Failed to fetch customer details:", err);
+        // Fallback to basic details if full fetch fails
+        updateFormData({
+          customer_db_id: customerId,
+          customer_code: customer.customer_code,
+          customer_name: customer.full_name || customer.first_name,
+          nic: customer.new_nic || customer.old_nic,
+          mobile: customer.contact_no,
+          address: customer.city
+        });
       });
-      setIsSearching(false);
-    }, 1000);
   };
 
   return (
@@ -30,25 +99,48 @@ const StepCustomer: React.FC<StepCustomerProps> = ({ formData, updateFormData })
       {/* Search Header */}
       <div className="bg-brand-50/50 dark:bg-brand-500/5 p-6 rounded-2xl border border-brand-100 dark:border-brand-500/10">
         <h3 className="text-sm font-bold text-brand-600 dark:text-brand-400 uppercase tracking-wider mb-4 flex items-center gap-2">
-            SELECT CUSTOMER
+          SELECT CUSTOMER
         </h3>
         <div className="flex flex-col md:flex-row gap-4">
-          <div className="relative flex-1">
-            <input 
+          <div className="relative flex-1" ref={dropdownRef}>
+            <input
               type="text"
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
               placeholder="Search by NIC, Business Reg No or Name..."
               className="w-full pl-4 pr-12 py-3.5 bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-xl text-sm outline-none focus:border-brand-500 focus:ring-4 focus:ring-brand-500/10 transition-all"
             />
-            <button 
-              onClick={handleSearch}
-              className="absolute right-2 top-2 bottom-2 px-4 bg-brand-500 text-white rounded-lg font-semibold text-xs hover:bg-brand-600 transition-colors flex items-center gap-2"
-              >
+            <div className="absolute right-2 top-2 bottom-2 px-4 flex items-center justify-center">
               {isSearching ? (
-                 <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin"></div>
-              ) : "Search"}
-            </button>
+                <div className="w-4 h-4 border-2 border-brand-500/30 border-t-brand-500 rounded-full animate-spin"></div>
+              ) : null}
+            </div>
+
+            {/* Search Results Dropdown */}
+            {showDropdown && searchResults.length > 0 && (
+              <div className="absolute z-10 w-full mt-2 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl shadow-lg max-h-60 overflow-y-auto">
+                {searchResults.map((customer, index) => (
+                  <div
+                    key={index}
+                    onClick={() => handleSelectCustomer(customer)}
+                    className="p-3 hover:bg-brand-50 dark:hover:bg-brand-500/10 cursor-pointer border-b border-gray-100 dark:border-gray-700 last:border-0 transition-colors"
+                  >
+                    <div className="font-bold text-sm">{customer.full_name || customer.first_name}</div>
+                    <div className="text-xs text-gray-500 flex gap-2 mt-1">
+                      <span>{customer.customer_code}</span>
+                      <span>•</span>
+                      <span>NIC: {customer.new_nic || customer.old_nic}</span>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
+            
+            {showDropdown && searchResults.length === 0 && !isSearching && searchTerm.length > 0 && (
+              <div className="absolute z-10 w-full mt-2 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl shadow-lg p-4 text-center text-sm text-gray-500">
+                No customers found matching "{searchTerm}"
+              </div>
+            )}
           </div>
           <button className="px-6 py-3.5 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 text-brand-500 font-bold rounded-xl text-sm hover:bg-gray-50 transition-all flex items-center justify-center gap-2">
             + New Customer
@@ -56,61 +148,68 @@ const StepCustomer: React.FC<StepCustomerProps> = ({ formData, updateFormData })
         </div>
       </div>
 
-      {formData.customer_id && (
+      {formData.customer_db_id && (
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
           {/* Customer Basic Info */}
           <div className="bg-white dark:bg-gray-800 p-6 rounded-2xl border border-gray-200 dark:border-gray-700 shadow-sm">
             <div className="flex items-center gap-4 mb-6">
-                 <div className="w-16 h-16 bg-brand-50 dark:bg-brand-500/10 rounded-full flex items-center justify-center text-brand-500">
-                    <UserCircleIcon className="w-10 h-10" />
-                 </div>
-                 <div>
-                    <h4 className="text-xl font-bold">{formData.customer_name}</h4>
-                    <p className="text-sm text-gray-500 font-medium">{formData.customer_id}</p>
-                 </div>
+              <div className="w-16 h-16 bg-brand-50 dark:bg-brand-500/10 rounded-full flex items-center justify-center text-brand-500">
+                <UserCircleIcon className="w-10 h-10" />
+              </div>
+              <div>
+                <h4 className="text-xl font-bold">{formData.customer_name}</h4>
+                <p className="text-sm text-gray-500 font-medium">{formData.customer_code}</p>
+              </div>
             </div>
 
             <div className="space-y-4">
-                <div className="flex justify-between py-2 border-b border-gray-50 dark:border-gray-700/50">
-                    <span className="text-xs font-bold text-gray-400 uppercase tracking-wider">NIC / REG NO</span>
-                    <span className="text-sm font-semibold">198512345678</span>
-                </div>
-                <div className="flex justify-between py-2 border-b border-gray-50 dark:border-gray-700/50">
-                    <span className="text-xs font-bold text-gray-400 uppercase tracking-wider">MOBILE</span>
-                    <span className="text-sm font-semibold">071 234 5678</span>
-                </div>
-                <div className="flex justify-between py-2 border-b border-gray-50 dark:border-gray-700/50">
-                    <span className="text-xs font-bold text-gray-400 uppercase tracking-wider">ADDRESS</span>
-                    <span className="text-sm font-semibold text-right">No 123, Galle Road, Colombo</span>
-                </div>
+              <div className="flex justify-between py-2 border-b border-gray-50 dark:border-gray-700/50">
+                <span className="text-xs font-bold text-gray-400 uppercase tracking-wider">NIC / REG NO</span>
+                <span className="text-sm font-semibold">{formData.nic || "-"}</span>
+              </div>
+              <div className="flex justify-between py-2 border-b border-gray-50 dark:border-gray-700/50">
+                <span className="text-xs font-bold text-gray-400 uppercase tracking-wider">MOBILE</span>
+                <span className="text-sm font-semibold">{formData.mobile || "-"}</span>
+              </div>
+              <div className="flex justify-between py-2 border-b border-gray-50 dark:border-gray-700/50">
+                <span className="text-xs font-bold text-gray-400 uppercase tracking-wider">ADDRESS</span>
+                <span className="text-sm font-semibold text-right">{formData.address || "-"}</span>
+              </div>
             </div>
           </div>
 
           {/* KYC & Bank Info */}
           <div className="bg-white dark:bg-gray-800 p-6 rounded-2xl border border-gray-200 dark:border-gray-700 shadow-sm flex flex-col justify-between">
             <div>
-                <h4 className="text-sm font-bold text-gray-900 dark:text-white uppercase tracking-wider mb-4">KYC STATUS</h4>
-                <div className="flex items-center gap-3 p-4 bg-success-50 dark:bg-success-500/10 rounded-xl border border-success-100 dark:border-success-500/20 mb-6">
-                    <div className="p-2 bg-success-500 text-white rounded-full">
-                        <UserCircleIcon className="w-4 h-4" />
-                    </div>
-                    <div>
-                        <p className="text-sm font-bold text-success-700">KYC VERIFIED</p>
-                        <p className="text-xs text-success-600 font-medium">Last updated 2 days ago</p>
-                    </div>
+              <h4 className="text-sm font-bold text-gray-900 dark:text-white uppercase tracking-wider mb-4">KYC STATUS</h4>
+              <div className="flex items-center gap-3 p-4 bg-success-50 dark:bg-success-500/10 rounded-xl border border-success-100 dark:border-success-500/20 mb-6">
+                <div className="p-2 bg-success-500 text-white rounded-full">
+                  <UserCircleIcon className="w-4 h-4" />
                 </div>
+                <div>
+                  <p className="text-sm font-bold text-success-700">KYC VERIFIED</p>
+                  <p className="text-xs text-success-600 font-medium">Last updated 2 days ago</p>
+                </div>
+              </div>
             </div>
 
             <div>
-                <label className="block text-xs font-bold text-gray-400 uppercase tracking-wider mb-2">SELECT BANK ACCOUNT</label>
-                <select 
-                   value={formData.bank_account_id}
-                   onChange={(e) => updateFormData({ bank_account_id: e.target.value })}
-                   className="w-full p-3.5 bg-gray-50 dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-xl text-sm font-semibold outline-none focus:border-brand-500"
-                   >
-                    <option value="BANK-001">Sampath Bank - 1009 **** 1234</option>
-                    <option value="BANK-002">Commercial Bank - 8002 **** 5678</option>
-                </select>
+              <label className="block text-xs font-bold text-gray-400 uppercase tracking-wider mb-2">SELECT BANK ACCOUNT</label>
+              <select
+                value={formData.bank_account_id || ""}
+                onChange={(e) => updateFormData({ bank_account_id: e.target.value })}
+                className="w-full p-3.5 bg-gray-50 dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-xl text-sm font-semibold outline-none focus:border-brand-500"
+              >
+                {formData._fullCustomer?.bank_accounts?.length > 0 ? (
+                  formData._fullCustomer.bank_accounts.map((acc: any, i: number) => (
+                    <option key={i} value={acc.ID || acc.id}>
+                      {acc.bank} - {acc.accountNumber || acc.account_number}
+                    </option>
+                  ))
+                ) : (
+                  <option value="" disabled>No bank accounts available</option>
+                )}
+              </select>
             </div>
           </div>
         </div>

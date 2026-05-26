@@ -15,7 +15,7 @@ interface AuthContextType {
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
 // --- DEV MODE CONFIGURATION ---
-const DEV_MODE = true; // Set to true to use hardcoded values
+const DEV_MODE = false; // Set to true to use hardcoded values
 const DEV_USER: User = {
   id: 1,
   full_name: "Admin",

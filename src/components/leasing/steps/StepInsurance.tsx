@@ -1,6 +1,6 @@
-import React from "react";
-import { INSURANCE_COMPANIES } from "../../../constants/leasingConstants";
+import React, { useState, useEffect } from "react";
 import { CheckCircleIcon } from "../../../icons";
+import apiClient from "../../../api/apiClient";
 
 interface StepInsuranceProps {
   formData: any;
@@ -8,6 +8,18 @@ interface StepInsuranceProps {
 }
 
 const StepInsurance: React.FC<StepInsuranceProps> = ({ formData, updateFormData }) => {
+  const [insuranceCompanies, setInsuranceCompanies] = useState<any[]>([]);
+
+  useEffect(() => {
+    apiClient.get("/insuarance-companies")
+      .then((res) => {
+        setInsuranceCompanies(res.data?.data || res.data || []);
+      })
+      .catch((err) => {
+        console.error("Failed to fetch insurance companies", err);
+      });
+  }, []);
+
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
     updateFormData({ [e.target.name]: e.target.value });
   };
@@ -23,7 +35,7 @@ const StepInsurance: React.FC<StepInsuranceProps> = ({ formData, updateFormData 
             <label className="block text-xs font-bold text-gray-500 uppercase mb-1.5 ml-1">Insurance Company</label>
             <select name="insurance_company" value={formData.insurance_company} onChange={handleChange} className="w-full p-2.5 bg-gray-50 dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-xl text-sm focus:border-brand-500 outline-none">
               <option value="">Select Company</option>
-              {INSURANCE_COMPANIES.map(c => <option key={c} value={c}>{c}</option>)}
+              {insuranceCompanies.map(c => <option key={c.ID || c.id} value={c.company_name}>{c.company_name}</option>)}
             </select>
           </div>
           <div>

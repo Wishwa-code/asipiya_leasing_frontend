@@ -1,8 +1,10 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
+import apiClient from "../api/apiClient";
 
 export interface LeaseFormData {
   // Step 1: Customer
-  customer_id: string;
+  customer_db_id: number | null;
+  customer_code: string;
   customer_name: string;
   bank_account_id: string;
   
@@ -69,7 +71,8 @@ export interface LeaseFormData {
 }
 
 const INITIAL_DATA: LeaseFormData = {
-  customer_id: "",
+  customer_db_id: null,
+  customer_code: "",
   customer_name: "",
   bank_account_id: "",
   introducers: [],
@@ -126,32 +129,111 @@ export const useLeaseForm = () => {
   });
 
   const [activeStep, setActiveStep] = useState(1);
+  const [draftId, setDraftId] = useState<number | null>(() => {
+    const savedId = localStorage.getItem("leasing_draft_id");
+    return savedId ? parseInt(savedId) : null;
+  });
+  const [stepStatuses, setStepStatuses] = useState<Record<number, string>>({});
+  
+  // Use a ref to keep track of the latest formData inside debounced functions
+  const formDataRef = useRef(formData);
+  useEffect(() => {
+    formDataRef.current = formData;
+  }, [formData]);
 
   useEffect(() => {
     localStorage.setItem("leasing_draft", JSON.stringify(formData));
+    if (draftId) {
+      localStorage.setItem("leasing_draft_id", draftId.toString());
+    } else {
+      localStorage.removeItem("leasing_draft_id");
+    }
+  }, [formData, draftId]);
+
+  const saveDraft = async (forceData?: LeaseFormData) => {
+    const dataToSave = forceData || formDataRef.current;
+    
+    // Minimal check to avoid creating draft if completely empty on step 1
+    if (!draftId && !dataToSave.customer_db_id) {
+       return;
+    }
+
+    try {
+      if (!draftId) {
+        const payload = {
+          customer_id: dataToSave.customer_db_id || 0,
+          current_progress_data: dataToSave
+        };
+        const res = await apiClient.post("/leasing-applications/draft", payload);
+        if (res.data && res.data.data && res.data.data.ID) {
+          setDraftId(res.data.data.ID);
+        }
+        if (res.data.step_statuses) {
+          setStepStatuses(res.data.step_statuses);
+        }
+      } else {
+        const payload = {
+          current_progress_data: dataToSave
+        };
+        const res = await apiClient.put(`/leasing-applications/${draftId}/draft`, payload);
+        if (res.data.step_statuses) {
+          setStepStatuses(res.data.step_statuses);
+        }
+      }
+    } catch (err) {
+      console.error("Failed to save draft:", err);
+    }
+  };
+
+  // Debounced auto-save effect
+  useEffect(() => {
+    if (!draftId && !formData.customer_db_id) return; // Don't auto-create until we have customer
+    
+    const timeoutId = setTimeout(() => {
+      saveDraft();
+    }, 1500);
+    
+    return () => clearTimeout(timeoutId);
   }, [formData]);
 
   const updateFormData = (fields: Partial<LeaseFormData>) => {
     setFormData(prev => ({ ...prev, ...fields }));
   };
 
-  const nextStep = () => setActiveStep(prev => Math.min(prev + 1, 9));
-  const prevStep = () => setActiveStep(prev => Math.max(prev - 1, 1));
-  const goToStep = (step: number) => setActiveStep(step);
+  const nextStep = () => {
+    saveDraft();
+    setActiveStep(prev => Math.min(prev + 1, 9));
+  };
+  
+  const prevStep = () => {
+    saveDraft();
+    setActiveStep(prev => Math.max(prev - 1, 1));
+  };
+  
+  const goToStep = (step: number) => {
+    saveDraft();
+    setActiveStep(step);
+  };
 
   const resetForm = () => {
     setFormData(INITIAL_DATA);
     localStorage.removeItem("leasing_draft");
+    localStorage.removeItem("leasing_draft_id");
+    setDraftId(null);
+    setStepStatuses({});
     setActiveStep(1);
   };
 
   return {
     formData,
     activeStep,
+    draftId,
+    stepStatuses,
     updateFormData,
     nextStep,
     prevStep,
     goToStep,
-    resetForm
+    resetForm,
+    saveDraft
   };
 };
