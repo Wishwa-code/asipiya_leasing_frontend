@@ -372,8 +372,14 @@ const StepVehicleAsset: React.FC<StepVehicleAssetProps> = ({ formData, updateFor
           </div>
           <div>
             <label className="block text-xs font-bold text-gray-500 uppercase mb-1.5 ml-1">Manu. Year</label>
-            <input type="text" name="manu_year" value={formData.manu_year} onChange={handleChange} className="w-full p-2.5 bg-gray-50 dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-xl text-sm focus:border-brand-500 outline-none" />
+            <select name="manu_year" value={formData.manu_year} onChange={handleChange} className="w-full p-2.5 bg-gray-50 dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-xl text-sm focus:border-brand-500 outline-none">
+              <option value="">Select Year</option>
+              {Array.from({ length: new Date().getFullYear() - 1886 + 1 }, (_, i) => new Date().getFullYear() - i).map(year => (
+                <option key={year} value={String(year)}>{year}</option>
+              ))}
+            </select>
           </div>
+
           <div>
             <label className="block text-xs font-bold text-gray-500 uppercase mb-1.5 ml-1">Usage</label>
             <select name="usage_type" value={formData.usage_type} onChange={handleChange} className="w-full p-2.5 bg-gray-50 dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-xl text-sm focus:border-brand-500 outline-none">

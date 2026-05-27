@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from "react";
 import { CheckCircleIcon } from "../../../icons";
 import apiClient from "../../../api/apiClient";
+import DatePicker from "../../form/date-picker";
 
 interface StepInsuranceProps {
   formData: any;
@@ -48,11 +49,21 @@ const StepInsurance: React.FC<StepInsuranceProps> = ({ formData, updateFormData 
           </div>
           <div>
             <label className="block text-xs font-bold text-gray-500 uppercase mb-1.5 ml-1">Cover Start Date</label>
-            <input type="date" name="insurance_start_date" value={formData.insurance_start_date} onChange={handleChange} className="w-full p-2.5 bg-gray-50 dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-xl text-sm outline-none focus:border-brand-500" />
+            <DatePicker
+              id="insurance_start_date"
+              placeholder="Select start date"
+              defaultDate={formData.insurance_start_date || ""}
+              onChange={(_dates, dateStr) => updateFormData({ insurance_start_date: dateStr })}
+            />
           </div>
           <div>
             <label className="block text-xs font-bold text-gray-500 uppercase mb-1.5 ml-1">Cover Expiry Date</label>
-            <input type="date" name="insurance_expiry_date" value={formData.insurance_expiry_date} onChange={handleChange} className="w-full p-2.5 bg-gray-50 dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-xl text-sm outline-none focus:border-brand-500" />
+            <DatePicker
+              id="insurance_expiry_date"
+              placeholder="Select expiry date"
+              defaultDate={formData.insurance_expiry_date || ""}
+              onChange={(_dates, dateStr) => updateFormData({ insurance_expiry_date: dateStr })}
+            />
           </div>
         </div>
       </div>

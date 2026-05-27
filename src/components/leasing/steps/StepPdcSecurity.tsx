@@ -1,6 +1,7 @@
 import React from "react";
 import { BANKS, PDC_STATUSES } from "../../../constants/leasingConstants";
 import { PlusIcon, TrashBinIcon } from "../../../icons";
+import DatePicker from "../../form/date-picker";
 
 interface StepPdcSecurityProps {
   formData: any;
@@ -55,6 +56,7 @@ const StepPdcSecurity: React.FC<StepPdcSecurityProps> = ({ formData, updateFormD
               <th className="px-6 py-4">Identification</th>
               <th className="px-6 py-4">Status</th>
               <th className="px-6 py-4">Bank</th>
+              <th className="px-6 py-4">Date</th>
               <th className="px-6 py-4">Security No / Ref</th>
               <th className="px-6 py-4">Ownership</th>
               <th className="px-6 py-4 text-right">Delete</th>
@@ -63,7 +65,7 @@ const StepPdcSecurity: React.FC<StepPdcSecurityProps> = ({ formData, updateFormD
           <tbody className="divide-y divide-gray-100 dark:divide-gray-700/50">
             {formData.pdc_securities.length === 0 ? (
               <tr>
-                <td colSpan={6} className="px-6 py-20 text-center text-gray-400 font-bold italic">
+                <td colSpan={7} className="px-6 py-20 text-center text-gray-400 font-bold italic">
                    No security items defined.
                 </td>
               </tr>
@@ -101,6 +103,14 @@ const StepPdcSecurity: React.FC<StepPdcSecurityProps> = ({ formData, updateFormD
                       >
                          {BANKS.map(b => <option key={b} value={b}>{b}</option>)}
                     </select>
+                  </td>
+                  <td className="px-2 py-2 min-w-[170px]">
+                    <DatePicker
+                      id={`pdc_date_${idx}`}
+                      placeholder="Pick date"
+                      defaultDate={sec.date || ""}
+                      onChange={(_dates, dateStr) => updateSecurity(idx, { date: dateStr })}
+                    />
                   </td>
                   <td className="px-4 py-3">
                     <input 

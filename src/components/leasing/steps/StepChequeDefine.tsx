@@ -1,5 +1,6 @@
 import React, { useMemo } from "react";
 import { PlusIcon, TrashBinIcon } from "../../../icons";
+import DatePicker from "../../form/date-picker";
 
 interface StepChequeDefineProps {
   formData: any;
@@ -57,6 +58,7 @@ const StepChequeDefine: React.FC<StepChequeDefineProps> = ({ formData, updateFor
                                 <th className="px-6 py-4">No.</th>
                                 <th className="px-6 py-4">Cheque No</th>
                                 <th className="px-6 py-4">Amount</th>
+                                <th className="px-6 py-4">Date</th>
                                 <th className="px-6 py-4">Status</th>
                                 <th className="px-6 py-4 text-right">Action</th>
                              </tr>
@@ -64,7 +66,7 @@ const StepChequeDefine: React.FC<StepChequeDefineProps> = ({ formData, updateFor
                         <tbody className="divide-y divide-gray-50 dark:divide-gray-700/50">
                             {formData.cheques.length === 0 ? (
                                 <tr>
-                                    <td colSpan={5} className="px-6 py-20 text-center text-gray-400 italic font-bold opacity-60">
+                                    <td colSpan={6} className="px-6 py-20 text-center text-gray-400 italic font-bold opacity-60">
                                        No cheques defined yet.
                                     </td>
                                 </tr>
@@ -91,6 +93,14 @@ const StepChequeDefine: React.FC<StepChequeDefineProps> = ({ formData, updateFor
                                                 value={chq.amount}
                                                 onChange={(e) => updateCheque(idx, { amount: e.target.value })}
                                                 className="bg-transparent border-0 font-bold text-sm text-brand-600 dark:text-brand-400 outline-none"
+                                            />
+                                        </td>
+                                        <td className="px-4 py-2 min-w-[180px]">
+                                            <DatePicker
+                                                id={`cheque_date_${idx}`}
+                                                placeholder="Pick date"
+                                                defaultDate={chq.date || ""}
+                                                onChange={(_dates, dateStr) => updateCheque(idx, { date: dateStr })}
                                             />
                                         </td>
                                         <td className="px-6 py-4">

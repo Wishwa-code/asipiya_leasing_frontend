@@ -417,13 +417,11 @@ const StepLeaseDetails: React.FC<StepLeaseDetailsProps> = ({ formData, updateFor
                   <label className="block text-xs font-bold text-gray-400 uppercase mb-1.5 ml-1">
                     Inspection Date <span className="text-red-500">*</span>
                   </label>
-                  <input
-                    type="date"
-                    name="inspection_date"
-                    value={formData.inspection_date}
-                    onChange={handleChange}
-                    className="w-full p-2.5 bg-gray-50 dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-xl text-sm focus:border-brand-500 outline-none font-semibold"
-                    required
+                  <DatePicker
+                    id="inspection_date"
+                    placeholder="Select date"
+                    defaultDate={formData.inspection_date || ""}
+                    onChange={(_dates, dateStr) => updateFormData({ inspection_date: dateStr })}
                   />
                 </div>
 
