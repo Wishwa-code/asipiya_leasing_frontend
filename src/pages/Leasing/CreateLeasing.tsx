@@ -1,7 +1,6 @@
 import React, { useState } from "react";
 import apiClient from "../../api/apiClient";
 import PageMeta from "../../components/common/PageMeta";
-import PageBreadcrumb from "../../components/common/PageBreadCrumb";
 import "./Leasing.css";
 
 import { useLeaseForm } from "../../hooks/useLeaseForm";
@@ -44,6 +43,34 @@ const CreateLeasing: React.FC = () => {
   const { formData, activeStep, draftId, stepStatuses, nextStep, prevStep, goToStep, updateFormData, saveDraft, resetForm } = useLeaseForm();
   const [isSubmitting, setIsSubmitting] = useState(false);
 
+  const canProceedFromGuarantors = (targetStep: number) => {
+    if (targetStep > 6) {
+      const required = formData.required_guarantor_count || 0;
+      const current = formData.guarantors?.length || 0;
+      if (current < required) {
+        return false;
+      }
+    }
+    return true;
+  };
+
+  const handleGoToStep = (step: number) => {
+    if (step > 6 && !canProceedFromGuarantors(step)) {
+      alert(`Cannot proceed: Selected product requires at least ${formData.required_guarantor_count} guarantor(s). Please add the required number of guarantors in Step 6 first.`);
+      return;
+    }
+    goToStep(step);
+  };
+
+  const handleNextStep = () => {
+    const targetStep = activeStep + 1;
+    if (targetStep > 6 && !canProceedFromGuarantors(targetStep)) {
+      alert(`Cannot proceed: Selected product requires at least ${formData.required_guarantor_count} guarantor(s). Please add the required number of guarantors in Step 6 first.`);
+      return;
+    }
+    nextStep();
+  };
+
   const submitApplication = async () => {
     if (!draftId) {
       alert("No draft found to submit. Please fill the customer details first.");
@@ -74,19 +101,28 @@ const CreateLeasing: React.FC = () => {
           market_value: parseFloat(formData.market_value || "0"),
           forced_sale_value: parseFloat(formData.forced_value || "0"),
           invoice_value: parseFloat(formData.invoice_value || "0"),
-          supplier_name: formData.supplier_name,
-          supplier_address: formData.supplier_address,
-          supplier_mobile: formData.supplier_mobile,
+          supplier_id: formData.supplier_id ? parseInt(formData.supplier_id) : null,
+          supplier_rno: formData.supplier_rno,
         },
         Loan: {
           product_id: parseInt(formData.product_id) || 0,
-          product_item: formData.product_item,
+          product_item_id: formData.product_item_id ? parseInt(formData.product_item_id) : null,
           loan_amount: parseFloat(formData.loan_amount || "0"),
-          period: parseInt(formData.period) || 0,
+          loan_period: parseInt(formData.period) || 0,
           interest_rate: parseFloat(formData.interest_rate || "0"),
-          installments_total: parseFloat(formData.installments_total || "0"),
-          total_interest: parseFloat(formData.total_interest || "0"),
-          total_payable: parseFloat(formData.total_payable || "0"),
+          interest_amount: parseFloat(formData.total_interest || "0"),
+          total_loan_amount: parseFloat(formData.total_payable || "0"),
+          installment_amount: parseFloat(formData.installments_total || "0"),
+          disburse_amount: parseFloat(formData.disburse_amount || "0"),
+          first_collection_date: formData.tcc_collection_date || "",
+          inspection_date: formData.inspection_date || "",
+          lending_officer_id: formData.marketing_executive_id ? parseInt(formData.marketing_executive_id) : null,
+          bank_account_id: formData.bank_account_id ? parseInt(formData.bank_account_id) : null,
+          branch_id: formData.branch_id ? parseInt(formData.branch_id) : 1,
+          other_charges_total: parseFloat(formData.other_charges_total || "0"),
+          other_charges_on_disburse: parseFloat(formData.other_charges_on_disburse || "0"),
+          other_charges_on_first_installment: parseFloat(formData.other_charges_on_first_installment || "0"),
+          other_charges_on_every_installments: parseFloat(formData.other_charges_on_every_installments || "0"),
         },
         Guarantors: formData.guarantors,
         PdcSecurity: {
@@ -113,7 +149,7 @@ const CreateLeasing: React.FC = () => {
     switch (activeStep) {
       case 1: return <StepCustomer formData={formData} updateFormData={updateFormData} />;
       case 2: return <StepIntroducer formData={formData} updateFormData={updateFormData} />;
-      case 3: return <StepVehicleAsset formData={formData} updateFormData={updateFormData} />;
+      case 3: return <StepVehicleAsset formData={formData} updateFormData={updateFormData} draftId={draftId} saveDraft={saveDraft} />;
       case 4: return <StepInsurance formData={formData} updateFormData={updateFormData} />;
       case 5: return <StepLeaseDetails formData={formData} updateFormData={updateFormData} />;
       case 6: return <StepGuarantors formData={formData} updateFormData={updateFormData} />;
@@ -184,7 +220,7 @@ const CreateLeasing: React.FC = () => {
               return (
               <button
                 key={step.id}
-                onClick={() => goToStep(step.id)}
+                onClick={() => handleGoToStep(step.id)}
                 className={`flex items-center gap-3 p-2.5 rounded-xl transition-all grow group ${
                   activeStep === step.id 
                   ? "bg-white dark:bg-gray-800 shadow-theme-sm ring-1 ring-brand-500/10" 
@@ -192,7 +228,7 @@ const CreateLeasing: React.FC = () => {
                 }`}
               >
                 <div className={`p-2 rounded-lg ${stepIconBgClass}`}>
-                  {React.cloneElement(step.icon as React.ReactElement, { className: "w-5 h-5" })}
+                  {React.cloneElement(step.icon as React.ReactElement<any>, { className: "w-5 h-5" })}
                 </div>
                 <div className="text-left">
                   <p className={`text-[10px] font-bold uppercase tracking-wider ${
@@ -236,7 +272,7 @@ const CreateLeasing: React.FC = () => {
               </div>
 
               <button 
-                onClick={nextStep}
+                onClick={handleNextStep}
                 disabled={activeStep === 9}
                 className="flex items-center gap-2 px-6 py-2.5 bg-brand-500 hover:bg-brand-600 text-white font-bold rounded-xl transition-all shadow-theme-sm disabled:opacity-30"
                 >

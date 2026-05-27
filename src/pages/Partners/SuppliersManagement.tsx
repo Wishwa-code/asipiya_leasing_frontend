@@ -1,7 +1,6 @@
 import { useState, useEffect } from "react";
 import PageMeta from "../../components/common/PageMeta";
-import { Link } from "react-router";
-import { PlusIcon, EyeIcon } from "../../icons";
+import { PlusIcon } from "../../icons";
 import apiClient from "../../api/apiClient";
 import { MapContainer, TileLayer, Marker, useMapEvents } from "react-leaflet";
 import "leaflet/dist/leaflet.css";
@@ -503,7 +502,7 @@ export default function SuppliersManagement() {
                     if (navigator.geolocation) {
                       navigator.geolocation.getCurrentPosition(
                         (p) => { setTempLat(p.coords.latitude); setTempLng(p.coords.longitude); },
-                        (e) => alert("Could not fetch location.")
+                        () => alert("Could not fetch location.")
                       );
                     }
                   }}

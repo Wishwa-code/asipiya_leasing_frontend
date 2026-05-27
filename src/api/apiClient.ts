@@ -1,6 +1,5 @@
 import axios from "axios";
 import Cookies from "js-cookie";
-import { handleLogout } from "./services/authService";
 
 const serverURL = import.meta.env.VITE_APP_API_URL || "http://localhost:8084/";
 const baseURL = serverURL.endsWith("/") ? `${serverURL}api/v1/` : `${serverURL}/api/v1/`;

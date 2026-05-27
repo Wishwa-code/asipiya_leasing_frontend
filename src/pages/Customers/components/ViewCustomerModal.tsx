@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { CloseIcon, UserCircleIcon, InfoIcon, CalenderIcon, HorizontaLDots } from "../../../icons";
+import { CloseIcon, UserCircleIcon } from "../../../icons";
 import apiClient from "../../../api/apiClient";
 
 interface ViewCustomerModalProps {

@@ -1,7 +1,7 @@
 import { useState, useEffect } from "react";
 import PageMeta from "../../components/common/PageMeta";
 import { Link, useNavigate } from "react-router";
-import { PlusIcon, EyeIcon, PencilIcon, UserCircleIcon, InfoIcon } from "../../icons";
+import { PlusIcon, PencilIcon, InfoIcon, UserCircleIcon } from "../../icons";
 import apiClient from "../../api/apiClient";
 import { ROUTES } from "../../routes/paths";
 

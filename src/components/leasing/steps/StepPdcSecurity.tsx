@@ -1,6 +1,6 @@
 import React from "react";
 import { BANKS, PDC_STATUSES } from "../../../constants/leasingConstants";
-import { DollarLineIcon, PlusIcon, TrashBinIcon } from "../../../icons";
+import { PlusIcon, TrashBinIcon } from "../../../icons";
 
 interface StepPdcSecurityProps {
   formData: any;

@@ -9,19 +9,14 @@ interface StepIntroducerProps {
 
 const StepIntroducer: React.FC<StepIntroducerProps> = ({ formData, updateFormData }) => {
   const [availableIntroducers, setAvailableIntroducers] = useState<any[]>([]);
-  const [isLoading, setIsLoading] = useState(false);
 
   useEffect(() => {
-    setIsLoading(true);
     apiClient.get("/introducers")
       .then((res) => {
         setAvailableIntroducers(res.data || []);
       })
       .catch((err) => {
         console.error("Failed to fetch introducers", err);
-      })
-      .finally(() => {
-        setIsLoading(false);
       });
   }, []);
 

@@ -46,15 +46,38 @@ const getMakeForModel = (modelName: string): string => {
 interface StepVehicleAssetProps {
   formData: any;
   updateFormData: (fields: any) => void;
+  draftId?: number | null;
+  saveDraft?: () => Promise<void>;
 }
 
-const StepVehicleAsset: React.FC<StepVehicleAssetProps> = ({ formData, updateFormData }) => {
+const VEHICLE_DOCS = [
+  { name: "front_side_photo", label: "Front Side Photo", required: true, accept: "image/*" },
+  { name: "back_side_photo", label: "Back Side Photo", required: true, accept: "image/*" },
+  { name: "left_side_photo", label: "Left Side Photo", required: true, accept: "image/*" },
+  { name: "right_side_photo", label: "Right Side Photo", required: true, accept: "image/*" },
+  { name: "upper_photo", label: "Upper Photo", required: false, accept: "image/*" },
+  { name: "inside_photo", label: "Inside Photo", required: false, accept: "image/*" },
+  { name: "chasis_no_file", label: "Chassis No (File)", required: true, accept: "*/*" },
+  { name: "meter_reading_file", label: "Meter Reading (File)", required: true, accept: "*/*" },
+  { name: "valuation_report", label: "Valuation Report", required: true, accept: ".pdf,image/*" },
+  { name: "cr_copy", label: "CR Copy", required: false, accept: ".pdf,image/*" },
+  { name: "deletion_copy", label: "Deletion Copy", required: false, accept: ".pdf,image/*" },
+  { name: "revenue_license", label: "Revenue License", required: false, accept: ".pdf,image/*" },
+  { name: "supplier_invoice", label: "Supplier Invoice", required: false, accept: ".pdf,image/*" }
+];
+
+import { TrashBinIcon, FileIcon } from "../../../icons";
+
+const StepVehicleAsset: React.FC<StepVehicleAssetProps> = ({ formData, updateFormData, draftId, saveDraft }) => {
   const [vehicleTypes, setVehicleTypes] = useState<any[]>([]);
   const [vehicleMakes, setVehicleMakes] = useState<any[]>([]);
   const [vehicleModels, setVehicleModels] = useState<any[]>([]);
+  const [suppliers, setSuppliers] = useState<any[]>([]);
   const [loadingTypes, setLoadingTypes] = useState(false);
   const [loadingMakes, setLoadingMakes] = useState(false);
   const [loadingModels, setLoadingModels] = useState(false);
+  const [loadingSuppliers, setLoadingSuppliers] = useState(false);
+  const [uploading, setUploading] = useState<Record<string, boolean>>({});
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
     updateFormData({ [e.target.name]: e.target.value });
@@ -73,7 +96,22 @@ const StepVehicleAsset: React.FC<StepVehicleAssetProps> = ({ formData, updateFor
         setLoadingTypes(false);
       }
     };
+    
+    const fetchSuppliers = async () => {
+      setLoadingSuppliers(true);
+      try {
+        const res = await apiClient.get("/suppliers");
+        const data = res.data?.data || res.data || [];
+        setSuppliers(data);
+      } catch (err) {
+        console.error("Failed to fetch suppliers:", err);
+      } finally {
+        setLoadingSuppliers(false);
+      }
+    };
+
     fetchTypes();
+    fetchSuppliers();
   }, []);
 
   // Sync type string to type_id if resuming from a draft with a string type
@@ -154,6 +192,81 @@ const StepVehicleAsset: React.FC<StepVehicleAssetProps> = ({ formData, updateFor
       vehicle_model_id: selectedId,
       vehicle_model: selectedModel ? selectedModel.vehicle_model_name : ""
     });
+  };
+
+  const handleFileUpload = async (name: string, file: File) => {
+    let activeDraftId = draftId;
+    
+    // Auto-save/create draft first if no draft ID is present yet
+    if (!activeDraftId) {
+      if (!formData.customer_db_id) {
+        alert("Please complete Step 1: Customer details first to initialize this lease application draft.");
+        return;
+      }
+      setUploading(prev => ({ ...prev, [name]: true }));
+      try {
+        if (saveDraft) {
+          await saveDraft();
+          const savedId = localStorage.getItem("leasing_draft_id");
+          if (savedId) {
+            activeDraftId = parseInt(savedId);
+          } else {
+            throw new Error("Draft ID was not saved successfully.");
+          }
+        }
+      } catch (err) {
+        console.error("Auto draft initialization failed for upload:", err);
+        alert("Failed to initialize lease application draft. Please check Customer details.");
+        setUploading(prev => ({ ...prev, [name]: false }));
+        return;
+      }
+    }
+
+    setUploading(prev => ({ ...prev, [name]: true }));
+    const uploadData = new FormData();
+    uploadData.append("image_type", name);
+    uploadData.append("file", file);
+
+    try {
+      const res = await apiClient.post(`/leasing-applications/${activeDraftId}/upload-document`, uploadData, {
+        headers: {
+          "Content-Type": "multipart/form-data"
+        }
+      });
+      const uploadedUrl = res.data?.url;
+      if (uploadedUrl) {
+        updateFormData({ [name]: uploadedUrl });
+      }
+    } catch (err: any) {
+      console.error(`Failed to upload ${name}:`, err);
+      alert(`Failed to upload file: ${err.response?.data?.error || err.message}`);
+    } finally {
+      setUploading(prev => ({ ...prev, [name]: false }));
+    }
+  };
+
+  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>, name: string) => {
+    const file = e.target.files?.[0];
+    if (file) {
+      handleFileUpload(name, file);
+    }
+  };
+
+  const handleDeleteFile = (name: string) => {
+    updateFormData({ [name]: "" });
+  };
+
+  const resolveFileUrl = (url: string) => {
+    if (!url) return "";
+    if (url.startsWith("http://") || url.startsWith("https://") || url.startsWith("data:")) {
+      return url;
+    }
+    if (url.startsWith("/storage/")) {
+      const cleanBase = (import.meta.env.VITE_APP_API_URL || "http://localhost:8084").replace(/\/$/, "");
+      return `${cleanBase}${url}`;
+    }
+    const cleanBase = (import.meta.env.VITE_APP_API_URL || "http://localhost:8084").replace(/\/$/, "");
+    return `${cleanBase}/uploads/${url}`;
   };
 
   const filteredModels = vehicleModels.filter(m => {
@@ -288,9 +401,9 @@ const StepVehicleAsset: React.FC<StepVehicleAssetProps> = ({ formData, updateFor
 
       {/* 3. Valuation & Supplier info */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-          <div className="bg-white dark:bg-gray-800 p-6 rounded-2xl border border-gray-200 dark:border-gray-700 shadow-sm">
+          <div className="bg-white dark:bg-gray-800 p-6 rounded-2xl border border-gray-200 dark:border-gray-700 shadow-sm flex flex-col justify-between">
             <h3 className="text-sm font-bold text-gray-400 uppercase tracking-wider mb-6">VALUATION</h3>
-            <div className="space-y-4">
+            <div className="space-y-4 grow flex flex-col justify-center">
                <div className="grid grid-cols-2 gap-4">
                   <div>
                     <label className="block text-xs font-bold text-gray-500 uppercase mb-1.5 ml-1">Market Value</label>
@@ -309,13 +422,153 @@ const StepVehicleAsset: React.FC<StepVehicleAssetProps> = ({ formData, updateFor
           </div>
 
           <div className="bg-white dark:bg-gray-800 p-6 rounded-2xl border border-gray-200 dark:border-gray-700 shadow-sm flex flex-col justify-between">
-            <h3 className="text-sm font-bold text-gray-400 uppercase tracking-wider mb-6">ASSET PHOTOS</h3>
-            <div className="grow flex flex-col items-center justify-center border-2 border-dashed border-gray-200 dark:border-gray-700 rounded-2xl p-8 hover:bg-gray-50 dark:hover:bg-gray-900/50 transition-colors cursor-pointer group">
-               <DownloadIcon className="w-8 h-8 mb-4 text-gray-400 group-hover:text-brand-500 transition-colors" />
-               <p className="font-bold text-sm">Upload or Drag Photos</p>
-               <p className="text-xs text-gray-400 mt-1">Min 4 photos required for valuation</p>
+            <h3 className="text-sm font-bold text-gray-400 uppercase tracking-wider mb-6">SUPPLIER DETAILS</h3>
+            <div className="space-y-4 grow flex flex-col justify-center">
+              <div>
+                <label className="block text-xs font-bold text-gray-500 uppercase mb-1.5 ml-1">Supplier <span className="text-red-500">*</span></label>
+                <select 
+                  name="supplier_id" 
+                  value={formData.supplier_id || ""} 
+                  onChange={handleChange} 
+                  className="w-full p-2.5 bg-gray-50 dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-xl text-sm focus:border-brand-500 outline-none font-bold"
+                  disabled={loadingSuppliers}
+                >
+                  <option value="">Select Supplier</option>
+                  {suppliers.map(s => (
+                    <option key={s.id || s.ID} value={String(s.id || s.ID)}>
+                      {s.name} {s.contact_no ? `(${s.contact_no})` : ''}
+                    </option>
+                  ))}
+                </select>
+              </div>
+              <div>
+                <label className="block text-xs font-bold text-gray-500 uppercase mb-1.5 ml-1">Supplier RNO <span className="text-red-500">*</span></label>
+                <input 
+                  type="text" 
+                  name="supplier_rno" 
+                  value={formData.supplier_rno || ""} 
+                  onChange={handleChange} 
+                  placeholder="Supplier Registration/Reference No" 
+                  className="w-full p-2.5 bg-gray-50 dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-xl text-sm font-bold outline-none focus:border-brand-500" 
+                />
+              </div>
             </div>
           </div>
+      </div>
+
+      {/* 4. Vehicle Documents Upload Grid */}
+      <div className="bg-white dark:bg-gray-800 p-6 rounded-2xl border border-gray-200 dark:border-gray-700 shadow-sm">
+        <h3 className="text-sm font-bold text-gray-400 uppercase tracking-wider mb-6 flex items-center gap-2">
+            <div className="p-2 bg-gray-100 dark:bg-gray-700 rounded-lg"><DownloadIcon className="w-4 h-4" /></div> VEHICLE ATTACHMENTS
+        </h3>
+        
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+          {VEHICLE_DOCS.map(doc => {
+            const value = formData[doc.name] || "";
+            const isUploaded = !!value;
+            const isImage = doc.accept === "image/*" || (typeof value === "string" && (
+              value.toLowerCase().endsWith(".png") || 
+              value.toLowerCase().endsWith(".jpg") || 
+              value.toLowerCase().endsWith(".jpeg") || 
+              value.toLowerCase().endsWith(".webp") ||
+              value.includes("image")
+            ));
+
+            const resolvedUrl = resolveFileUrl(value);
+
+            return (
+              <div 
+                key={doc.name} 
+                className="bg-gray-50 dark:bg-gray-900/50 p-5 rounded-2xl border border-gray-250 dark:border-gray-800 shadow-sm flex flex-col justify-between h-72 relative hover:border-brand-500/30 transition-all duration-300"
+              >
+                <div className="flex justify-between items-start mb-3">
+                  <label className="block text-xs font-bold text-gray-500 dark:text-gray-400 uppercase tracking-wide">
+                    {doc.label} {doc.required && <span className="text-red-500 ml-0.5">*</span>}
+                  </label>
+                </div>
+
+                <div className="grow flex flex-col items-center justify-center border border-dashed border-gray-200 dark:border-gray-700 rounded-xl bg-white dark:bg-gray-900 p-4 relative overflow-hidden h-44">
+                  {uploading[doc.name] ? (
+                    <div className="flex flex-col items-center justify-center gap-2">
+                      <span className="w-8 h-8 border-3 border-brand-500/35 border-t-brand-500 rounded-full animate-spin"></span>
+                      <span className="text-xs font-bold text-brand-500 uppercase tracking-widest animate-pulse">Uploading...</span>
+                    </div>
+                  ) : isUploaded ? (
+                    isImage ? (
+                      <div className="relative w-full h-full group/preview">
+                        <img 
+                          src={resolvedUrl} 
+                          alt={doc.label} 
+                          className="w-full h-full object-cover rounded-lg"
+                        />
+                        <div className="absolute inset-0 bg-black/60 opacity-0 hover:opacity-100 group-hover/preview:opacity-100 transition-opacity flex items-center justify-center gap-3 rounded-lg">
+                          <a 
+                            href={resolvedUrl} 
+                            target="_blank" 
+                            rel="noreferrer"
+                            className="p-2 bg-white/10 hover:bg-white/20 text-white rounded-lg transition-colors"
+                            title="View Original"
+                          >
+                            <DownloadIcon className="w-5 h-5" />
+                          </a>
+                          <button 
+                            type="button"
+                            onClick={() => handleDeleteFile(doc.name)}
+                            className="p-2 bg-red-500/20 hover:bg-red-500/40 text-red-400 hover:text-white rounded-lg transition-colors"
+                            title="Delete file"
+                          >
+                            <TrashBinIcon className="w-5 h-5" />
+                          </button>
+                        </div>
+                      </div>
+                    ) : (
+                      <div className="flex flex-col items-center justify-center p-2 text-center w-full">
+                        <div className="p-3 bg-brand-50 dark:bg-brand-500/10 rounded-full text-brand-500 mb-2">
+                          <FileIcon className="w-8 h-8" />
+                        </div>
+                        <p className="text-xs font-bold text-gray-700 dark:text-gray-300 truncate max-w-[200px] mb-2 px-2">
+                          {value.split('/').pop()}
+                        </p>
+                        <div className="flex gap-2">
+                          <a 
+                            href={resolvedUrl} 
+                            target="_blank" 
+                            rel="noreferrer"
+                            className="text-[10px] font-bold uppercase tracking-wider text-brand-500 hover:underline"
+                          >
+                            Open
+                          </a>
+                          <span className="text-gray-300 dark:text-gray-700">|</span>
+                          <button 
+                            type="button"
+                            onClick={() => handleDeleteFile(doc.name)}
+                            className="text-[10px] font-bold uppercase tracking-wider text-red-500 hover:underline"
+                          >
+                            Delete
+                          </button>
+                        </div>
+                      </div>
+                    )
+                  ) : (
+                    <label className="flex flex-col items-center justify-center w-full h-full cursor-pointer hover:bg-gray-50/50 dark:hover:bg-gray-800/10 rounded-xl transition-colors">
+                      <input 
+                        type="file" 
+                        className="hidden" 
+                        accept={doc.accept} 
+                        onChange={(e) => handleFileChange(e, doc.name)}
+                      />
+                      <div className="p-3 bg-gray-100 dark:bg-gray-800 rounded-full text-gray-400 mb-2">
+                        <DownloadIcon className="w-6 h-6 rotate-180" />
+                      </div>
+                      <span className="text-xs font-bold text-gray-600 dark:text-gray-400">Choose File</span>
+                      <span className="text-[10px] text-gray-400 mt-1">Upload File or Image</span>
+                    </label>
+                  )}
+                </div>
+              </div>
+            );
+          })}
+        </div>
       </div>
     </div>
   );

@@ -36,7 +36,22 @@ export interface LeaseFormData {
   supplier_name: string;
   supplier_address: string;
   supplier_mobile: string;
+  supplier_id: string;
+  supplier_rno: string;
   vehicle_photos: string[];
+  front_side_photo: string;
+  back_side_photo: string;
+  left_side_photo: string;
+  right_side_photo: string;
+  upper_photo: string;
+  inside_photo: string;
+  chasis_no_file: string;
+  meter_reading_file: string;
+  valuation_report: string;
+  cr_copy: string;
+  deletion_copy: string;
+  revenue_license: string;
+  supplier_invoice: string;
 
   // Step 4: Insurance
   insurance_company: string;
@@ -50,6 +65,7 @@ export interface LeaseFormData {
   inspection_date: string;
   product_id: string;
   product_item: string;
+  product_item_id: string;
   loan_amount: string;
   period: string;
   interest_rate: string;
@@ -57,9 +73,20 @@ export interface LeaseFormData {
   total_interest: string;
   total_payable: string;
   tcc_collection_date: string;
+  bank_id: string;
+  branch_id: string;
+  account_number: string;
+  ltv: string;
+  disburse_amount: string;
+  installment_amount: string;
+  other_charges_total: string;
+  other_charges_on_disburse: string;
+  other_charges_on_first_installment: string;
+  other_charges_on_every_installments: string;
   
   // Step 6: Guarantors
   guarantors: any[];
+  required_guarantor_count: number;
 
   // Step 7: PDC Security
   pdc_securities: any[];
@@ -103,7 +130,22 @@ const INITIAL_DATA: LeaseFormData = {
   supplier_name: "",
   supplier_address: "",
   supplier_mobile: "",
+  supplier_id: "",
+  supplier_rno: "",
   vehicle_photos: [],
+  front_side_photo: "",
+  back_side_photo: "",
+  left_side_photo: "",
+  right_side_photo: "",
+  upper_photo: "",
+  inside_photo: "",
+  chasis_no_file: "",
+  meter_reading_file: "",
+  valuation_report: "",
+  cr_copy: "",
+  deletion_copy: "",
+  revenue_license: "",
+  supplier_invoice: "",
   insurance_company: "",
   insurance_amount: "0.00",
   insurance_premium: "0.00",
@@ -113,6 +155,7 @@ const INITIAL_DATA: LeaseFormData = {
   inspection_date: new Date().toISOString().split('T')[0],
   product_id: "",
   product_item: "",
+  product_item_id: "",
   loan_amount: "0.00",
   period: "12",
   interest_rate: "0.00",
@@ -120,7 +163,18 @@ const INITIAL_DATA: LeaseFormData = {
   total_interest: "0.00",
   total_payable: "0.00",
   tcc_collection_date: "",
+  bank_id: "",
+  branch_id: "",
+  account_number: "",
+  ltv: "0.00",
+  disburse_amount: "0.00",
+  installment_amount: "0.00",
+  other_charges_total: "0.00",
+  other_charges_on_disburse: "0.00",
+  other_charges_on_first_installment: "0.00",
+  other_charges_on_every_installments: "0.00",
   guarantors: [],
+  required_guarantor_count: 0,
   pdc_securities: [],
   cheques: [],
   original_cr_no: "",
@@ -136,6 +190,13 @@ export const useLeaseForm = () => {
 
   const [activeStep, setActiveStep] = useState(1);
   const [draftId, setDraftId] = useState<number | null>(() => {
+    // Check search params first
+    const params = new URLSearchParams(window.location.search);
+    const paramId = params.get("draftId");
+    if (paramId) {
+      const parsed = parseInt(paramId);
+      if (!isNaN(parsed)) return parsed;
+    }
     const savedId = localStorage.getItem("leasing_draft_id");
     return savedId ? parseInt(savedId) : null;
   });
@@ -146,6 +207,57 @@ export const useLeaseForm = () => {
   useEffect(() => {
     formDataRef.current = formData;
   }, [formData]);
+
+  // Load draftId from query params if changed in URL
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search);
+    const paramId = params.get("draftId");
+    if (paramId) {
+      const parsedId = parseInt(paramId);
+      if (!isNaN(parsedId) && parsedId !== draftId) {
+        setDraftId(parsedId);
+      }
+    }
+  }, [draftId]);
+
+  // Fetch draft from backend when draftId is set
+  useEffect(() => {
+    if (!draftId) return;
+
+    const fetchDraftData = async () => {
+      try {
+        const res = await apiClient.get(`/leasing-applications/${draftId}`);
+        const app = res.data?.data;
+        if (app) {
+          let parsed: Partial<LeaseFormData> = {};
+          if (app.current_progress_data) {
+            parsed = typeof app.current_progress_data === "string"
+              ? JSON.parse(app.current_progress_data)
+              : app.current_progress_data;
+          }
+
+          // Map associated document images
+          const docImages = app.document_images || [];
+          const mappedDocs: Record<string, string> = {};
+          docImages.forEach((img: any) => {
+            if (img.image_type && img.image_url) {
+              mappedDocs[img.image_type] = img.image_url;
+            }
+          });
+
+          setFormData(prev => ({
+            ...prev,
+            ...parsed,
+            ...mappedDocs
+          }));
+        }
+      } catch (err) {
+        console.error("Failed to load draft from server:", err);
+      }
+    };
+
+    fetchDraftData();
+  }, [draftId]);
 
   useEffect(() => {
     localStorage.setItem("leasing_draft", JSON.stringify(formData));

@@ -1,5 +1,5 @@
 import React, { useMemo } from "react";
-import { ListIcon, PlusIcon, TrashBinIcon, DollarLineIcon } from "../../../icons";
+import { PlusIcon, TrashBinIcon } from "../../../icons";
 
 interface StepChequeDefineProps {
   formData: any;

@@ -49,7 +49,7 @@ export default function CreateCustomer() {
   const [submitSuccess, setSubmitSuccess] = useState<string | null>(null);
   const [generatedId] = useState(`CUS-${Date.now().toString().slice(-6)}`);
 
-  const formRef = useRef<HTMLDivElement>(null);
+  const formRef = useRef<HTMLFormElement>(null);
 
   useEffect(() => {
     const handleScroll = () => setIsScrolled(window.scrollY > 60);

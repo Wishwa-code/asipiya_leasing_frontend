@@ -47,7 +47,7 @@ const AppSidebar: React.FC = () => {
     [location.pathname]
   );
 
-  const hasPrivilege = useCallback((priv?: string) => {
+  const hasPrivilege = useCallback((_priv?: string) => {
     // Temporarily disabled privilege checks
     // if (!priv) return true;
     // return user?.privileges.includes(priv);
