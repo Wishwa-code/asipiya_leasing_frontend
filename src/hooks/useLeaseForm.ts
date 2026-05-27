@@ -13,8 +13,11 @@ export interface LeaseFormData {
 
   // Step 3: Vehicle Asset
   vehicle_type: string;
+  vehicle_type_id: string;
   vehicle_make: string;
+  vehicle_make_id: string;
   vehicle_model: string;
+  vehicle_model_id: string;
   vehicle_status: string;
   engine_cc: string;
   chassis_no: string;
@@ -76,9 +79,12 @@ const INITIAL_DATA: LeaseFormData = {
   customer_name: "",
   bank_account_id: "",
   introducers: [],
-  vehicle_type: "Cars",
+  vehicle_type: "",
+  vehicle_type_id: "",
   vehicle_make: "",
+  vehicle_make_id: "",
   vehicle_model: "",
+  vehicle_model_id: "",
   vehicle_status: "REGISTERED",
   engine_cc: "",
   chassis_no: "",
