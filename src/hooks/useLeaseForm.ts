@@ -182,6 +182,134 @@ const INITIAL_DATA: LeaseFormData = {
   documents: []
 };
 
+/** Maps wizard step number to the backend step_name path param */
+export const STEP_NAMES: Record<number, string> = {
+  1: "customer",
+  2: "introducers",
+  3: "vehicle",
+  4: "insurance",
+  5: "lease-details",
+  6: "guarantors",
+  7: "pdc-security",
+  8: "cheque-define",
+  9: "documents",
+};
+
+/** Extracts only the fields relevant to each step for partial-payload autosave */
+export function getStepFields(step: number, data: LeaseFormData): Record<string, any> {
+  switch (step) {
+    case 1:
+      return {
+        customer_id: data.customer_db_id,
+        customer_code: data.customer_code,
+        customer_name: data.customer_name,
+        bank_account_id: data.bank_account_id,
+      };
+    case 2:
+      return {
+        introducers: data.introducers,
+      };
+    case 3:
+      return {
+        vehicle_type: data.vehicle_type,
+        vehicle_type_id: data.vehicle_type_id,
+        vehicle_make: data.vehicle_make,
+        vehicle_make_id: data.vehicle_make_id,
+        vehicle_model: data.vehicle_model,
+        vehicle_model_id: data.vehicle_model_id,
+        vehicle_status: data.vehicle_status,
+        engine_cc: data.engine_cc,
+        chassis_no: data.chassis_no,
+        manu_year: data.manu_year,
+        color: data.color,
+        usage_type: data.usage_type,
+        manu_country: data.manu_country,
+        body_type: data.body_type,
+        equipment: data.equipment,
+        reg_year: data.reg_year,
+        reg_no: data.reg_no,
+        valuation_no: data.valuation_no,
+        market_value: data.market_value,
+        forced_value: data.forced_value,
+        invoice_value: data.invoice_value,
+        supplier_name: data.supplier_name,
+        supplier_address: data.supplier_address,
+        supplier_mobile: data.supplier_mobile,
+        supplier_id: data.supplier_id,
+        supplier_rno: data.supplier_rno,
+        front_side_photo: data.front_side_photo,
+        back_side_photo: data.back_side_photo,
+        left_side_photo: data.left_side_photo,
+        right_side_photo: data.right_side_photo,
+        upper_photo: data.upper_photo,
+        inside_photo: data.inside_photo,
+        chasis_no_file: data.chasis_no_file,
+        meter_reading_file: data.meter_reading_file,
+        valuation_report: data.valuation_report,
+        cr_copy: data.cr_copy,
+        deletion_copy: data.deletion_copy,
+        revenue_license: data.revenue_license,
+        supplier_invoice: data.supplier_invoice,
+      };
+    case 4:
+      return {
+        insurance_company: data.insurance_company,
+        insurance_amount: data.insurance_amount,
+        insurance_premium: data.insurance_premium,
+        insurance_start_date: data.insurance_start_date,
+        insurance_expiry_date: data.insurance_expiry_date,
+      };
+    case 5:
+      return {
+        product_id: data.product_id,
+        product_item: data.product_item,
+        product_item_id: data.product_item_id,
+        marketing_executive_id: data.marketing_executive_id,
+        inspection_date: data.inspection_date,
+        loan_amount: data.loan_amount,
+        period: data.period,
+        interest_rate: data.interest_rate,
+        installments_total: data.installments_total,
+        total_interest: data.total_interest,
+        total_payable: data.total_payable,
+        tcc_collection_date: data.tcc_collection_date,
+        bank_id: data.bank_id,
+        branch_id: data.branch_id,
+        account_number: data.account_number,
+        bank_account_id: data.bank_account_id,
+        ltv: data.ltv,
+        disburse_amount: data.disburse_amount,
+        installment_amount: data.installment_amount,
+        other_charges_total: data.other_charges_total,
+        other_charges_on_disburse: data.other_charges_on_disburse,
+        other_charges_on_first_installment: data.other_charges_on_first_installment,
+        other_charges_on_every_installments: data.other_charges_on_every_installments,
+        required_guarantor_count: data.required_guarantor_count,
+      };
+    case 6:
+      return {
+        guarantors: data.guarantors,
+        required_guarantor_count: data.required_guarantor_count,
+      };
+    case 7:
+      return {
+        pdc_securities: data.pdc_securities,
+      };
+    case 8:
+      return {
+        cheques: data.cheques,
+      };
+    case 9:
+      return {
+        original_cr_no: data.original_cr_no,
+        duplicate_key: data.duplicate_key,
+        documents: data.documents,
+      };
+    default:
+      return {};
+  }
+}
+
 export const useLeaseForm = () => {
   const [formData, setFormData] = useState<LeaseFormData>(() => {
     const saved = localStorage.getItem("leasing_draft");
@@ -207,6 +335,24 @@ export const useLeaseForm = () => {
   useEffect(() => {
     formDataRef.current = formData;
   }, [formData]);
+
+  // Ref to always have the current activeStep value inside async/debounced closures
+  const activeStepRef = useRef(activeStep);
+  useEffect(() => {
+    activeStepRef.current = activeStep;
+  }, [activeStep]);
+
+  // Track last-saved fields per step to skip redundant network calls
+  const lastSavedFieldsRef = useRef<Record<number, any>>({});
+  useEffect(() => {
+    // Initialize per-step snapshot from the initial formData on first render
+    if (Object.keys(lastSavedFieldsRef.current).length === 0) {
+      for (let i = 1; i <= 9; i++) {
+        lastSavedFieldsRef.current[i] = getStepFields(i, formDataRef.current);
+      }
+    }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   // Load draftId from query params if changed in URL
   useEffect(() => {
@@ -245,11 +391,18 @@ export const useLeaseForm = () => {
             }
           });
 
-          setFormData(prev => ({
-            ...prev,
+          const mergedData = {
+            ...formDataRef.current,
             ...parsed,
             ...mappedDocs
-          }));
+          };
+
+          setFormData(mergedData);
+
+          // Update last saved fields with the fetched data
+          for (let i = 1; i <= 9; i++) {
+            lastSavedFieldsRef.current[i] = getStepFields(i, mergedData);
+          }
         }
       } catch (err) {
         console.error("Failed to load draft from server:", err);
@@ -284,19 +437,35 @@ export const useLeaseForm = () => {
         };
         const res = await apiClient.post("/leasing-applications/draft", payload);
         if (res.data && res.data.data && res.data.data.ID) {
-          setDraftId(res.data.data.ID);
+          const newId = res.data.data.ID;
+          setDraftId(newId);
+          localStorage.setItem("leasing_draft_id", newId.toString());
         }
         if (res.data.step_statuses) {
           setStepStatuses(res.data.step_statuses);
+        }
+        // Initialize all step refs upon initial creation
+        for (let i = 1; i <= 9; i++) {
+          lastSavedFieldsRef.current[i] = getStepFields(i, dataToSave);
         }
       } else {
-        const payload = {
-          current_progress_data: dataToSave
-        };
-        const res = await apiClient.put(`/leasing-applications/${draftId}/draft`, payload);
+        const currentStep = activeStepRef.current;
+        const stepName = STEP_NAMES[currentStep];
+        const stepPayload = getStepFields(currentStep, dataToSave);
+        
+        // Skip if no changes to active step
+        const lastSavedFields = lastSavedFieldsRef.current[currentStep];
+        if (JSON.stringify(stepPayload) === JSON.stringify(lastSavedFields)) {
+          return;
+        }
+
+        const res = await apiClient.put(`/leasing-applications/${draftId}/draft/step/${stepName}`, stepPayload);
         if (res.data.step_statuses) {
           setStepStatuses(res.data.step_statuses);
         }
+        
+        // Update the ref to the newly saved fields
+        lastSavedFieldsRef.current[currentStep] = stepPayload;
       }
     } catch (err) {
       console.error("Failed to save draft:", err);
@@ -307,12 +476,21 @@ export const useLeaseForm = () => {
   useEffect(() => {
     if (!draftId && !formData.customer_db_id) return; // Don't auto-create until we have customer
     
+    // Track changes to the specific step fields
+    const currentFields = getStepFields(activeStep, formData);
+    const lastSavedFields = lastSavedFieldsRef.current[activeStep];
+    
+    // Only trigger autosave if fields in active step actually changed
+    if (JSON.stringify(currentFields) === JSON.stringify(lastSavedFields)) {
+      return;
+    }
+    
     const timeoutId = setTimeout(() => {
       saveDraft();
     }, 1500);
     
     return () => clearTimeout(timeoutId);
-  }, [formData]);
+  }, [formData, activeStep, draftId]);
 
   const updateFormData = (fields: Partial<LeaseFormData>) => {
     setFormData(prev => ({ ...prev, ...fields }));
@@ -340,6 +518,12 @@ export const useLeaseForm = () => {
     setDraftId(null);
     setStepStatuses({});
     setActiveStep(1);
+    
+    // Clear/reinitialize ref
+    lastSavedFieldsRef.current = {};
+    for (let i = 1; i <= 9; i++) {
+      lastSavedFieldsRef.current[i] = getStepFields(i, INITIAL_DATA);
+    }
   };
 
   return {
@@ -355,3 +539,4 @@ export const useLeaseForm = () => {
     saveDraft
   };
 };
+

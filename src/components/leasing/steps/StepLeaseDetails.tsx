@@ -2,6 +2,7 @@ import React, { useEffect, useState } from "react";
 import { PlugInIcon, DollarLineIcon } from "../../../icons";
 import { generateRepaymentSchedule } from "../../../utils/leasingUtils";
 import apiClient from "../../../api/apiClient";
+import DatePicker from "../../form/date-picker";
 
 interface StepLeaseDetailsProps {
   formData: any;
@@ -23,13 +24,22 @@ const StepLeaseDetails: React.FC<StepLeaseDetailsProps> = ({ formData, updateFor
   const [pageSize, setPageSize] = useState(25);
   const [currentPage, setCurrentPage] = useState(1);
 
+  const getTomorrowDateString = () => {
+    const tomorrow = new Date();
+    tomorrow.setDate(tomorrow.getDate() + 1);
+    const yyyy = tomorrow.getFullYear();
+    const mm = String(tomorrow.getMonth() + 1).padStart(2, "0");
+    const dd = String(tomorrow.getDate()).padStart(2, "0");
+    return `${yyyy}-${mm}-${dd}`;
+  };
+
   // Fetch product, marketing executive, and bank lists on mount
   useEffect(() => {
     const fetchLookups = async () => {
       setLoading(true);
       try {
         const [productsRes, executivesRes, banksRes] = await Promise.all([
-          apiClient.get("/leasing/products"),
+          apiClient.get("/leasing/products?full=true"),
           apiClient.get("/lookup/marketing-executives"),
           apiClient.get("/lookup/banks")
         ]);
@@ -787,15 +797,15 @@ const StepLeaseDetails: React.FC<StepLeaseDetailsProps> = ({ formData, updateFor
 
             <div className="flex flex-col md:flex-row gap-4 items-end max-w-xl">
               <div className="flex-1 w-full">
-                <label className="block text-xs font-bold text-gray-400 uppercase mb-1.5 ml-1">
-                  First Collection Date
-                </label>
-                <input
-                  type="date"
-                  name="tcc_collection_date"
-                  value={formData.tcc_collection_date}
-                  onChange={handleChange}
-                  className="w-full p-2.5 bg-gray-50 dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-xl text-sm focus:border-brand-500 outline-none font-semibold"
+                <DatePicker
+                  id="tcc_collection_date"
+                  label="First Collection Date"
+                  placeholder="Select Date"
+                  defaultDate={formData.tcc_collection_date || ""}
+                  minDate={getTomorrowDateString()}
+                  onChange={(selectedDates, dateStr) => {
+                    updateFormData({ tcc_collection_date: dateStr });
+                  }}
                 />
               </div>
               <button
