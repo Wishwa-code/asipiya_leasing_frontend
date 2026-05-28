@@ -106,8 +106,28 @@ const CreateLeasing: React.FC = () => {
         },
         Guarantors: formData.guarantors,
         PdcSecurity: {
-           // Mapping array to parent struct if needed, keeping simple for now
-           items: formData.pdc_securities
+          pdc_security_type: formData.pdc_security_type,
+          cheque_details: formData.pdc_security_type === "Cheque" ? [
+            {
+              cheque_status: formData.pdc_cheque_status,
+              bank_id: formData.pdc_bank_id ? parseInt(formData.pdc_bank_id) : null,
+              cheque_date: formData.pdc_cheque_date,
+              cheque_no: formData.pdc_cheque_no,
+              ownership: formData.pdc_ownership,
+              reference_details: formData.pdc_reference_details,
+            }
+          ] : [],
+          cr_book_details: (formData.pdc_security_type === "CR Book" || formData.pdc_security_type === "CR Book (Certificate of Registration)") ? [
+            {
+              book_date: formData.pdc_book_date,
+              reference_details: formData.pdc_reference_details,
+            }
+          ] : [],
+          deed_details: (formData.pdc_security_type === "Deed" || formData.pdc_security_type === "Deed (Signed Contract)") ? [
+            {
+              reference_details: formData.pdc_reference_details,
+            }
+          ] : [],
         },
         ChequeDefine: {
            items: formData.cheques
@@ -133,7 +153,7 @@ const CreateLeasing: React.FC = () => {
       case 4: return <StepInsurance formData={formData} updateFormData={updateFormData} />;
       case 5: return <StepLeaseDetails formData={formData} updateFormData={updateFormData} />;
       case 6: return <StepGuarantors formData={formData} updateFormData={updateFormData} />;
-      case 7: return <StepPdcSecurity formData={formData} updateFormData={updateFormData} />;
+      case 7: return <StepPdcSecurity formData={formData} updateFormData={updateFormData} draftId={draftId} />;
       case 8: return <StepChequeDefine formData={formData} updateFormData={updateFormData} />;
       case 9: return <StepCrDocs formData={formData} updateFormData={updateFormData} />;
       default: return <StepCustomer formData={formData} updateFormData={updateFormData} />;

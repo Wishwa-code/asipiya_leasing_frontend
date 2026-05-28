@@ -89,7 +89,14 @@ export interface LeaseFormData {
   required_guarantor_count: number;
 
   // Step 7: PDC Security
-  pdc_securities: any[];
+  pdc_security_type: string;
+  pdc_cheque_status: "Blank" | "Dated";
+  pdc_bank_id: string;
+  pdc_cheque_date: string;
+  pdc_cheque_no: string;
+  pdc_ownership: string;
+  pdc_book_date: string;
+  pdc_reference_details: string;
 
   // Step 8: Cheque Define
   cheques: any[];
@@ -175,7 +182,14 @@ const INITIAL_DATA: LeaseFormData = {
   other_charges_on_every_installments: "0.00",
   guarantors: [],
   required_guarantor_count: 0,
-  pdc_securities: [],
+  pdc_security_type: "Deed",
+  pdc_cheque_status: "Blank",
+  pdc_bank_id: "",
+  pdc_cheque_date: "",
+  pdc_cheque_no: "",
+  pdc_ownership: "Primary",
+  pdc_book_date: "",
+  pdc_reference_details: "",
   cheques: [],
   original_cr_no: "",
   duplicate_key: false,
@@ -293,7 +307,14 @@ export function getStepFields(step: number, data: LeaseFormData): Record<string,
       };
     case 7:
       return {
-        pdc_securities: data.pdc_securities,
+        pdc_security_type: data.pdc_security_type,
+        pdc_cheque_status: data.pdc_cheque_status,
+        pdc_bank_id: data.pdc_bank_id,
+        pdc_cheque_date: data.pdc_cheque_date,
+        pdc_cheque_no: data.pdc_cheque_no,
+        pdc_ownership: data.pdc_ownership,
+        pdc_book_date: data.pdc_book_date,
+        pdc_reference_details: data.pdc_reference_details,
       };
     case 8:
       return {
