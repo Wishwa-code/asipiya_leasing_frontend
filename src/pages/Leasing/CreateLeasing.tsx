@@ -131,6 +131,8 @@ const CreateLeasing: React.FC = () => {
         },
         ChequeDefine: {
           items: (formData.cheques || []).map((chq: any) => ({
+            cheque_no: chq.cheque_no || "",
+            cheque_date: chq.cheque_date || "",
             payee_name: chq.payee_name,
             nic_br_no: chq.nic_br_no,
             instructions: chq.instructions,

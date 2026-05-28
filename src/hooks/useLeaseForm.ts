@@ -477,6 +477,8 @@ export const useLeaseForm = () => {
     return savedId ? parseInt(savedId) : null;
   });
   const [stepStatuses, setStepStatuses] = useState<Record<number, string>>({});
+  const [errors, setErrors] = useState<Record<string, string>>({});
+  const [stepErrors, setStepErrors] = useState<Record<string, Record<string, string>>>({});
   
   // Use a ref to keep track of the latest formData inside debounced functions
   const formDataRef = useRef(formData);
@@ -489,6 +491,12 @@ export const useLeaseForm = () => {
   useEffect(() => {
     activeStepRef.current = activeStep;
   }, [activeStep]);
+
+  // Update local active-step errors when changing steps
+  useEffect(() => {
+    const activeStepName = STEP_NAMES[activeStep];
+    setErrors(stepErrors[activeStepName] || {});
+  }, [activeStep, stepErrors]);
 
   // Track last-saved fields per step to skip redundant network calls
   const lastSavedFieldsRef = useRef<Record<number, any>>({});
@@ -549,6 +557,12 @@ export const useLeaseForm = () => {
 
           if (res.data.step_statuses) {
             setStepStatuses(res.data.step_statuses);
+          }
+
+          if (res.data.step_errors) {
+            setStepErrors(res.data.step_errors);
+            const activeStepName = STEP_NAMES[activeStepRef.current];
+            setErrors(res.data.step_errors[activeStepName] || {});
           }
 
           // Update last saved fields with the fetched data
@@ -615,6 +629,10 @@ export const useLeaseForm = () => {
         if (res.data.step_statuses) {
           setStepStatuses(res.data.step_statuses);
         }
+        const activeStepName = STEP_NAMES[currentStep];
+        const stepErrs = res.data.errors || {};
+        setErrors(stepErrs);
+        setStepErrors(prev => ({ ...prev, [activeStepName]: stepErrs }));
         
         // Update the ref to the newly saved fields
         lastSavedFieldsRef.current[currentStep] = stepPayload;
@@ -669,6 +687,8 @@ export const useLeaseForm = () => {
     localStorage.removeItem("leasing_draft_id");
     setDraftId(null);
     setStepStatuses({});
+    setErrors({});
+    setStepErrors({});
     setActiveStep(1);
     
     // Clear/reinitialize ref
@@ -683,6 +703,8 @@ export const useLeaseForm = () => {
     activeStep,
     draftId,
     stepStatuses,
+    errors,
+    stepErrors,
     updateFormData,
     nextStep,
     prevStep,
