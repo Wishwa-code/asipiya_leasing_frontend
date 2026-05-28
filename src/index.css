@@ -790,3 +790,7 @@ span.flatpickr-weekday,
 .simplebar-scrollbar.simplebar-visible:before {
   @apply opacity-100;
 }
+
+.flatpickr-calendar {
+  z-index: 999999 !important;
+}

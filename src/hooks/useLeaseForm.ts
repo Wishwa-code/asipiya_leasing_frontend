@@ -184,15 +184,15 @@ const INITIAL_DATA: LeaseFormData = {
 
 /** Maps wizard step number to the backend step_name path param */
 export const STEP_NAMES: Record<number, string> = {
-  1: "customer",
-  2: "introducers",
-  3: "vehicle",
-  4: "insurance",
-  5: "lease-details",
-  6: "guarantors",
-  7: "pdc-security",
-  8: "cheque-define",
-  9: "documents",
+  1: "step-customer",
+  2: "step-introducers",
+  3: "step-vehicle",
+  4: "step-insurance",
+  5: "step-lease-details",
+  6: "step-guarantors",
+  7: "step-pdc-security",
+  8: "step-cheque-define",
+  9: "step-documents",
 };
 
 /** Extracts only the fields relevant to each step for partial-payload autosave */

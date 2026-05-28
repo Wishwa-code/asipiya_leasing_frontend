@@ -43,31 +43,11 @@ const CreateLeasing: React.FC = () => {
   const { formData, activeStep, draftId, stepStatuses, nextStep, prevStep, goToStep, updateFormData, saveDraft, resetForm } = useLeaseForm();
   const [isSubmitting, setIsSubmitting] = useState(false);
 
-  const canProceedFromGuarantors = (targetStep: number) => {
-    if (targetStep > 6) {
-      const required = formData.required_guarantor_count || 0;
-      const current = formData.guarantors?.length || 0;
-      if (current < required) {
-        return false;
-      }
-    }
-    return true;
-  };
-
   const handleGoToStep = (step: number) => {
-    if (step > 6 && !canProceedFromGuarantors(step)) {
-      alert(`Cannot proceed: Selected product requires at least ${formData.required_guarantor_count} guarantor(s). Please add the required number of guarantors in Step 6 first.`);
-      return;
-    }
     goToStep(step);
   };
 
   const handleNextStep = () => {
-    const targetStep = activeStep + 1;
-    if (targetStep > 6 && !canProceedFromGuarantors(targetStep)) {
-      alert(`Cannot proceed: Selected product requires at least ${formData.required_guarantor_count} guarantor(s). Please add the required number of guarantors in Step 6 first.`);
-      return;
-    }
     nextStep();
   };
 
@@ -186,6 +166,16 @@ const CreateLeasing: React.FC = () => {
           </div>
 
           <div className="flex items-center gap-3 w-full xl:w-auto">
+            <button
+              onClick={() => {
+                if (window.confirm("Are you sure you want to reset this draft? All entered data and local storage will be permanently cleared.")) {
+                  resetForm();
+                }
+              }}
+              className="flex-1 sm:flex-none px-5 py-2.5 bg-white dark:bg-gray-800 border border-red-200 dark:border-red-800/50 text-red-600 dark:text-red-400 font-semibold rounded-xl hover:bg-red-50 dark:hover:bg-red-900/20 transition-all shadow-theme-xs flex items-center justify-center gap-2"
+            >
+              Reset Draft
+            </button>
             <button 
               onClick={() => saveDraft()}
               className="flex-1 sm:flex-none px-5 py-2.5 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 text-gray-700 dark:text-gray-300 font-semibold rounded-xl hover:bg-gray-50 transition-all shadow-theme-xs flex items-center justify-center gap-2"

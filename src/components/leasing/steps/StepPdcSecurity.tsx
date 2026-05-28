@@ -109,6 +109,7 @@ const StepPdcSecurity: React.FC<StepPdcSecurityProps> = ({ formData, updateFormD
                       id={`pdc_date_${idx}`}
                       placeholder="Pick date"
                       defaultDate={sec.date || ""}
+                      static={false}
                       onChange={(_dates, dateStr) => updateSecurity(idx, { date: dateStr })}
                     />
                   </td>

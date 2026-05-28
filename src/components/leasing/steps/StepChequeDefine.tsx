@@ -100,6 +100,7 @@ const StepChequeDefine: React.FC<StepChequeDefineProps> = ({ formData, updateFor
                                                 id={`cheque_date_${idx}`}
                                                 placeholder="Pick date"
                                                 defaultDate={chq.date || ""}
+                                                static={false}
                                                 onChange={(_dates, dateStr) => updateCheque(idx, { date: dateStr })}
                                             />
                                         </td>
