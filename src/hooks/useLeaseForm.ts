@@ -547,6 +547,10 @@ export const useLeaseForm = () => {
 
           setFormData(mergedData);
 
+          if (res.data.step_statuses) {
+            setStepStatuses(res.data.step_statuses);
+          }
+
           // Update last saved fields with the fetched data
           for (let i = 1; i <= 9; i++) {
             lastSavedFieldsRef.current[i] = getStepFields(i, mergedData);

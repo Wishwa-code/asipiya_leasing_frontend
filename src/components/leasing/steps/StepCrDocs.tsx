@@ -27,6 +27,24 @@ const StepCrDocs: React.FC<StepCrDocsProps> = ({ formData, updateFormData, draft
   const [checkingRmv, setCheckingRmv] = useState(false);
   const [uploading, setUploading] = useState<Record<string, boolean>>({});
 
+  useEffect(() => {
+    const bridgeData: Partial<any> = {};
+
+    if (!formData.cr_reg_no && formData.reg_no) bridgeData.cr_reg_no = formData.reg_no;
+    if (!formData.cr_chassis_no && formData.chassis_no) bridgeData.cr_chassis_no = formData.chassis_no;
+    if (!formData.cr_make && formData.vehicle_make) bridgeData.cr_make = formData.vehicle_make;
+    if (!formData.cr_model && formData.vehicle_model) bridgeData.cr_model = formData.vehicle_model;
+    if (!formData.cr_yom && formData.manu_year) bridgeData.cr_yom = formData.manu_year;
+    if (!formData.cr_engine_capacity && formData.engine_cc) bridgeData.cr_engine_capacity = formData.engine_cc;
+    if (!formData.cr_body_type && formData.body_type) bridgeData.cr_body_type = formData.body_type;
+    if (!formData.cr_country_of_origin && formData.manu_country) bridgeData.cr_country_of_origin = formData.manu_country;
+    if (!formData.cr_registered_owner && formData.customer_name) bridgeData.cr_registered_owner = formData.customer_name;
+
+    if (Object.keys(bridgeData).length > 0) {
+      updateFormData(bridgeData);
+    }
+  }, []);
+
   const handleInputChange = (
     e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>
   ) => {
