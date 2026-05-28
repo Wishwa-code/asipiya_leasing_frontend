@@ -130,7 +130,15 @@ const CreateLeasing: React.FC = () => {
           ] : [],
         },
         ChequeDefine: {
-           items: formData.cheques
+          items: (formData.cheques || []).map((chq: any) => ({
+            payee_name: chq.payee_name,
+            nic_br_no: chq.nic_br_no,
+            instructions: chq.instructions,
+            payment_amount: parseFloat(chq.payment_amount || "0"),
+            bank_name: chq.bank_name,
+            branch_name: chq.branch_name,
+            account_number: chq.account_number,
+          }))
         }
       };
 
@@ -155,7 +163,7 @@ const CreateLeasing: React.FC = () => {
       case 6: return <StepGuarantors formData={formData} updateFormData={updateFormData} />;
       case 7: return <StepPdcSecurity formData={formData} updateFormData={updateFormData} draftId={draftId} />;
       case 8: return <StepChequeDefine formData={formData} updateFormData={updateFormData} />;
-      case 9: return <StepCrDocs formData={formData} updateFormData={updateFormData} />;
+      case 9: return <StepCrDocs formData={formData} updateFormData={updateFormData} draftId={draftId} saveDraft={saveDraft} />;
       default: return <StepCustomer formData={formData} updateFormData={updateFormData} />;
     }
   };

@@ -105,6 +105,51 @@ export interface LeaseFormData {
   original_cr_no: string;
   duplicate_key: boolean;
   documents: any[];
+
+  cr_reg_no: string;
+  cr_first_reg_date: string;
+  cr_absolute_owner: string;
+  cr_registered_owner: string;
+  cr_previous_owners_count: string;
+  cr_make: string;
+  cr_model: string;
+  cr_variant: string;
+  cr_yom: string;
+  cr_year_of_reg: string;
+  cr_chassis_no: string;
+  cr_engine_no: string;
+  cr_engine_capacity: string;
+  cr_fuel_type: string;
+  cr_transmission: string;
+  cr_body_type: string;
+  cr_color: string;
+  cr_seating_capacity: string;
+  cr_gross_weight: string;
+  cr_unladen_weight: string;
+  cr_country_of_origin: string;
+  cr_mileage: string;
+
+  cr_serial_no: string;
+  cr_issue_date: string;
+  cr_issue_office: string;
+  cr_type: string;
+  cr_keys_received: string;
+
+  url_cr_front: string;
+  url_cr_back: string;
+  url_invoice: string;
+  url_valuation: string;
+  url_cusdec: string;
+  url_revenue_license: string;
+  url_emission_cert: string;
+  url_insurance_note: string;
+  url_chassis_punch: string;
+  url_engine_punch: string;
+
+  rmv_verified: boolean;
+  rmv_verified_at: string;
+  data_matched: boolean;
+  discrepancy_reason: string;
 }
 
 const INITIAL_DATA: LeaseFormData = {
@@ -193,7 +238,48 @@ const INITIAL_DATA: LeaseFormData = {
   cheques: [],
   original_cr_no: "",
   duplicate_key: false,
-  documents: []
+  documents: [],
+  cr_reg_no: "",
+  cr_first_reg_date: "",
+  cr_absolute_owner: "Asipiya Leasing Center",
+  cr_registered_owner: "",
+  cr_previous_owners_count: "0",
+  cr_make: "",
+  cr_model: "",
+  cr_variant: "",
+  cr_yom: "",
+  cr_year_of_reg: "",
+  cr_chassis_no: "",
+  cr_engine_no: "",
+  cr_engine_capacity: "",
+  cr_fuel_type: "Petrol",
+  cr_transmission: "Automatic",
+  cr_body_type: "Motor Car",
+  cr_color: "",
+  cr_seating_capacity: "",
+  cr_gross_weight: "",
+  cr_unladen_weight: "",
+  cr_country_of_origin: "",
+  cr_mileage: "",
+  cr_serial_no: "",
+  cr_issue_date: "",
+  cr_issue_office: "Narahenpita",
+  cr_type: "Original",
+  cr_keys_received: "2",
+  url_cr_front: "",
+  url_cr_back: "",
+  url_invoice: "",
+  url_valuation: "",
+  url_cusdec: "",
+  url_revenue_license: "",
+  url_emission_cert: "",
+  url_insurance_note: "",
+  url_chassis_punch: "",
+  url_engine_punch: "",
+  rmv_verified: false,
+  rmv_verified_at: "",
+  data_matched: true,
+  discrepancy_reason: ""
 };
 
 /** Maps wizard step number to the backend step_name path param */
@@ -325,6 +411,47 @@ export function getStepFields(step: number, data: LeaseFormData): Record<string,
         original_cr_no: data.original_cr_no,
         duplicate_key: data.duplicate_key,
         documents: data.documents,
+        cr_reg_no: data.cr_reg_no,
+        cr_first_reg_date: data.cr_first_reg_date,
+        cr_absolute_owner: data.cr_absolute_owner,
+        cr_registered_owner: data.cr_registered_owner,
+        cr_previous_owners_count: data.cr_previous_owners_count,
+        cr_make: data.cr_make,
+        cr_model: data.cr_model,
+        cr_variant: data.cr_variant,
+        cr_yom: data.cr_yom,
+        cr_year_of_reg: data.cr_year_of_reg,
+        cr_chassis_no: data.cr_chassis_no,
+        cr_engine_no: data.cr_engine_no,
+        cr_engine_capacity: data.cr_engine_capacity,
+        cr_fuel_type: data.cr_fuel_type,
+        cr_transmission: data.cr_transmission,
+        cr_body_type: data.cr_body_type,
+        cr_color: data.cr_color,
+        cr_seating_capacity: data.cr_seating_capacity,
+        cr_gross_weight: data.cr_gross_weight,
+        cr_unladen_weight: data.cr_unladen_weight,
+        cr_country_of_origin: data.cr_country_of_origin,
+        cr_mileage: data.cr_mileage,
+        cr_serial_no: data.cr_serial_no,
+        cr_issue_date: data.cr_issue_date,
+        cr_issue_office: data.cr_issue_office,
+        cr_type: data.cr_type,
+        cr_keys_received: data.cr_keys_received,
+        url_cr_front: data.url_cr_front,
+        url_cr_back: data.url_cr_back,
+        url_invoice: data.url_invoice,
+        url_valuation: data.url_valuation,
+        url_cusdec: data.url_cusdec,
+        url_revenue_license: data.url_revenue_license,
+        url_emission_cert: data.url_emission_cert,
+        url_insurance_note: data.url_insurance_note,
+        url_chassis_punch: data.url_chassis_punch,
+        url_engine_punch: data.url_engine_punch,
+        rmv_verified: data.rmv_verified,
+        rmv_verified_at: data.rmv_verified_at,
+        data_matched: data.data_matched,
+        discrepancy_reason: data.discrepancy_reason,
       };
     default:
       return {};
