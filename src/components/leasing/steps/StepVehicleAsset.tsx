@@ -74,10 +74,12 @@ const StepVehicleAsset: React.FC<StepVehicleAssetProps> = ({ formData, updateFor
   const [vehicleMakes, setVehicleMakes] = useState<any[]>([]);
   const [vehicleModels, setVehicleModels] = useState<any[]>([]);
   const [suppliers, setSuppliers] = useState<any[]>([]);
+  const [colors, setColors] = useState<any[]>([]);
   const [loadingTypes, setLoadingTypes] = useState(false);
   const [loadingMakes, setLoadingMakes] = useState(false);
   const [loadingModels, setLoadingModels] = useState(false);
   const [loadingSuppliers, setLoadingSuppliers] = useState(false);
+  const [loadingColors, setLoadingColors] = useState(false);
   const [uploading, setUploading] = useState<Record<string, boolean>>({});
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
@@ -111,8 +113,22 @@ const StepVehicleAsset: React.FC<StepVehicleAssetProps> = ({ formData, updateFor
       }
     };
 
+    const fetchColors = async () => {
+      setLoadingColors(true);
+      try {
+        const res = await apiClient.get("/lookup/colors");
+        const data = res.data?.data || res.data || [];
+        setColors(data);
+      } catch (err) {
+        console.error("Failed to fetch colors:", err);
+      } finally {
+        setLoadingColors(false);
+      }
+    };
+
     fetchTypes();
     fetchSuppliers();
+    fetchColors();
   }, []);
 
   // Sync type string to type_id if resuming from a draft with a string type
@@ -290,7 +306,11 @@ const StepVehicleAsset: React.FC<StepVehicleAssetProps> = ({ formData, updateFor
               name="vehicle_type_id" 
               value={formData.vehicle_type_id || ""} 
               onChange={handleTypeChange} 
-              className="w-full p-2.5 bg-gray-50 dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-xl text-sm focus:border-brand-500 outline-none"
+              className={`w-full p-2.5 bg-gray-50 dark:bg-gray-900 border rounded-xl text-sm outline-none transition-all ${
+                errors?.vehicle_type_id
+                  ? "border-red-500 focus:border-red-500"
+                  : "border-gray-200 dark:border-gray-700 focus:border-brand-500"
+              }`}
               disabled={loadingTypes}
             >
               <option value="">Select Asset Type</option>
@@ -300,6 +320,9 @@ const StepVehicleAsset: React.FC<StepVehicleAssetProps> = ({ formData, updateFor
                 </option>
               ))}
             </select>
+            {errors?.vehicle_type_id && (
+              <p className="text-xs text-red-500 font-bold mt-2 ml-1">{errors.vehicle_type_id}</p>
+            )}
           </div>
           <div>
             <label className="block text-xs font-bold text-gray-500 uppercase mb-1.5 ml-1">Make</label>
@@ -363,10 +386,22 @@ const StepVehicleAsset: React.FC<StepVehicleAssetProps> = ({ formData, updateFor
           </div>
           <div>
             <label className="block text-xs font-bold text-gray-500 uppercase mb-1.5 ml-1">Asset Status</label>
-            <select name="vehicle_status" value={formData.vehicle_status} onChange={handleChange} className="w-full p-2.5 bg-gray-50 dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-xl text-sm focus:border-brand-500 outline-none font-bold text-brand-500">
+            <select 
+              name="vehicle_status" 
+              value={formData.vehicle_status} 
+              onChange={handleChange} 
+              className={`w-full p-2.5 bg-gray-50 dark:bg-gray-900 border rounded-xl text-sm outline-none font-bold text-brand-500 transition-all ${
+                errors?.vehicle_status
+                  ? "border-red-500 focus:border-red-500"
+                  : "border-gray-200 dark:border-gray-700 focus:border-brand-500"
+              }`}
+            >
               <option value="REGISTERED">REGISTERED</option>
               <option value="UNREGISTERED">UNREGISTERED</option>
             </select>
+            {errors?.vehicle_status && (
+              <p className="text-xs text-red-500 font-bold mt-2 ml-1">{errors.vehicle_status}</p>
+            )}
           </div>
         </div>
       </div>
@@ -379,33 +414,95 @@ const StepVehicleAsset: React.FC<StepVehicleAssetProps> = ({ formData, updateFor
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
           <div>
             <label className="block text-xs font-bold text-gray-500 uppercase mb-1.5 ml-1">Engine CC</label>
-            <input type="text" name="engine_cc" value={formData.engine_cc} onChange={handleChange} className="w-full p-2.5 bg-gray-50 dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-xl text-sm focus:border-brand-500 outline-none" />
+            <input 
+              type="text" 
+              name="engine_cc" 
+              value={formData.engine_cc} 
+              onChange={handleChange} 
+              className={`w-full p-2.5 bg-gray-50 dark:bg-gray-900 border rounded-xl text-sm outline-none transition-all ${
+                errors?.engine_cc
+                  ? "border-red-500 focus:border-red-500"
+                  : "border-gray-200 dark:border-gray-700 focus:border-brand-500"
+              }`} 
+            />
+            {errors?.engine_cc && (
+              <p className="text-xs text-red-500 font-bold mt-2 ml-1">{errors.engine_cc}</p>
+            )}
           </div>
           <div className="lg:col-span-2">
             <label className="block text-xs font-bold text-gray-500 uppercase mb-1.5 ml-1">Chassis No</label>
-            <input type="text" name="chassis_no" value={formData.chassis_no} onChange={handleChange} className="w-full p-2.5 bg-gray-50 dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-xl text-sm focus:border-brand-500 outline-none" />
+            <input 
+              type="text" 
+              name="chassis_no" 
+              value={formData.chassis_no} 
+              onChange={handleChange} 
+              className={`w-full p-2.5 bg-gray-50 dark:bg-gray-900 border rounded-xl text-sm outline-none transition-all ${
+                errors?.chassis_no
+                  ? "border-red-500 focus:border-red-500"
+                  : "border-gray-200 dark:border-gray-700 focus:border-brand-500"
+              }`} 
+            />
+            {errors?.chassis_no && (
+              <p className="text-xs text-red-500 font-bold mt-2 ml-1">{errors.chassis_no}</p>
+            )}
           </div>
           <div>
             <label className="block text-xs font-bold text-gray-500 uppercase mb-1.5 ml-1">Manu. Year</label>
-            <select name="manu_year" value={formData.manu_year} onChange={handleChange} className="w-full p-2.5 bg-gray-50 dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-xl text-sm focus:border-brand-500 outline-none">
+            <select 
+              name="manu_year" 
+              value={formData.manu_year} 
+              onChange={handleChange} 
+              className={`w-full p-2.5 bg-gray-50 dark:bg-gray-900 border rounded-xl text-sm outline-none transition-all ${
+                errors?.manu_year
+                  ? "border-red-500 focus:border-red-500"
+                  : "border-gray-200 dark:border-gray-700 focus:border-brand-500"
+              }`}
+            >
               <option value="">Select Year</option>
               {Array.from({ length: new Date().getFullYear() - 1886 + 1 }, (_, i) => new Date().getFullYear() - i).map(year => (
                 <option key={year} value={String(year)}>{year}</option>
               ))}
             </select>
+            {errors?.manu_year && (
+              <p className="text-xs text-red-500 font-bold mt-2 ml-1">{errors.manu_year}</p>
+            )}
           </div>
 
           <div>
             <label className="block text-xs font-bold text-gray-500 uppercase mb-1.5 ml-1">Usage</label>
-            <select name="usage_type" value={formData.usage_type} onChange={handleChange} className="w-full p-2.5 bg-gray-50 dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-xl text-sm focus:border-brand-500 outline-none">
+            <select 
+              name="usage_type" 
+              value={formData.usage_type} 
+              onChange={handleChange} 
+              className={`w-full p-2.5 bg-gray-50 dark:bg-gray-900 border rounded-xl text-sm outline-none transition-all ${
+                errors?.usage_type
+                  ? "border-red-500 focus:border-red-500"
+                  : "border-gray-200 dark:border-gray-700 focus:border-brand-500"
+              }`}
+            >
               {USAGE_TYPES.map(t => <option key={t} value={t}>{t}</option>)}
             </select>
+            {errors?.usage_type && (
+              <p className="text-xs text-red-500 font-bold mt-2 ml-1">{errors.usage_type}</p>
+            )}
           </div>
           <div>
             <label className="block text-xs font-bold text-gray-500 uppercase mb-1.5 ml-1">Manu. Country</label>
-            <select name="manu_country" value={formData.manu_country} onChange={handleChange} className="w-full p-2.5 bg-gray-50 dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-xl text-sm focus:border-brand-500 outline-none">
+            <select 
+              name="manu_country" 
+              value={formData.manu_country} 
+              onChange={handleChange} 
+              className={`w-full p-2.5 bg-gray-50 dark:bg-gray-900 border rounded-xl text-sm outline-none transition-all ${
+                errors?.manu_country
+                  ? "border-red-500 focus:border-red-500"
+                  : "border-gray-200 dark:border-gray-700 focus:border-brand-500"
+              }`}
+            >
               {MANU_COUNTRIES.map(t => <option key={t} value={t}>{t}</option>)}
             </select>
+            {errors?.manu_country && (
+              <p className="text-xs text-red-500 font-bold mt-2 ml-1">{errors.manu_country}</p>
+            )}
           </div>
           <div>
             <label className="block text-xs font-bold text-gray-500 uppercase mb-1.5 ml-1">Body Type</label>
@@ -414,8 +511,68 @@ const StepVehicleAsset: React.FC<StepVehicleAssetProps> = ({ formData, updateFor
             </select>
           </div>
           <div>
-              <label className="block text-xs font-bold text-gray-500 uppercase mb-1.5 ml-1">Reg. No</label>
-              <input type="text" name="reg_no" value={formData.reg_no} onChange={handleChange} placeholder="e.g. WP CAA-1234" className="w-full p-2.5 bg-brand-50/50 dark:bg-brand-500/5 border border-brand-200 dark:border-brand-500/20 rounded-xl text-sm font-bold text-brand-600 dark:text-brand-400 focus:border-brand-500 outline-none" />
+            <label className="block text-xs font-bold text-gray-500 uppercase mb-1.5 ml-1">Color</label>
+            <select 
+              name="color_id" 
+              value={formData.color_id || ""} 
+              onChange={handleChange} 
+              className={`w-full p-2.5 bg-gray-50 dark:bg-gray-900 border rounded-xl text-sm outline-none transition-all ${
+                errors?.color_id
+                  ? "border-red-500 focus:border-red-500"
+                  : "border-gray-200 dark:border-gray-700 focus:border-brand-500"
+              }`}
+              disabled={loadingColors}
+            >
+              <option value="">Select Color</option>
+              {colors.map(c => (
+                <option key={c.id || c.ID} value={String(c.id || c.ID)}>
+                  {c.color_name}
+                </option>
+              ))}
+            </select>
+            {errors?.color_id && (
+              <p className="text-xs text-red-500 font-bold mt-2 ml-1">{errors.color_id}</p>
+            )}
+          </div>
+
+          <div>
+            <label className="block text-xs font-bold text-gray-500 uppercase mb-1.5 ml-1">Reg. Year</label>
+            <select 
+              name="reg_year" 
+              value={formData.reg_year} 
+              onChange={handleChange} 
+              className={`w-full p-2.5 bg-gray-50 dark:bg-gray-900 border rounded-xl text-sm outline-none transition-all ${
+                errors?.reg_year
+                  ? "border-red-500 focus:border-red-500"
+                  : "border-gray-200 dark:border-gray-700 focus:border-brand-500"
+              }`}
+            >
+              <option value="">Select Year</option>
+              {Array.from({ length: new Date().getFullYear() - 1886 + 1 }, (_, i) => new Date().getFullYear() - i).map(year => (
+                <option key={year} value={String(year)}>{year}</option>
+              ))}
+            </select>
+            {errors?.reg_year && (
+              <p className="text-xs text-red-500 font-bold mt-2 ml-1">{errors.reg_year}</p>
+            )}
+          </div>
+          <div>
+            <label className="block text-xs font-bold text-gray-500 uppercase mb-1.5 ml-1">Reg. No</label>
+            <input 
+              type="text" 
+              name="reg_no" 
+              value={formData.reg_no} 
+              onChange={handleChange} 
+              placeholder="e.g. WP CAA-1234" 
+              className={`w-full p-2.5 bg-brand-50/50 dark:bg-brand-500/5 border rounded-xl text-sm font-bold text-brand-600 dark:text-brand-400 outline-none transition-all ${
+                errors?.reg_no
+                  ? "border-red-500 focus:border-red-500"
+                  : "border-brand-200 dark:border-brand-500/20 focus:border-brand-500"
+              }`} 
+            />
+            {errors?.reg_no && (
+              <p className="text-xs text-red-500 font-bold mt-2 ml-1">{errors.reg_no}</p>
+            )}
           </div>
         </div>
       </div>
@@ -490,7 +647,11 @@ const StepVehicleAsset: React.FC<StepVehicleAssetProps> = ({ formData, updateFor
                   name="supplier_id" 
                   value={formData.supplier_id || ""} 
                   onChange={handleChange} 
-                  className="w-full p-2.5 bg-gray-50 dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-xl text-sm focus:border-brand-500 outline-none font-bold"
+                  className={`w-full p-2.5 bg-gray-50 dark:bg-gray-900 border rounded-xl text-sm outline-none font-bold transition-all ${
+                    errors?.supplier_id
+                      ? "border-red-500 focus:border-red-500"
+                      : "border-gray-200 dark:border-gray-700 focus:border-brand-500"
+                  }`}
                   disabled={loadingSuppliers}
                 >
                   <option value="">Select Supplier</option>
@@ -500,6 +661,9 @@ const StepVehicleAsset: React.FC<StepVehicleAssetProps> = ({ formData, updateFor
                     </option>
                   ))}
                 </select>
+                {errors?.supplier_id && (
+                  <p className="text-xs text-red-500 font-bold mt-2 ml-1">{errors.supplier_id}</p>
+                )}
               </div>
               <div>
                 <label className="block text-xs font-bold text-gray-500 uppercase mb-1.5 ml-1">Supplier RNO <span className="text-red-500">*</span></label>

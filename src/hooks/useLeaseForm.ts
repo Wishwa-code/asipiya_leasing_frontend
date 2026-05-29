@@ -23,6 +23,7 @@ export interface LeaseFormData {
   chassis_no: string;
   manu_year: string;
   color: string;
+  color_id: string;
   usage_type: string;
   manu_country: string;
   body_type: string;
@@ -169,6 +170,7 @@ const INITIAL_DATA: LeaseFormData = {
   chassis_no: "",
   manu_year: "",
   color: "",
+  color_id: "",
   usage_type: "PRIVATE",
   manu_country: "JAPAN",
   body_type: "SEDAN",
@@ -322,6 +324,7 @@ export function getStepFields(step: number, data: LeaseFormData): Record<string,
         chassis_no: data.chassis_no,
         manu_year: data.manu_year,
         color: data.color,
+        color_id: data.color_id,
         usage_type: data.usage_type,
         manu_country: data.manu_country,
         body_type: data.body_type,
