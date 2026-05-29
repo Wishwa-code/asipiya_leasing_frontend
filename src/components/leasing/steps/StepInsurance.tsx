@@ -6,9 +6,10 @@ import DatePicker from "../../form/date-picker";
 interface StepInsuranceProps {
   formData: any;
   updateFormData: (fields: any) => void;
+  errors?: Record<string, string>;
 }
 
-const StepInsurance: React.FC<StepInsuranceProps> = ({ formData, updateFormData }) => {
+const StepInsurance: React.FC<StepInsuranceProps> = ({ formData, updateFormData, errors }) => {
   const [insuranceCompanies, setInsuranceCompanies] = useState<any[]>([]);
 
   useEffect(() => {
@@ -34,18 +35,58 @@ const StepInsurance: React.FC<StepInsuranceProps> = ({ formData, updateFormData 
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
           <div>
             <label className="block text-xs font-bold text-gray-500 uppercase mb-1.5 ml-1">Insurance Company</label>
-            <select name="insurance_company" value={formData.insurance_company} onChange={handleChange} className="w-full p-2.5 bg-gray-50 dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-xl text-sm focus:border-brand-500 outline-none">
+            <select 
+              name="insurance_company" 
+              value={formData.insurance_company} 
+              onChange={handleChange} 
+              className={`w-full p-2.5 bg-gray-50 dark:bg-gray-900 border rounded-xl text-sm outline-none transition-all ${
+                errors?.insurance_company 
+                  ? 'border-red-500 focus:border-red-500' 
+                  : 'border-gray-200 dark:border-gray-700 focus:border-brand-500'
+              }`}
+            >
               <option value="">Select Company</option>
               {insuranceCompanies.map(c => <option key={c.ID || c.id} value={c.company_name}>{c.company_name}</option>)}
             </select>
+            {errors?.insurance_company && (
+              <p className="text-xs text-red-500 font-bold mt-2 ml-1">{errors.insurance_company}</p>
+            )}
           </div>
           <div>
             <label className="block text-xs font-bold text-gray-500 uppercase mb-1.5 ml-1">Sum Insured (Amount)</label>
-            <input type="text" name="insurance_amount" value={formData.insurance_amount} onChange={handleChange} placeholder="0.00" className="w-full p-2.5 bg-gray-50 dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-xl text-sm font-bold focus:border-brand-500 outline-none" />
+            <input 
+              type="text" 
+              name="insurance_amount" 
+              value={formData.insurance_amount} 
+              onChange={handleChange} 
+              placeholder="0.00" 
+              className={`w-full p-2.5 bg-gray-50 dark:bg-gray-900 border rounded-xl text-sm font-bold outline-none transition-all ${
+                errors?.insurance_amount 
+                  ? 'border-red-500 focus:border-red-500' 
+                  : 'border-gray-200 dark:border-gray-700 focus:border-brand-500'
+              }`} 
+            />
+            {errors?.insurance_amount && (
+              <p className="text-xs text-red-500 font-bold mt-2 ml-1">{errors.insurance_amount}</p>
+            )}
           </div>
           <div>
             <label className="block text-xs font-bold text-gray-500 uppercase mb-1.5 ml-1">Annual Premium</label>
-            <input type="text" name="insurance_premium" value={formData.insurance_premium} onChange={handleChange} placeholder="0.00" className="w-full p-2.5 bg-gray-50 dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-xl text-sm font-bold focus:border-brand-500 outline-none" />
+            <input 
+              type="text" 
+              name="insurance_premium" 
+              value={formData.insurance_premium} 
+              onChange={handleChange} 
+              placeholder="0.00" 
+              className={`w-full p-2.5 bg-gray-50 dark:bg-gray-900 border rounded-xl text-sm font-bold outline-none transition-all ${
+                errors?.insurance_premium 
+                  ? 'border-red-500 focus:border-red-500' 
+                  : 'border-gray-200 dark:border-gray-700 focus:border-brand-500'
+              }`} 
+            />
+            {errors?.insurance_premium && (
+              <p className="text-xs text-red-500 font-bold mt-2 ml-1">{errors.insurance_premium}</p>
+            )}
           </div>
           <div>
             <label className="block text-xs font-bold text-gray-500 uppercase mb-1.5 ml-1">Cover Start Date</label>
@@ -54,7 +95,11 @@ const StepInsurance: React.FC<StepInsuranceProps> = ({ formData, updateFormData 
               placeholder="Select start date"
               defaultDate={formData.insurance_start_date || ""}
               onChange={(_dates, dateStr) => updateFormData({ insurance_start_date: dateStr })}
+              error={!!errors?.insurance_start_date}
             />
+            {errors?.insurance_start_date && (
+              <p className="text-xs text-red-500 font-bold mt-2 ml-1">{errors.insurance_start_date}</p>
+            )}
           </div>
           <div>
             <label className="block text-xs font-bold text-gray-500 uppercase mb-1.5 ml-1">Cover Expiry Date</label>
@@ -63,7 +108,11 @@ const StepInsurance: React.FC<StepInsuranceProps> = ({ formData, updateFormData 
               placeholder="Select expiry date"
               defaultDate={formData.insurance_expiry_date || ""}
               onChange={(_dates, dateStr) => updateFormData({ insurance_expiry_date: dateStr })}
+              error={!!errors?.insurance_expiry_date}
             />
+            {errors?.insurance_expiry_date && (
+              <p className="text-xs text-red-500 font-bold mt-2 ml-1">{errors.insurance_expiry_date}</p>
+            )}
           </div>
         </div>
       </div>

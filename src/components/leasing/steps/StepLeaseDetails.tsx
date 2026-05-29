@@ -7,9 +7,10 @@ import DatePicker from "../../form/date-picker";
 interface StepLeaseDetailsProps {
   formData: any;
   updateFormData: (fields: any) => void;
+  errors?: Record<string, string>;
 }
 
-const StepLeaseDetails: React.FC<StepLeaseDetailsProps> = ({ formData, updateFormData }) => {
+const StepLeaseDetails: React.FC<StepLeaseDetailsProps> = ({ formData, updateFormData, errors }) => {
   const [products, setProducts] = useState<any[]>([]);
   const [executives, setExecutives] = useState<any[]>([]);
   const [banks, setBanks] = useState<any[]>([]);
@@ -434,7 +435,11 @@ const StepLeaseDetails: React.FC<StepLeaseDetailsProps> = ({ formData, updateFor
                     name="product_id"
                     value={formData.product_id}
                     onChange={(e) => handleProductChange(e.target.value)}
-                    className="w-full p-2.5 bg-gray-50 dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-xl text-sm focus:border-brand-500 outline-none font-bold text-brand-500"
+                    className={`w-full p-2.5 bg-gray-50 dark:bg-gray-900 border rounded-xl text-sm outline-none font-bold transition-all ${
+                      errors?.product_id
+                        ? "border-red-500 text-red-500 focus:border-red-500"
+                        : "border-gray-200 dark:border-gray-700 text-brand-500 focus:border-brand-500"
+                    }`}
                     required
                   >
                     <option value="">Choose Product...</option>
@@ -444,6 +449,9 @@ const StepLeaseDetails: React.FC<StepLeaseDetailsProps> = ({ formData, updateFor
                       </option>
                     ))}
                   </select>
+                  {errors?.product_id && (
+                    <p className="text-xs text-red-500 font-bold mt-2 ml-1">{errors.product_id}</p>
+                  )}
                 </div>
 
                 {/* Product Item */}
@@ -539,13 +547,20 @@ const StepLeaseDetails: React.FC<StepLeaseDetailsProps> = ({ formData, updateFor
                       value={formData.interest_rate}
                       onChange={handleChange}
                       placeholder="Rate"
-                      className="w-full p-2.5 pr-20 bg-gray-50 dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-xl text-sm font-bold outline-none focus:border-brand-500"
+                      className={`w-full p-2.5 pr-20 bg-gray-50 dark:bg-gray-900 border rounded-xl text-sm font-bold outline-none transition-all ${
+                        errors?.interest_rate
+                          ? "border-red-500 focus:border-red-500"
+                          : "border-gray-200 dark:border-gray-700 focus:border-brand-500"
+                      }`}
                       required
                     />
                     <span className="absolute right-3 top-3 text-[10px] uppercase font-bold text-gray-400">
                       / {selectedProduct?.interest_period_type ? selectedProduct.interest_period_type.replace("per_", "") : "Month"}
                     </span>
                   </div>
+                  {errors?.interest_rate && (
+                    <p className="text-xs text-red-500 font-bold mt-2 ml-1">{errors.interest_rate}</p>
+                  )}
                   {selectedItem && (
                     <small className="block mt-1 text-brand-500 font-bold ml-1" style={{ fontSize: "10px" }}>
                       Min: {selectedItem.minimum_interest}% | Max: {selectedItem.maximum_interest}%
@@ -562,7 +577,11 @@ const StepLeaseDetails: React.FC<StepLeaseDetailsProps> = ({ formData, updateFor
                     name="period"
                     value={formData.period}
                     onChange={handleChange}
-                    className="w-full p-2.5 bg-gray-50 dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-xl text-sm font-bold outline-none focus:border-brand-500"
+                    className={`w-full p-2.5 bg-gray-50 dark:bg-gray-900 border rounded-xl text-sm font-bold outline-none transition-all ${
+                      errors?.period
+                        ? "border-red-500 focus:border-red-500"
+                        : "border-gray-200 dark:border-gray-700 focus:border-brand-500"
+                    }`}
                     required
                   >
                     <option value="">Choose Period...</option>
@@ -570,6 +589,9 @@ const StepLeaseDetails: React.FC<StepLeaseDetailsProps> = ({ formData, updateFor
                       <option key={p} value={p}>{p}</option>
                     ))}
                   </select>
+                  {errors?.period && (
+                    <p className="text-xs text-red-500 font-bold mt-2 ml-1">{errors.period}</p>
+                  )}
                   {selectedItem && (
                     <small className="block mt-1 text-brand-500 font-bold ml-1" style={{ fontSize: "10px" }}>
                       Min: {selectedItem.minimum_loan_period} | Max: {selectedItem.maximum_loan_period}
@@ -590,8 +612,15 @@ const StepLeaseDetails: React.FC<StepLeaseDetailsProps> = ({ formData, updateFor
                     value={formData.loan_amount}
                     onChange={handleFacilityAmountChange}
                     placeholder="0.00"
-                    className="w-full p-3 bg-brand-50/50 dark:bg-brand-500/5 border border-brand-200 dark:border-brand-500/20 rounded-xl text-md font-bold text-brand-600 dark:text-brand-400 focus:border-brand-500 outline-none"
+                    className={`w-full p-3 bg-brand-50/50 dark:bg-brand-500/5 border rounded-xl text-md font-bold outline-none transition-all ${
+                      errors?.loan_amount
+                        ? "border-red-500 text-red-500 focus:border-red-500"
+                        : "border-brand-200 dark:border-brand-500/20 text-brand-600 dark:text-brand-400 focus:border-brand-500"
+                    }`}
                   />
+                  {errors?.loan_amount && (
+                    <p className="text-xs text-red-500 font-bold mt-2 ml-1">{errors.loan_amount}</p>
+                  )}
                   {selectedItem && (
                     <small className="block mt-1 text-brand-500 font-bold ml-1" style={{ fontSize: "10px" }}>
                       Min: {selectedItem.minimum_loan_amount?.toLocaleString()} LKR | Max: {selectedItem.maximum_loan_amount?.toLocaleString()} LKR
@@ -804,7 +833,11 @@ const StepLeaseDetails: React.FC<StepLeaseDetailsProps> = ({ formData, updateFor
                   onChange={(selectedDates, dateStr) => {
                     updateFormData({ tcc_collection_date: dateStr });
                   }}
+                  error={!!errors?.tcc_collection_date}
                 />
+                {errors?.tcc_collection_date && (
+                  <p className="text-xs text-red-500 font-bold mt-2 ml-1">{errors.tcc_collection_date}</p>
+                )}
               </div>
               <button
                 type="button"

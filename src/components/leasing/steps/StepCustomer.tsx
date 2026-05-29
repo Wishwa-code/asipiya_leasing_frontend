@@ -5,9 +5,10 @@ import apiClient from "../../../api/apiClient";
 interface StepCustomerProps {
   formData: any;
   updateFormData: (fields: any) => void;
+  errors?: Record<string, string>;
 }
 
-const StepCustomer: React.FC<StepCustomerProps> = ({ formData, updateFormData }) => {
+const StepCustomer: React.FC<StepCustomerProps> = ({ formData, updateFormData, errors }) => {
   const [searchTerm, setSearchTerm] = useState("");
   const [isSearching, setIsSearching] = useState(false);
   const [searchResults, setSearchResults] = useState<any[]>([]);
@@ -108,8 +109,15 @@ const StepCustomer: React.FC<StepCustomerProps> = ({ formData, updateFormData })
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
               placeholder="Search by NIC, Business Reg No or Name..."
-              className="w-full pl-4 pr-12 py-3.5 bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-xl text-sm outline-none focus:border-brand-500 focus:ring-4 focus:ring-brand-500/10 transition-all"
+              className={`w-full pl-4 pr-12 py-3.5 bg-white dark:bg-gray-900 border rounded-xl text-sm outline-none transition-all ${
+                errors?.customer_id 
+                  ? 'border-red-500 focus:border-red-500 focus:ring-4 focus:ring-red-500/10' 
+                  : 'border-gray-200 dark:border-gray-700 focus:border-brand-500 focus:ring-4 focus:ring-brand-500/10'
+              }`}
             />
+            {errors?.customer_id && (
+              <p className="text-xs text-red-500 font-bold mt-2 ml-1">{errors.customer_id}</p>
+            )}
             <div className="absolute right-2 top-2 bottom-2 px-4 flex items-center justify-center">
               {isSearching ? (
                 <div className="w-4 h-4 border-2 border-brand-500/30 border-t-brand-500 rounded-full animate-spin"></div>

@@ -5,9 +5,10 @@ import apiClient from "../../../api/apiClient";
 interface StepGuarantorsProps {
   formData: any;
   updateFormData: (fields: any) => void;
+  errors?: Record<string, string>;
 }
 
-const StepGuarantors: React.FC<StepGuarantorsProps> = ({ formData, updateFormData }) => {
+const StepGuarantors: React.FC<StepGuarantorsProps> = ({ formData, updateFormData, errors }) => {
   const requiredCount = parseInt(formData.required_guarantor_count) || 0;
   const currentCount = formData.guarantors?.length || 0;
   const isProductSelected = !!formData.product_id;
@@ -224,7 +225,11 @@ const StepGuarantors: React.FC<StepGuarantorsProps> = ({ formData, updateFormDat
                     <select 
                       value={guar.customer_id || ""}
                       onChange={(e) => handleSelectCustomer(idx, e.target.value)}
-                      className="w-full p-2.5 bg-gray-50 dark:bg-gray-900 border border-gray-250 dark:border-gray-700 rounded-xl text-sm font-semibold focus:border-brand-500 outline-none transition-colors"
+                      className={`w-full p-2.5 bg-gray-50 dark:bg-gray-900 border rounded-xl text-sm font-semibold outline-none transition-colors ${
+                        errors?.[`guarantors.${idx}.customer_id`]
+                          ? "border-red-500 focus:border-red-500"
+                          : "border-gray-250 dark:border-gray-700 focus:border-brand-500"
+                      }`}
                     >
                       <option value="">Choose Customer...</option>
                       {getAvailableCustomers(idx).map((c: any) => (
@@ -233,6 +238,11 @@ const StepGuarantors: React.FC<StepGuarantorsProps> = ({ formData, updateFormDat
                         </option>
                       ))}
                     </select>
+                    {errors?.[`guarantors.${idx}.customer_id`] && (
+                      <p className="text-xs text-red-500 font-bold mt-2 ml-1">
+                        {errors[`guarantors.${idx}.customer_id`]}
+                      </p>
+                    )}
                   </div>
                   <div>
                     <label className="block text-xs font-bold text-gray-450 uppercase mb-1.5 ml-1">NIC No</label>
@@ -269,12 +279,21 @@ const StepGuarantors: React.FC<StepGuarantorsProps> = ({ formData, updateFormDat
                     <select 
                       value={guar.relationship}
                       onChange={(e) => updateGuarantor(idx, { relationship: e.target.value })}
-                      className="w-full p-2.5 bg-gray-50 dark:bg-gray-900 border border-gray-250 dark:border-gray-700 rounded-xl text-sm font-semibold focus:border-brand-500 outline-none transition-colors"
+                      className={`w-full p-2.5 bg-gray-50 dark:bg-gray-900 border rounded-xl text-sm font-semibold outline-none transition-colors ${
+                        errors?.[`guarantors.${idx}.type`]
+                          ? "border-red-500 focus:border-red-500"
+                          : "border-gray-250 dark:border-gray-700 focus:border-brand-500"
+                      }`}
                     >
                          <option value="Friend">Friend</option>
                          <option value="Relative">Relative</option>
                          <option value="Colleague">Colleague</option>
                     </select>
+                    {errors?.[`guarantors.${idx}.type`] && (
+                      <p className="text-xs text-red-500 font-bold mt-2 ml-1">
+                        {errors[`guarantors.${idx}.type`]}
+                      </p>
+                    )}
                   </div>
                </div>
 

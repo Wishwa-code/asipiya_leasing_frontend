@@ -6,9 +6,10 @@ import DatePicker from "../../form/date-picker";
 interface StepChequeDefineProps {
   formData: any;
   updateFormData: (fields: any) => void;
+  errors?: Record<string, string>;
 }
 
-const StepChequeDefine: React.FC<StepChequeDefineProps> = ({ formData, updateFormData }) => {
+const StepChequeDefine: React.FC<StepChequeDefineProps> = ({ formData, updateFormData, errors }) => {
   const [banks, setBanks] = useState<any[]>([]);
   const [loadingBanks, setLoadingBanks] = useState(false);
 
@@ -137,6 +138,9 @@ const StepChequeDefine: React.FC<StepChequeDefineProps> = ({ formData, updateFor
               <p className="text-sm text-gray-500 font-medium">
                 Define payout/disbursement instructions for the leasing application
               </p>
+              {errors?.cheques && (
+                <p className="text-sm text-red-500 font-bold mt-2">{errors.cheques}</p>
+              )}
             </div>
             <button
               onClick={addCheque}
@@ -203,7 +207,12 @@ const StepChequeDefine: React.FC<StepChequeDefineProps> = ({ formData, updateFor
                             value={chq.payee_name || ""}
                             onChange={(e) => updateCheque(idx, { payee_name: e.target.value })}
                             placeholder="Payee Name"
-                            className="w-full px-3 py-2 bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-xl text-sm font-semibold focus:border-brand-500 outline-none text-gray-900 dark:text-white"
+                            className={`w-full px-3 py-2 bg-white dark:bg-gray-900 border rounded-xl text-sm font-semibold outline-none transition-all ${
+                              errors?.[`cheques.${idx}.payee_name`]
+                                ? "border-red-500 focus:border-red-500 text-red-500"
+                                : "border-gray-200 dark:border-gray-700 focus:border-brand-500 text-gray-900 dark:text-white"
+                            }`}
+                            title={errors?.[`cheques.${idx}.payee_name`]}
                           />
                         </td>
                         <td className="px-2 py-3">
@@ -212,7 +221,12 @@ const StepChequeDefine: React.FC<StepChequeDefineProps> = ({ formData, updateFor
                             value={chq.nic_br_no || ""}
                             onChange={(e) => updateCheque(idx, { nic_br_no: e.target.value })}
                             placeholder="NIC / BR No."
-                            className="w-full px-3 py-2 bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-xl text-sm font-semibold focus:border-brand-500 outline-none text-gray-900 dark:text-white"
+                            className={`w-full px-3 py-2 bg-white dark:bg-gray-900 border rounded-xl text-sm font-semibold outline-none transition-all ${
+                              errors?.[`cheques.${idx}.nic_br_no`]
+                                ? "border-red-500 focus:border-red-500 text-red-500"
+                                : "border-gray-200 dark:border-gray-700 focus:border-brand-500 text-gray-900 dark:text-white"
+                            }`}
+                            title={errors?.[`cheques.${idx}.nic_br_no`]}
                           />
                         </td>
                         <td className="px-2 py-3">
@@ -221,7 +235,12 @@ const StepChequeDefine: React.FC<StepChequeDefineProps> = ({ formData, updateFor
                             value={chq.instructions || ""}
                             onChange={(e) => updateCheque(idx, { instructions: e.target.value })}
                             placeholder="Instructions"
-                            className="w-full px-3 py-2 bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-xl text-sm font-semibold focus:border-brand-500 outline-none text-gray-900 dark:text-white"
+                            className={`w-full px-3 py-2 bg-white dark:bg-gray-900 border rounded-xl text-sm font-semibold outline-none transition-all ${
+                              errors?.[`cheques.${idx}.instructions`]
+                                ? "border-red-500 focus:border-red-500 text-red-500"
+                                : "border-gray-200 dark:border-gray-700 focus:border-brand-500 text-gray-900 dark:text-white"
+                            }`}
+                            title={errors?.[`cheques.${idx}.instructions`]}
                           />
                         </td>
                         <td className="px-2 py-3">
@@ -230,14 +249,24 @@ const StepChequeDefine: React.FC<StepChequeDefineProps> = ({ formData, updateFor
                             value={chq.payment_amount || ""}
                             onChange={(e) => updateCheque(idx, { payment_amount: e.target.value })}
                             placeholder="0.00"
-                            className="w-full px-3 py-2 bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-xl text-sm font-bold focus:border-brand-500 outline-none text-brand-600 dark:text-brand-400"
+                            className={`w-full px-3 py-2 bg-white dark:bg-gray-900 border rounded-xl text-sm font-bold outline-none transition-all ${
+                              errors?.[`cheques.${idx}.payment_amount`]
+                                ? "border-red-500 focus:border-red-500 text-red-500"
+                                : "border-gray-200 dark:border-gray-700 focus:border-brand-500 text-brand-600 dark:text-brand-400"
+                            }`}
+                            title={errors?.[`cheques.${idx}.payment_amount`]}
                           />
                         </td>
                         <td className="px-2 py-3">
                           <select
                             value={chq.bank_name || ""}
                             onChange={(e) => updateCheque(idx, { bank_name: e.target.value })}
-                            className="w-full px-3 py-2 bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-xl text-sm font-semibold focus:border-brand-500 outline-none text-gray-900 dark:text-white"
+                            className={`w-full px-3 py-2 bg-white dark:bg-gray-900 border rounded-xl text-sm font-semibold outline-none transition-all ${
+                              errors?.[`cheques.${idx}.bank_name`]
+                                ? "border-red-500 focus:border-red-500 text-red-500"
+                                : "border-gray-200 dark:border-gray-700 focus:border-brand-500 text-gray-900 dark:text-white"
+                            }`}
+                            title={errors?.[`cheques.${idx}.bank_name`]}
                           >
                             <option value="">
                               {loadingBanks ? "Loading banks..." : "Select Bank"}
@@ -255,7 +284,12 @@ const StepChequeDefine: React.FC<StepChequeDefineProps> = ({ formData, updateFor
                             value={chq.branch_name || ""}
                             onChange={(e) => updateCheque(idx, { branch_name: e.target.value })}
                             placeholder="Select Branch"
-                            className="w-full px-3 py-2 bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-xl text-sm font-semibold focus:border-brand-500 outline-none text-gray-900 dark:text-white"
+                            className={`w-full px-3 py-2 bg-white dark:bg-gray-900 border rounded-xl text-sm font-semibold outline-none transition-all ${
+                              errors?.[`cheques.${idx}.branch_name`]
+                                ? "border-red-500 focus:border-red-500 text-red-500"
+                                : "border-gray-200 dark:border-gray-700 focus:border-brand-500 text-gray-900 dark:text-white"
+                            }`}
+                            title={errors?.[`cheques.${idx}.branch_name`]}
                           />
                         </td>
                         <td className="px-2 py-3">
@@ -264,7 +298,12 @@ const StepChequeDefine: React.FC<StepChequeDefineProps> = ({ formData, updateFor
                             value={chq.account_number || ""}
                             onChange={(e) => updateCheque(idx, { account_number: e.target.value })}
                             placeholder="Account No."
-                            className="w-full px-3 py-2 bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-xl text-sm font-semibold focus:border-brand-500 outline-none text-gray-900 dark:text-white"
+                            className={`w-full px-3 py-2 bg-white dark:bg-gray-900 border rounded-xl text-sm font-semibold outline-none transition-all ${
+                              errors?.[`cheques.${idx}.account_number`]
+                                ? "border-red-500 focus:border-red-500 text-red-500"
+                                : "border-gray-200 dark:border-gray-700 focus:border-brand-500 text-gray-900 dark:text-white"
+                            }`}
+                            title={errors?.[`cheques.${idx}.account_number`]}
                           />
                         </td>
                         <td className="px-4 py-4 text-center">

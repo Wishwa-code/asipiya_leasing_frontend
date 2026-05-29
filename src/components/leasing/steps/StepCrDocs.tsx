@@ -8,6 +8,7 @@ interface StepCrDocsProps {
   updateFormData: (fields: any) => void;
   draftId?: number | null;
   saveDraft?: () => Promise<void>;
+  errors?: Record<string, string>;
 }
 
 const STEP9_DOCS = [
@@ -23,7 +24,7 @@ const STEP9_DOCS = [
   { name: "url_engine_punch", label: "Engine Number Plate Photo", required: false, accept: "image/*" },
 ];
 
-const StepCrDocs: React.FC<StepCrDocsProps> = ({ formData, updateFormData, draftId, saveDraft }) => {
+const StepCrDocs: React.FC<StepCrDocsProps> = ({ formData, updateFormData, draftId, saveDraft, errors }) => {
   const [checkingRmv, setCheckingRmv] = useState(false);
   const [uploading, setUploading] = useState<Record<string, boolean>>({});
 
@@ -530,8 +531,15 @@ const StepCrDocs: React.FC<StepCrDocsProps> = ({ formData, updateFormData, draft
               value={formData.cr_serial_no || ""}
               onChange={handleInputChange}
               placeholder="e.g. CR-90982"
-              className="w-full p-2.5 bg-gray-50 dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-xl text-sm font-semibold focus:border-brand-500 outline-none text-gray-900 dark:text-white"
+              className={`w-full p-2.5 bg-gray-50 dark:bg-gray-900 border rounded-xl text-sm font-semibold outline-none transition-all ${
+                errors?.cr_serial_no 
+                  ? 'border-red-500 focus:border-red-500' 
+                  : 'border-gray-200 dark:border-gray-700 focus:border-brand-500'
+              }`}
             />
+            {errors?.cr_serial_no && (
+              <p className="text-xs text-red-500 font-bold mt-2 ml-1">{errors.cr_serial_no}</p>
+            )}
           </div>
 
           <div>
@@ -637,17 +645,25 @@ const StepCrDocs: React.FC<StepCrDocsProps> = ({ formData, updateFormData, draft
                   value.includes("image")));
 
             const resolvedUrl = resolveFileUrl(value);
+            const hasError = !!errors?.[doc.name];
 
             return (
               <div
                 key={doc.name}
-                className="bg-gray-50 dark:bg-gray-900/50 p-5 rounded-2xl border border-gray-200 dark:border-gray-800 shadow-sm flex flex-col justify-between h-72 relative hover:border-brand-500/30 transition-all duration-300"
+                className={`bg-gray-50 dark:bg-gray-900/50 p-5 rounded-2xl border shadow-sm flex flex-col justify-between h-72 relative hover:border-brand-500/30 transition-all duration-300 ${
+                  hasError 
+                    ? 'border-red-500 focus:border-red-500' 
+                    : 'border-gray-250 dark:border-gray-800'
+                }`}
               >
                 <div className="flex justify-between items-start mb-3">
                   <label className="block text-xs font-bold text-gray-500 dark:text-gray-400 uppercase tracking-wide">
                     {doc.label} {doc.required && <span className="text-red-500 ml-0.5">*</span>}
                   </label>
                 </div>
+                {hasError && (
+                  <p className="text-[10px] text-red-500 font-bold -mt-2 mb-2 ml-1">{errors[doc.name]}</p>
+                )}
 
                 <div className="grow flex flex-col items-center justify-center border border-dashed border-gray-200 dark:border-gray-700 rounded-xl bg-white dark:bg-gray-900 p-4 relative overflow-hidden h-44">
                   {uploading[doc.name] ? (

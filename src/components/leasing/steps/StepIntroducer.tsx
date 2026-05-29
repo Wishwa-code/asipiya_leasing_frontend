@@ -5,9 +5,10 @@ import apiClient from "../../../api/apiClient";
 interface StepIntroducerProps {
   formData: any;
   updateFormData: (fields: any) => void;
+  errors?: Record<string, string>;
 }
 
-const StepIntroducer: React.FC<StepIntroducerProps> = ({ formData, updateFormData }) => {
+const StepIntroducer: React.FC<StepIntroducerProps> = ({ formData, updateFormData, errors }) => {
   const [availableIntroducers, setAvailableIntroducers] = useState<any[]>([]);
 
   useEffect(() => {
@@ -110,7 +111,11 @@ const StepIntroducer: React.FC<StepIntroducerProps> = ({ formData, updateFormDat
                     <select 
                       value={intro.introducer_id || ""}
                       onChange={(e) => handleSelectIntroducer(idx, e.target.value)}
-                      className="w-full p-2.5 bg-gray-50 dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-xl text-sm focus:border-brand-500 outline-none"
+                      className={`w-full p-2.5 bg-gray-50 dark:bg-gray-900 border rounded-xl text-sm outline-none transition-all ${
+                        errors?.[`introducers.${idx}.introducer_id`]
+                          ? "border-red-500 focus:border-red-500"
+                          : "border-gray-200 dark:border-gray-700 focus:border-brand-500"
+                      }`}
                     >
                       <option value="" disabled>Select an Introducer</option>
                       {availableIntroducers.map(opt => (
@@ -119,6 +124,11 @@ const StepIntroducer: React.FC<StepIntroducerProps> = ({ formData, updateFormDat
                         </option>
                       ))}
                     </select>
+                    {errors?.[`introducers.${idx}.introducer_id`] && (
+                      <p className="text-xs text-red-500 font-bold mt-2 ml-1">
+                        {errors[`introducers.${idx}.introducer_id`]}
+                      </p>
+                    )}
                   </div>
 
                   {intro.introducer_id && (

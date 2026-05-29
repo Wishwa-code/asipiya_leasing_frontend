@@ -40,7 +40,7 @@ import StepChequeDefine from "../../components/leasing/steps/StepChequeDefine";
 import StepCrDocs from "../../components/leasing/steps/StepCrDocs";
 
 const CreateLeasing: React.FC = () => {
-  const { formData, activeStep, draftId, stepStatuses, nextStep, prevStep, goToStep, updateFormData, saveDraft, resetForm } = useLeaseForm();
+  const { formData, activeStep, draftId, stepStatuses, errors, nextStep, prevStep, goToStep, updateFormData, saveDraft, resetForm } = useLeaseForm();
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   const handleGoToStep = (step: number) => {
@@ -157,16 +157,16 @@ const CreateLeasing: React.FC = () => {
 
   const renderStep = () => {
     switch (activeStep) {
-      case 1: return <StepCustomer formData={formData} updateFormData={updateFormData} />;
-      case 2: return <StepIntroducer formData={formData} updateFormData={updateFormData} />;
-      case 3: return <StepVehicleAsset formData={formData} updateFormData={updateFormData} draftId={draftId} saveDraft={saveDraft} />;
-      case 4: return <StepInsurance formData={formData} updateFormData={updateFormData} />;
-      case 5: return <StepLeaseDetails formData={formData} updateFormData={updateFormData} />;
-      case 6: return <StepGuarantors formData={formData} updateFormData={updateFormData} />;
-      case 7: return <StepPdcSecurity formData={formData} updateFormData={updateFormData} draftId={draftId} />;
-      case 8: return <StepChequeDefine formData={formData} updateFormData={updateFormData} />;
-      case 9: return <StepCrDocs formData={formData} updateFormData={updateFormData} draftId={draftId} saveDraft={saveDraft} />;
-      default: return <StepCustomer formData={formData} updateFormData={updateFormData} />;
+      case 1: return <StepCustomer formData={formData} updateFormData={updateFormData} errors={errors} />;
+      case 2: return <StepIntroducer formData={formData} updateFormData={updateFormData} errors={errors} />;
+      case 3: return <StepVehicleAsset formData={formData} updateFormData={updateFormData} draftId={draftId} saveDraft={saveDraft} errors={errors} />;
+      case 4: return <StepInsurance formData={formData} updateFormData={updateFormData} errors={errors} />;
+      case 5: return <StepLeaseDetails formData={formData} updateFormData={updateFormData} errors={errors} />;
+      case 6: return <StepGuarantors formData={formData} updateFormData={updateFormData} errors={errors} />;
+      case 7: return <StepPdcSecurity formData={formData} updateFormData={updateFormData} errors={errors} />;
+      case 8: return <StepChequeDefine formData={formData} updateFormData={updateFormData} errors={errors} />;
+      case 9: return <StepCrDocs formData={formData} updateFormData={updateFormData} errors={errors} />;
+      default: return <StepCustomer formData={formData} updateFormData={updateFormData} errors={errors} />;
     }
   };
 

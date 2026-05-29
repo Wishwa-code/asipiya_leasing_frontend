@@ -48,6 +48,7 @@ interface StepVehicleAssetProps {
   updateFormData: (fields: any) => void;
   draftId?: number | null;
   saveDraft?: () => Promise<void>;
+  errors?: Record<string, string>;
 }
 
 const VEHICLE_DOCS = [
@@ -68,7 +69,7 @@ const VEHICLE_DOCS = [
 
 import { TrashBinIcon, FileIcon } from "../../../icons";
 
-const StepVehicleAsset: React.FC<StepVehicleAssetProps> = ({ formData, updateFormData, draftId, saveDraft }) => {
+const StepVehicleAsset: React.FC<StepVehicleAssetProps> = ({ formData, updateFormData, draftId, saveDraft, errors }) => {
   const [vehicleTypes, setVehicleTypes] = useState<any[]>([]);
   const [vehicleMakes, setVehicleMakes] = useState<any[]>([]);
   const [vehicleModels, setVehicleModels] = useState<any[]>([]);
@@ -306,7 +307,11 @@ const StepVehicleAsset: React.FC<StepVehicleAssetProps> = ({ formData, updateFor
               name="vehicle_make_id" 
               value={formData.vehicle_make_id || ""} 
               onChange={handleMakeChange} 
-              className="w-full p-2.5 bg-gray-50 dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-xl text-sm focus:border-brand-500 outline-none"
+              className={`w-full p-2.5 bg-gray-50 dark:bg-gray-900 border rounded-xl text-sm outline-none transition-all ${
+                errors?.vehicle_make_id
+                  ? "border-red-500 focus:border-red-500"
+                  : "border-gray-200 dark:border-gray-700 focus:border-brand-500"
+              }`}
               disabled={loadingMakes || !formData.vehicle_type_id}
             >
               <option value="">
@@ -322,6 +327,9 @@ const StepVehicleAsset: React.FC<StepVehicleAssetProps> = ({ formData, updateFor
                 </option>
               ))}
             </select>
+            {errors?.vehicle_make_id && (
+              <p className="text-xs text-red-500 font-bold mt-2 ml-1">{errors.vehicle_make_id}</p>
+            )}
           </div>
           <div>
             <label className="block text-xs font-bold text-gray-500 uppercase mb-1.5 ml-1">Model</label>
@@ -329,7 +337,11 @@ const StepVehicleAsset: React.FC<StepVehicleAssetProps> = ({ formData, updateFor
               name="vehicle_model_id" 
               value={formData.vehicle_model_id || ""} 
               onChange={handleModelChange} 
-              className="w-full p-2.5 bg-gray-50 dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-xl text-sm focus:border-brand-500 outline-none"
+              className={`w-full p-2.5 bg-gray-50 dark:bg-gray-900 border rounded-xl text-sm outline-none transition-all ${
+                errors?.vehicle_model_id
+                  ? "border-red-500 focus:border-red-500"
+                  : "border-gray-200 dark:border-gray-700 focus:border-brand-500"
+              }`}
               disabled={loadingModels || !formData.vehicle_make_id}
             >
               <option value="">
@@ -345,6 +357,9 @@ const StepVehicleAsset: React.FC<StepVehicleAssetProps> = ({ formData, updateFor
                 </option>
               ))}
             </select>
+            {errors?.vehicle_model_id && (
+              <p className="text-xs text-red-500 font-bold mt-2 ml-1">{errors.vehicle_model_id}</p>
+            )}
           </div>
           <div>
             <label className="block text-xs font-bold text-gray-500 uppercase mb-1.5 ml-1">Asset Status</label>
@@ -413,16 +428,55 @@ const StepVehicleAsset: React.FC<StepVehicleAssetProps> = ({ formData, updateFor
                <div className="grid grid-cols-2 gap-4">
                   <div>
                     <label className="block text-xs font-bold text-gray-500 uppercase mb-1.5 ml-1">Market Value</label>
-                    <input type="text" name="market_value" value={formData.market_value} onChange={handleChange} className="w-full p-2.5 bg-gray-50 dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-xl text-sm font-bold outline-none focus:border-brand-500" />
+                    <input 
+                      type="text" 
+                      name="market_value" 
+                      value={formData.market_value} 
+                      onChange={handleChange} 
+                      className={`w-full p-2.5 bg-gray-50 dark:bg-gray-900 border rounded-xl text-sm font-bold outline-none transition-all ${
+                        errors?.market_value
+                          ? "border-red-500 focus:border-red-500"
+                          : "border-gray-200 dark:border-gray-700 focus:border-brand-500"
+                      }`} 
+                    />
+                    {errors?.market_value && (
+                      <p className="text-xs text-red-500 font-bold mt-2 ml-1">{errors.market_value}</p>
+                    )}
                   </div>
                   <div>
                     <label className="block text-xs font-bold text-gray-500 uppercase mb-1.5 ml-1">Forced Value</label>
-                    <input type="text" name="forced_value" value={formData.forced_value} onChange={handleChange} className="w-full p-2.5 bg-gray-50 dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-xl text-sm font-bold outline-none focus:border-brand-500" />
+                    <input 
+                      type="text" 
+                      name="forced_value" 
+                      value={formData.forced_value} 
+                      onChange={handleChange} 
+                      className={`w-full p-2.5 bg-gray-50 dark:bg-gray-900 border rounded-xl text-sm font-bold outline-none transition-all ${
+                        errors?.forced_value
+                          ? "border-red-500 focus:border-red-500"
+                          : "border-gray-200 dark:border-gray-700 focus:border-brand-500"
+                      }`} 
+                    />
+                    {errors?.forced_value && (
+                      <p className="text-xs text-red-500 font-bold mt-2 ml-1">{errors.forced_value}</p>
+                    )}
                   </div>
                </div>
                <div>
                   <label className="block text-xs font-bold text-gray-500 uppercase mb-1.5 ml-1">Invoice Value</label>
-                  <input type="text" name="invoice_value" value={formData.invoice_value} onChange={handleChange} className="w-full p-2.5 bg-gray-50 dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-xl text-sm font-bold outline-none focus:border-brand-500" />
+                  <input 
+                    type="text" 
+                    name="invoice_value" 
+                    value={formData.invoice_value} 
+                    onChange={handleChange} 
+                    className={`w-full p-2.5 bg-gray-50 dark:bg-gray-900 border rounded-xl text-sm font-bold outline-none transition-all ${
+                      errors?.invoice_value
+                        ? "border-red-500 focus:border-red-500"
+                        : "border-gray-200 dark:border-gray-700 focus:border-brand-500"
+                    }`} 
+                  />
+                  {errors?.invoice_value && (
+                    <p className="text-xs text-red-500 font-bold mt-2 ml-1">{errors.invoice_value}</p>
+                  )}
                </div>
             </div>
           </div>
