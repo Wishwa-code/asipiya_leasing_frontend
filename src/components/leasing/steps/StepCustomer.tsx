@@ -58,16 +58,16 @@ const StepCustomer: React.FC<StepCustomerProps> = ({ formData, updateFormData, e
   const handleSelectCustomer = (customer: any) => {
     setShowDropdown(false);
     setSearchTerm("");
-    
+
     // Fetch full customer details including bank accounts
     const customerId = customer.ID || customer.id;
     apiClient.get(`/customers/${customerId}`)
       .then((res) => {
         const fullCustomer = res.data.data;
-        
+
         // Use the first bank account as default if available
-        const defaultBankAccountId = fullCustomer.bank_accounts && fullCustomer.bank_accounts.length > 0 
-          ? fullCustomer.bank_accounts[0].ID || fullCustomer.bank_accounts[0].id 
+        const defaultBankAccountId = fullCustomer.bank_accounts && fullCustomer.bank_accounts.length > 0
+          ? fullCustomer.bank_accounts[0].ID || fullCustomer.bank_accounts[0].id
           : "";
 
         updateFormData({
@@ -109,11 +109,10 @@ const StepCustomer: React.FC<StepCustomerProps> = ({ formData, updateFormData, e
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
               placeholder="Search by NIC, Business Reg No or Name..."
-              className={`w-full pl-4 pr-12 py-3.5 bg-white dark:bg-gray-900 border rounded-xl text-sm outline-none transition-all ${
-                errors?.customer_id 
-                  ? 'border-red-500 focus:border-red-500 focus:ring-4 focus:ring-red-500/10' 
+              className={`w-full pl-4 pr-12 py-3.5 bg-white dark:bg-gray-900 border rounded-xl text-sm outline-none transition-all ${errors?.customer_id
+                  ? 'border-red-500 focus:border-red-500 focus:ring-4 focus:ring-red-500/10'
                   : 'border-gray-200 dark:border-gray-700 focus:border-brand-500 focus:ring-4 focus:ring-brand-500/10'
-              }`}
+                }`}
             />
             {errors?.customer_id && (
               <p className="text-xs text-red-500 font-bold mt-2 ml-1">{errors.customer_id}</p>
@@ -143,7 +142,7 @@ const StepCustomer: React.FC<StepCustomerProps> = ({ formData, updateFormData, e
                 ))}
               </div>
             )}
-            
+
             {showDropdown && searchResults.length === 0 && !isSearching && searchTerm.length > 0 && (
               <div className="absolute z-10 w-full mt-2 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl shadow-lg p-4 text-center text-sm text-gray-500">
                 No customers found matching "{searchTerm}"
