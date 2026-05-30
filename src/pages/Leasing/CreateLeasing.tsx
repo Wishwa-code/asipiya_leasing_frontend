@@ -14,7 +14,8 @@ import {
   ListIcon,
   DocsIcon,
   AngleLeftIcon,
-  AngleRightIcon
+  AngleRightIcon,
+  AlertIcon
 } from "../../icons";
 
 const STEPS = [
@@ -302,6 +303,35 @@ const CreateLeasing: React.FC = () => {
 
       {/* Content Area */}
       <div className="mt-8 max-w-[1600px] mx-auto min-h-[60vh]">
+          {/* Active Step Validation Errors Card */}
+          {Object.keys(errors).length > 0 && (
+            <div className="mb-6 p-4 bg-orange-50 dark:bg-orange-500/10 border border-orange-200 dark:border-orange-500/20 rounded-2xl text-orange-850 dark:text-orange-300 shadow-theme-xs flex items-start gap-3.5 animate-fadeIn">
+              <div className="p-2.5 bg-orange-100 dark:bg-orange-500/20 rounded-xl text-orange-600 dark:text-orange-400 shrink-0">
+                <AlertIcon className="w-5 h-5" />
+              </div>
+              <div className="grow">
+                <h4 className="text-sm font-bold uppercase tracking-wider mb-1">
+                  Step 0{activeStep} Incomplete or Contains Validation Errors
+                </h4>
+                <p className="text-xs text-orange-600/80 dark:text-orange-400/80 font-medium">
+                  Please correct the following fields before proceeding:
+                </p>
+                <ul className="mt-3 grid grid-cols-1 md:grid-cols-2 gap-x-6 gap-y-2 list-disc list-inside text-xs font-semibold">
+                  {Object.entries(errors).map(([field, errMsg]) => {
+                    const cleanField = field === "_general" ? "General" : field
+                      .replace(/_/g, " ")
+                      .replace(/\b\w/g, (c) => c.toUpperCase());
+                    return (
+                      <li key={field} className="text-orange-700 dark:text-orange-300">
+                        <span className="font-extrabold">{cleanField}:</span> {errMsg}
+                      </li>
+                    );
+                  })}
+                </ul>
+              </div>
+            </div>
+          )}
+
           {/* Main Content Render based on step */}
           <div className="min-h-[400px]">
              {renderStep()}
