@@ -14,9 +14,11 @@ const StepLeaseDetails: React.FC<StepLeaseDetailsProps> = ({ formData, updateFor
   const [products, setProducts] = useState<any[]>([]);
   const [executives, setExecutives] = useState<any[]>([]);
   const [banks, setBanks] = useState<any[]>([]);
+  const [branches, setBranches] = useState<any[]>([]);
   const [customerAccounts, setCustomerAccounts] = useState<any[]>([]);
   
   const [loading, setLoading] = useState(false);
+  const [loadingBranches, setLoadingBranches] = useState(false);
   const [calculating, setCalculating] = useState(false);
   const [generatingSchedule, setGeneratingSchedule] = useState(false);
   
@@ -72,6 +74,55 @@ const StepLeaseDetails: React.FC<StepLeaseDetailsProps> = ({ formData, updateFor
     };
     fetchCustomerBanks();
   }, [formData.customer_db_id]);
+
+  const handleBankChange = async (bankName: string) => {
+    updateFormData({
+      bank_id: bankName,
+      branch_id: "" // clear branch on bank change
+    });
+
+    if (!bankName) {
+      setBranches([]);
+      return;
+    }
+
+    const matchedBank = banks.find(b => (b.name || b.Name) === bankName);
+    if (!matchedBank) {
+      setBranches([]);
+      return;
+    }
+
+    const bankId = matchedBank.id || matchedBank.ID;
+    setLoadingBranches(true);
+    try {
+      const res = await apiClient.get(`/lookup/banks/${bankId}/branches`);
+      setBranches(res.data?.data || res.data || []);
+    } catch (err) {
+      console.error("Failed to fetch branches:", err);
+      setBranches([]);
+    } finally {
+      setLoadingBranches(false);
+    }
+  };
+
+  // Fetch branches on load if formData.bank_id is pre-filled
+  useEffect(() => {
+    if (banks.length === 0 || !formData.bank_id) return;
+    
+    const fetchInitialBranches = async () => {
+      const matchedBank = banks.find(b => (b.name || b.Name) === formData.bank_id);
+      if (matchedBank) {
+        const bankId = matchedBank.id || matchedBank.ID;
+        try {
+          const res = await apiClient.get(`/lookup/banks/${bankId}/branches`);
+          setBranches(res.data?.data || res.data || []);
+        } catch (err) {
+          console.error("Failed to fetch initial branches:", err);
+        }
+      }
+    };
+    fetchInitialBranches();
+  }, [banks, formData.bank_id]);
 
   // Selected product and item configuration
   const selectedProduct = products.find(p => String(p.id || p.ID) === String(formData.product_id)) || null;
@@ -749,7 +800,7 @@ const StepLeaseDetails: React.FC<StepLeaseDetailsProps> = ({ formData, updateFor
                     <select
                       name="bank_id"
                       value={formData.bank_id}
-                      onChange={handleChange}
+                      onChange={(e) => handleBankChange(e.target.value)}
                       className="w-full p-2.5 bg-gray-50 dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-xl text-sm font-semibold outline-none focus:border-brand-500"
                       required
                     >
@@ -763,14 +814,22 @@ const StepLeaseDetails: React.FC<StepLeaseDetailsProps> = ({ formData, updateFor
                   </div>
                   <div>
                     <label className="block text-xs font-bold text-gray-400 uppercase mb-1.5 ml-1">Branch Name</label>
-                    <input
-                      type="text"
+                    <select
                       name="branch_id"
                       value={formData.branch_id}
                       onChange={handleChange}
-                      placeholder="Branch Name"
                       className="w-full p-2.5 bg-gray-50 dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-xl text-sm font-semibold outline-none focus:border-brand-500"
-                    />
+                      disabled={!formData.bank_id || loadingBranches}
+                    >
+                      <option value="">
+                        {loadingBranches ? "Loading branches..." : !formData.bank_id ? "Select Bank First" : "Choose Branch..."}
+                      </option>
+                      {branches.map(br => (
+                        <option key={br.id || br.ID} value={br.name || br.Name}>
+                          {br.name || br.Name}
+                        </option>
+                      ))}
+                    </select>
                   </div>
                   <div>
                     <label className="block text-xs font-bold text-gray-400 uppercase mb-1.5 ml-1">Account Number</label>

@@ -12,6 +12,7 @@ interface StepChequeDefineProps {
 const StepChequeDefine: React.FC<StepChequeDefineProps> = ({ formData, updateFormData, errors }) => {
   const [banks, setBanks] = useState<any[]>([]);
   const [loadingBanks, setLoadingBanks] = useState(false);
+  const [branchesCache, setBranchesCache] = useState<Record<string, any[]>>({});
 
   useEffect(() => {
     const fetchBanks = async () => {
@@ -27,6 +28,47 @@ const StepChequeDefine: React.FC<StepChequeDefineProps> = ({ formData, updateFor
     };
     fetchBanks();
   }, []);
+
+  const handleBankChange = async (idx: number, bankName: string) => {
+    updateCheque(idx, { bank_name: bankName, branch_name: "" });
+    if (!bankName) return;
+
+    const matched = banks.find(b => (b.name || b.Name) === bankName);
+    if (!matched) return;
+
+    const bankId = matched.id || matched.ID;
+    if (!bankId || branchesCache[bankId]) return;
+
+    try {
+      const res = await apiClient.get(`/lookup/banks/${bankId}/branches`);
+      const data = res.data?.data || res.data || [];
+      setBranchesCache(prev => ({ ...prev, [bankId]: data }));
+    } catch (err) {
+      console.error(`Failed to fetch branches for bankId ${bankId}:`, err);
+    }
+  };
+
+  // Load branches for any pre-filled banks in the cheques list
+  useEffect(() => {
+    if (banks.length === 0 || !formData.cheques) return;
+
+    const uniqueBanks = Array.from(new Set(formData.cheques.map((c: any) => c.bank_name).filter(Boolean)));
+    uniqueBanks.forEach(async (bName: any) => {
+      const matched = banks.find(b => (b.name || b.Name) === bName);
+      if (matched) {
+        const bankId = matched.id || matched.ID;
+        if (bankId && !branchesCache[bankId]) {
+          try {
+            const res = await apiClient.get(`/lookup/banks/${bankId}/branches`);
+            const data = res.data?.data || res.data || [];
+            setBranchesCache(prev => ({ ...prev, [bankId]: data }));
+          } catch (err) {
+            console.error(`Failed to load initial branches for bank ${bankId}:`, err);
+          }
+        }
+      }
+    });
+  }, [banks, formData.cheques]);
 
   const addCheque = () => {
     const newCheque = {
@@ -260,7 +302,7 @@ const StepChequeDefine: React.FC<StepChequeDefineProps> = ({ formData, updateFor
                         <td className="px-2 py-3">
                           <select
                             value={chq.bank_name || ""}
-                            onChange={(e) => updateCheque(idx, { bank_name: e.target.value })}
+                            onChange={(e) => handleBankChange(idx, e.target.value)}
                             className={`w-full px-3 py-2 bg-white dark:bg-gray-900 border rounded-xl text-sm font-semibold outline-none transition-all ${
                               errors?.[`cheques.${idx}.bank_name`]
                                 ? "border-red-500 focus:border-red-500 text-red-500"
@@ -279,18 +321,29 @@ const StepChequeDefine: React.FC<StepChequeDefineProps> = ({ formData, updateFor
                           </select>
                         </td>
                         <td className="px-2 py-3">
-                          <input
-                            type="text"
+                          <select
                             value={chq.branch_name || ""}
                             onChange={(e) => updateCheque(idx, { branch_name: e.target.value })}
-                            placeholder="Select Branch"
                             className={`w-full px-3 py-2 bg-white dark:bg-gray-900 border rounded-xl text-sm font-semibold outline-none transition-all ${
                               errors?.[`cheques.${idx}.branch_name`]
                                 ? "border-red-500 focus:border-red-500 text-red-500"
                                 : "border-gray-200 dark:border-gray-700 focus:border-brand-500 text-gray-900 dark:text-white"
                             }`}
                             title={errors?.[`cheques.${idx}.branch_name`]}
-                          />
+                            disabled={!chq.bank_name}
+                          >
+                            <option value="">Select Branch</option>
+                            {(() => {
+                              const selectedBank = banks.find(b => (b.name || b.Name) === chq.bank_name);
+                              const bankId = selectedBank?.id || selectedBank?.ID;
+                              const rowBranches = bankId ? (branchesCache[bankId] || []) : [];
+                              return rowBranches.map((br: any) => (
+                                <option key={br.id || br.ID} value={br.name || br.Name}>
+                                  {br.name || br.Name}
+                                </option>
+                              ));
+                            })()}
+                          </select>
                         </td>
                         <td className="px-2 py-3">
                           <input

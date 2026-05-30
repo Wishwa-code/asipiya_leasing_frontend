@@ -146,6 +146,50 @@ export default function CreateCustomer() {
   const [banks, setBanks] = useState<BankEntry[]>([]);
   const [bankForm, setBankForm] = useState({ bank: "", accountNumber: "", beneficiary: "", type: "", branch: "" });
 
+  const [bankList, setBankList] = useState<any[]>([]);
+  const [branchList, setBranchList] = useState<any[]>([]);
+  const [loadingBanks, setLoadingBanks] = useState(false);
+  const [loadingBranches, setLoadingBranches] = useState(false);
+
+  useEffect(() => {
+    const fetchBanks = async () => {
+      setLoadingBanks(true);
+      try {
+        const res = await apiClient.get("/lookup/banks");
+        setBankList(res.data?.data || res.data || []);
+      } catch (err) {
+        console.error("Failed to fetch banks:", err);
+      } finally {
+        setLoadingBanks(false);
+      }
+    };
+    fetchBanks();
+  }, []);
+
+  const handleBankChange = async (bankName: string) => {
+    setBankForm(f => ({ ...f, bank: bankName, branch: "" }));
+    if (!bankName) {
+      setBranchList([]);
+      return;
+    }
+    const matched = bankList.find(b => (b.name || b.Name) === bankName);
+    if (!matched) {
+      setBranchList([]);
+      return;
+    }
+    const bankId = matched.id || matched.ID;
+    setLoadingBranches(true);
+    try {
+      const res = await apiClient.get(`/lookup/banks/${bankId}/branches`);
+      setBranchList(res.data?.data || res.data || []);
+    } catch (err) {
+      console.error("Failed to fetch branches:", err);
+      setBranchList([]);
+    } finally {
+      setLoadingBranches(false);
+    }
+  };
+
   function addBank() {
     if (!bankForm.bank || !bankForm.accountNumber) return;
     setBanks(b => [...b, { id: uid(), ...bankForm }]);
@@ -678,18 +722,17 @@ export default function CreateCustomer() {
             <div className="bg-gray-50 dark:bg-gray-800/50 rounded-xl p-4 mb-4 space-y-3 border border-dashed border-gray-200 dark:border-gray-700">
               <div>
                 <label className={labelCls}>Select Bank</label>
-                <select className={selectCls} value={bankForm.bank} onChange={e => setBankForm(f => ({ ...f, bank: e.target.value }))}>
-                  <option value="">Select Bank</option>
-                  <option>Bank of Ceylon</option>
-                  <option>People's Bank</option>
-                  <option>Commercial Bank</option>
-                  <option>Sampath Bank</option>
-                  <option>HNB</option>
-                  <option>NSB</option>
-                  <option>Seylan Bank</option>
-                  <option>NTB</option>
-                  <option>PABC</option>
-                  <option>Other</option>
+                <select 
+                  className={selectCls} 
+                  value={bankForm.bank} 
+                  onChange={e => handleBankChange(e.target.value)}
+                >
+                  <option value="">{loadingBanks ? "Loading banks..." : "Select Bank"}</option>
+                  {bankList.map(b => (
+                    <option key={b.id || b.ID} value={b.name || b.Name}>
+                      {b.name || b.Name}
+                    </option>
+                  ))}
                 </select>
               </div>
               <div className="grid grid-cols-2 gap-3">
@@ -721,8 +764,21 @@ export default function CreateCustomer() {
               </div>
               <div>
                 <label className={labelCls}>Branch</label>
-                <input className={inputCls} placeholder="Branch Name" value={bankForm.branch}
-                  onChange={e => setBankForm(f => ({ ...f, branch: e.target.value }))} />
+                <select 
+                  className={selectCls} 
+                  value={bankForm.branch} 
+                  onChange={e => setBankForm(f => ({ ...f, branch: e.target.value }))}
+                  disabled={!bankForm.bank || loadingBranches}
+                >
+                  <option value="">
+                    {loadingBranches ? "Loading branches..." : !bankForm.bank ? "Select Bank First" : "Select Branch"}
+                  </option>
+                  {branchList.map(br => (
+                    <option key={br.id || br.ID} value={br.name || br.Name}>
+                      {br.name || br.Name}
+                    </option>
+                  ))}
+                </select>
               </div>
             </div>
 

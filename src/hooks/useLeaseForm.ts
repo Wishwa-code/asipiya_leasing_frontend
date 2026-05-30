@@ -485,6 +485,7 @@ export const useLeaseForm = () => {
   const [stepStatuses, setStepStatuses] = useState<Record<number, string>>({});
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [stepErrors, setStepErrors] = useState<Record<string, Record<string, string>>>({});
+  const [autosavedSteps, setAutosavedSteps] = useState<Record<number, boolean>>({});
   
   // Use a ref to keep track of the latest formData inside debounced functions
   const formDataRef = useRef(formData);
@@ -501,8 +502,13 @@ export const useLeaseForm = () => {
   // Update local active-step errors when changing steps
   useEffect(() => {
     const activeStepName = STEP_NAMES[activeStep];
-    setErrors(stepErrors[activeStepName] || {});
-  }, [activeStep, stepErrors]);
+    const rawErrors = stepErrors[activeStepName] || {};
+    if (autosavedSteps[activeStep]) {
+      setErrors(rawErrors);
+    } else {
+      setErrors({});
+    }
+  }, [activeStep, stepErrors, autosavedSteps]);
 
   // Track last-saved fields per step to skip redundant network calls
   const lastSavedFieldsRef = useRef<Record<number, any>>({});
@@ -620,6 +626,8 @@ export const useLeaseForm = () => {
         for (let i = 1; i <= 9; i++) {
           lastSavedFieldsRef.current[i] = getStepFields(i, dataToSave);
         }
+        // Mark first step as autosaved
+        setAutosavedSteps(prev => ({ ...prev, [activeStepRef.current]: true }));
       } else {
         const currentStep = activeStepRef.current;
         const stepName = STEP_NAMES[currentStep];
@@ -628,6 +636,7 @@ export const useLeaseForm = () => {
         // Skip if no changes to active step
         const lastSavedFields = lastSavedFieldsRef.current[currentStep];
         if (JSON.stringify(stepPayload) === JSON.stringify(lastSavedFields)) {
+          setAutosavedSteps(prev => ({ ...prev, [currentStep]: true }));
           return;
         }
 
@@ -639,6 +648,7 @@ export const useLeaseForm = () => {
         const stepErrs = res.data.errors || {};
         setErrors(stepErrs);
         setStepErrors(prev => ({ ...prev, [activeStepName]: stepErrs }));
+        setAutosavedSteps(prev => ({ ...prev, [currentStep]: true }));
         
         // Update the ref to the newly saved fields
         lastSavedFieldsRef.current[currentStep] = stepPayload;
@@ -695,6 +705,7 @@ export const useLeaseForm = () => {
     setStepStatuses({});
     setErrors({});
     setStepErrors({});
+    setAutosavedSteps({});
     setActiveStep(1);
     
     // Clear/reinitialize ref
