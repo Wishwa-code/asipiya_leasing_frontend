@@ -56,6 +56,37 @@ const CreateLeasing: React.FC = () => {
       alert("No draft found to submit. Please fill the customer details first.");
       return;
     }
+
+    // Validate all wizard steps before submission
+    const requiredSteps = [1, 3, 4, 5, 7, 8, 9];
+    const invalidSteps: string[] = [];
+
+    requiredSteps.forEach(stepId => {
+      if (stepStatuses[stepId] !== "complete") {
+        const stepLabel = STEPS.find(s => s.id === stepId)?.label || `Step ${stepId}`;
+        invalidSteps.push(stepLabel);
+      }
+    });
+
+    // Check optional step 2 (Introducers)
+    if (stepStatuses[2] === "error") {
+      invalidSteps.push("Introducers");
+    }
+
+    // Check optional step 6 (Guarantors)
+    const reqGuarCount = parseInt(formData.required_guarantor_count || "0") || 0;
+    if (reqGuarCount > 0) {
+      if (stepStatuses[6] !== "complete") {
+        invalidSteps.push("Guarantors");
+      }
+    } else if (stepStatuses[6] === "error") {
+      invalidSteps.push("Guarantors");
+    }
+
+    if (invalidSteps.length > 0) {
+      alert(`Cannot submit application. The following steps are incomplete or contain validation errors:\n- ${invalidSteps.join("\n- ")}`);
+      return;
+    }
     
     setIsSubmitting(true);
     try {
@@ -166,7 +197,7 @@ const CreateLeasing: React.FC = () => {
       case 6: return <StepGuarantors formData={formData} updateFormData={updateFormData} errors={errors} />;
       case 7: return <StepPdcSecurity formData={formData} updateFormData={updateFormData} errors={errors} />;
       case 8: return <StepChequeDefine formData={formData} updateFormData={updateFormData} errors={errors} />;
-      case 9: return <StepCrDocs formData={formData} updateFormData={updateFormData} errors={errors} />;
+      case 9: return <StepCrDocs formData={formData} updateFormData={updateFormData} draftId={draftId} saveDraft={saveDraft} errors={errors} />;
       default: return <StepCustomer formData={formData} updateFormData={updateFormData} errors={errors} />;
     }
   };

@@ -97,6 +97,28 @@ const StepCustomer: React.FC<StepCustomerProps> = ({ formData, updateFormData, e
 
   return (
     <div className="space-y-8 animate-fadeIn">
+      {/* Draft Identification Name */}
+      <div className="bg-white dark:bg-gray-800 p-6 rounded-2xl border border-gray-200 dark:border-gray-700 shadow-sm">
+        <h3 className="text-sm font-bold text-gray-500 dark:text-gray-400 uppercase tracking-wider mb-3">
+          DRAFT IDENTIFICATION
+        </h3>
+        <div>
+          <label className="block text-xs font-bold text-gray-450 uppercase mb-2 ml-1">
+            Internal Identification Name (Optional)
+          </label>
+          <input
+            type="text"
+            value={formData.internal_identification_name || ""}
+            onChange={(e) => updateFormData({ internal_identification_name: e.target.value })}
+            placeholder="e.g. John Doe - Toyota Prius 2018 Draft"
+            className="w-full p-3 py-2.5 bg-gray-50 dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-xl text-sm font-semibold outline-none focus:border-brand-500 transition-colors"
+          />
+          <p className="text-[11px] text-gray-400 dark:text-gray-500 mt-2 font-medium ml-1">
+            This name helps you identify and retrieve this draft application easily in the drafts list.
+          </p>
+        </div>
+      </div>
+
       {/* Search Header */}
       <div className="bg-brand-50/50 dark:bg-brand-500/5 p-6 rounded-2xl border border-brand-100 dark:border-brand-500/10">
         <h3 className="text-sm font-bold text-brand-600 dark:text-brand-400 uppercase tracking-wider mb-4 flex items-center gap-2">

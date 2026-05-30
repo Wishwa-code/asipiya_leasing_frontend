@@ -7,6 +7,7 @@ export interface LeaseFormData {
   customer_code: string;
   customer_name: string;
   bank_account_id: string;
+  internal_identification_name?: string;
   
   // Step 2: Introducers
   introducers: any[];
@@ -158,6 +159,7 @@ const INITIAL_DATA: LeaseFormData = {
   customer_code: "",
   customer_name: "",
   bank_account_id: "",
+  internal_identification_name: "",
   introducers: [],
   vehicle_type: "",
   vehicle_type_id: "",
@@ -306,6 +308,7 @@ export function getStepFields(step: number, data: LeaseFormData): Record<string,
         customer_code: data.customer_code,
         customer_name: data.customer_name,
         bank_account_id: data.bank_account_id,
+        internal_identification_name: data.internal_identification_name,
       };
     case 2:
       return {

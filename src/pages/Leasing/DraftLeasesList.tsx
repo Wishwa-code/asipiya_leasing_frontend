@@ -9,6 +9,7 @@ type DraftLeaseItem = {
   ID: number;
   customer_id: number;
   draft_code: string;
+  internal_identification_name: string;
   current_progress_data: any;
   status: string;
   CreatedAt: string;
@@ -24,6 +25,7 @@ export default function DraftLeasesList() {
   const [filters, setFilters] = useState({
     code: "",
     nic: "",
+    name: "",
   });
 
   useEffect(() => {
@@ -49,7 +51,7 @@ export default function DraftLeasesList() {
   };
 
   const clearFilters = () => {
-    setFilters({ code: "", nic: "" });
+    setFilters({ code: "", nic: "", name: "" });
     setTimeout(fetchDrafts, 0);
   };
 
@@ -112,6 +114,19 @@ export default function DraftLeasesList() {
                     className="w-full rounded-xl border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-900 pl-11 pr-4 py-2.5 text-sm outline-none focus:border-brand-500"
                     value={filters.nic}
                     onChange={(e) => setFilters({...filters, nic: e.target.value})}
+                  />
+                </div>
+              </div>
+              <div>
+                <label className="block text-[11px] font-bold text-gray-500 dark:text-gray-400 uppercase mb-2">Draft Name</label>
+                <div className="relative">
+                  <span className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400"><PencilIcon className="w-4 h-4" /></span>
+                  <input 
+                    type="text" 
+                    placeholder="Search by Draft Name"
+                    className="w-full rounded-xl border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-900 pl-11 pr-4 py-2.5 text-sm outline-none focus:border-brand-500"
+                    value={filters.name}
+                    onChange={(e) => setFilters({...filters, name: e.target.value})}
                   />
                 </div>
               </div>
@@ -182,8 +197,13 @@ export default function DraftLeasesList() {
                             D
                           </div>
                           <div>
-                            <h4 className="font-bold text-gray-900 dark:text-white mb-0.5">ID: {draft.ID}</h4>
-                            <span className="text-[11px] font-bold text-gray-400 uppercase tracking-tighter">Status: Draft</span>
+                            <h4 className="font-bold text-gray-900 dark:text-white mb-0.5">
+                              {draft.internal_identification_name || `Draft ID: ${draft.ID}`}
+                            </h4>
+                            {draft.internal_identification_name && (
+                              <p className="text-[11px] font-bold text-gray-450 uppercase tracking-tighter">ID: {draft.ID}</p>
+                            )}
+                            <span className="text-[11px] font-bold text-gray-400 uppercase tracking-tighter block mt-0.5">Status: Draft</span>
                           </div>
                         </div>
                       </td>
