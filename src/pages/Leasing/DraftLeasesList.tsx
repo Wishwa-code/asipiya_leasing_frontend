@@ -16,6 +16,134 @@ type DraftLeaseItem = {
   UpdatedAt: string;
 };
 
+const STEP_LABELS = [
+  "Customer details",
+  "Introducers",
+  "Vehicle & asset details",
+  "Insurance info",
+  "Product & loan configuration",
+  "Guarantors",
+  "PDC security",
+  "Cheque configuration",
+  "CR & compliance documents"
+];
+
+function getStepStatuses(parsedData: any) {
+  const statuses = Array(9).fill("pristine");
+  if (!parsedData) return statuses;
+
+  // Step 1: Customer
+  const step1Touched = !!parsedData.customer_db_id || !!parsedData.customer_name;
+  if (step1Touched) {
+    const step1Complete = !!parsedData.customer_db_id;
+    statuses[0] = step1Complete ? "complete" : "error";
+  }
+
+  // Step 2: Introducers (Optional)
+  const step2Touched = parsedData.introducers && parsedData.introducers.length > 0;
+  if (step2Touched) {
+    statuses[1] = "complete";
+  }
+
+  // Step 3: Vehicle Asset
+  const step3Fields = [
+    parsedData.vehicle_type_id,
+    parsedData.vehicle_make_id,
+    parsedData.vehicle_model_id,
+    parsedData.vehicle_status,
+    parsedData.engine_cc,
+    parsedData.chassis_no || parsedData.chasis_no,
+    parsedData.manu_year,
+    parsedData.color_id,
+    parsedData.usage_type,
+    parsedData.manu_country,
+    parsedData.reg_year,
+    parsedData.reg_no,
+    parsedData.supplier_id,
+    parsedData.market_value,
+    parsedData.forced_value,
+    parsedData.invoice_value
+  ];
+  const step3Touched = step3Fields.some(f => !!f);
+  if (step3Touched) {
+    const step3Complete = step3Fields.every(f => !!f && f !== "0.00" && f !== "0");
+    statuses[2] = step3Complete ? "complete" : "error";
+  }
+
+  // Step 4: Insurance
+  const step4Fields = [
+    parsedData.insurance_company,
+    parsedData.insurance_amount,
+    parsedData.insurance_premium,
+    parsedData.insurance_start_date,
+    parsedData.insurance_expiry_date
+  ];
+  const step4Touched = step4Fields.some(f => !!f);
+  if (step4Touched) {
+    const step4Complete = step4Fields.every(f => !!f);
+    statuses[3] = step4Complete ? "complete" : "error";
+  }
+
+  // Step 5: Lease Details
+  const step5Fields = [
+    parsedData.product_id,
+    parsedData.loan_amount,
+    parsedData.interest_rate,
+    parsedData.period,
+    parsedData.tcc_collection_date
+  ];
+  const step5Touched = step5Fields.some(f => !!f);
+  if (step5Touched) {
+    const step5Complete = step5Fields.every(f => !!f);
+    statuses[4] = step5Complete ? "complete" : "error";
+  }
+
+  // Step 6: Guarantors
+  const reqGuarCount = parseInt(parsedData.required_guarantor_count || "0") || 0;
+  const guarantorsCount = parsedData.guarantors ? parsedData.guarantors.length : 0;
+  if (reqGuarCount > 0 || guarantorsCount > 0) {
+    statuses[5] = (guarantorsCount >= reqGuarCount) ? "complete" : "error";
+  }
+
+  // Step 7: PDC Security
+  const step7Touched = !!parsedData.pdc_security_type || !!parsedData.pdc_reference_details;
+  if (step7Touched) {
+    let step7Complete = !!parsedData.pdc_reference_details;
+    if (parsedData.pdc_security_type === "Cheque") {
+      step7Complete = step7Complete && !!parsedData.pdc_bank_id && !!parsedData.pdc_cheque_date && !!parsedData.pdc_cheque_no && !!parsedData.pdc_ownership;
+    } else if (parsedData.pdc_security_type === "CR Book") {
+      step7Complete = step7Complete && !!parsedData.pdc_book_date;
+    }
+    statuses[6] = step7Complete ? "complete" : "error";
+  }
+
+  // Step 8: Cheque Define
+  const step8Touched = parsedData.cheques && parsedData.cheques.length > 0;
+  if (step8Touched) {
+    const allChequesValid = parsedData.cheques.every((chq: any) => 
+      !!chq.payee_name && !!chq.nic_br_no && !!chq.instructions && 
+      !!chq.bank_name && !!chq.branch_name && !!chq.account_number && 
+      parseFloat(chq.payment_amount) > 0
+    );
+    statuses[7] = allChequesValid ? "complete" : "error";
+  }
+
+  // Step 9: CR & Docs
+  const step9Fields = [
+    parsedData.cr_serial_no,
+    parsedData.url_cr_front,
+    parsedData.url_cr_back,
+    parsedData.url_invoice
+  ];
+  const step9Touched = step9Fields.some(f => !!f);
+  if (step9Touched) {
+    const step9Complete = step9Fields.every(f => !!f);
+    statuses[8] = step9Complete ? "complete" : "error";
+  }
+
+  return statuses;
+}
+
 export default function DraftLeasesList() {
   const navigate = useNavigate();
   const [drafts, setDrafts] = useState<DraftLeaseItem[]>([]);
@@ -160,6 +288,7 @@ export default function DraftLeasesList() {
                 <th className="px-6 py-4 w-12 text-center">#</th>
                 <th className="px-6 py-4">Draft Identity</th>
                 <th className="px-6 py-4">Customer Details</th>
+                <th className="px-6 py-4">Application Progress</th>
                 <th className="px-6 py-4">Last Updated</th>
                 <th className="px-6 py-4 text-right">Action</th>
               </tr>
@@ -167,14 +296,14 @@ export default function DraftLeasesList() {
             <tbody className="divide-y divide-gray-100 dark:divide-gray-800">
               {loading ? (
                 <tr>
-                  <td colSpan={5} className="px-6 py-12 text-center">
+                  <td colSpan={6} className="px-6 py-12 text-center">
                     <span className="inline-block w-8 h-8 border-4 border-brand-500/30 border-t-brand-500 rounded-full animate-spin"></span>
                     <p className="mt-4 text-xs font-bold uppercase tracking-widest text-brand-500">Retrieving Drafts...</p>
                   </td>
                 </tr>
               ) : drafts.length === 0 ? (
                 <tr>
-                  <td colSpan={5} className="px-6 py-16 text-center text-gray-400">
+                  <td colSpan={6} className="px-6 py-16 text-center text-gray-400">
                     <p className="font-semibold text-base">No drafts found</p>
                     <p className="text-sm">Try adjusting your search filters</p>
                   </td>
@@ -197,13 +326,15 @@ export default function DraftLeasesList() {
                             D
                           </div>
                           <div>
+                            <div className="flex items-center gap-2 mb-1">
+                              <span className="px-2 py-0.5 bg-brand-500/10 text-brand-500 text-[10px] font-black rounded-md uppercase tracking-wider">
+                                {draft.draft_code || `LSE-DRAFT-${draft.ID}`}
+                              </span>
+                            </div>
                             <h4 className="font-bold text-gray-900 dark:text-white mb-0.5">
-                              {draft.internal_identification_name || `Draft ID: ${draft.ID}`}
+                              {draft.internal_identification_name || "Unnamed Draft"}
                             </h4>
-                            {draft.internal_identification_name && (
-                              <p className="text-[11px] font-bold text-gray-450 uppercase tracking-tighter">ID: {draft.ID}</p>
-                            )}
-                            <span className="text-[11px] font-bold text-gray-400 uppercase tracking-tighter block mt-0.5">Status: Draft</span>
+                            <span className="text-[10px] font-bold text-gray-400 uppercase tracking-tighter block">ID: {draft.ID}</span>
                           </div>
                         </div>
                       </td>
@@ -216,6 +347,40 @@ export default function DraftLeasesList() {
                             Code: {parsedData?.customer_code || "-"}
                           </div>
                         </div>
+                      </td>
+                      <td className="px-6 py-5">
+                        {(() => {
+                          const statuses = getStepStatuses(parsedData);
+                          const completedCount = statuses.filter(s => s === "complete").length;
+                          return (
+                            <div className="flex flex-col gap-1.5 min-w-[200px]">
+                              <div className="flex items-center justify-between text-xs font-bold text-gray-500 dark:text-gray-400">
+                                <span>Completed Steps</span>
+                                <span className="text-brand-500">{completedCount} / 9</span>
+                              </div>
+                              <div className="flex items-center gap-1">
+                                {statuses.map((status, i) => {
+                                  let bgClass = "bg-gray-100 text-gray-400 border border-gray-200 dark:bg-gray-900/50 dark:text-gray-650 dark:border-gray-800";
+                                  if (status === "complete") {
+                                    bgClass = "bg-emerald-500 text-white shadow-sm shadow-emerald-500/10 border-emerald-600";
+                                  } else if (status === "error") {
+                                    bgClass = "bg-orange-500 text-white shadow-sm shadow-orange-500/10 border-orange-600";
+                                  }
+                                  
+                                  return (
+                                    <div
+                                      key={i}
+                                      className={`w-6 h-6 rounded-md flex items-center justify-center text-[10px] font-black select-none transition-transform hover:scale-110 cursor-help ${bgClass}`}
+                                      title={`Step ${i + 1}: ${STEP_LABELS[i]} (${status === "complete" ? "Complete" : status === "error" ? "Incomplete / Error" : "Pristine"})`}
+                                    >
+                                      {i + 1}
+                                    </div>
+                                  );
+                                })}
+                              </div>
+                            </div>
+                          );
+                        })()}
                       </td>
                       <td className="px-6 py-5">
                         <div className="space-y-1.5 text-xs text-gray-500">

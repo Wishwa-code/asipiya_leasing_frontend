@@ -559,9 +559,41 @@ export const useLeaseForm = () => {
             }
           });
 
+          // Map relational PDC Security if present in database
+          const mappedPdc: Partial<LeaseFormData> = {};
+          if (app.pdc_security) {
+            const sec = app.pdc_security;
+            let type = sec.pdc_security_type || "";
+            if (type.startsWith("Deed")) type = "Deed";
+            else if (type.startsWith("CR Book")) type = "CR Book";
+            else if (type.startsWith("Cheque")) type = "Cheque";
+
+            if (type) {
+              mappedPdc.pdc_security_type = type;
+            }
+
+            if (type === "Cheque" && sec.cheque_details && sec.cheque_details.length > 0) {
+              const chq = sec.cheque_details[0];
+              mappedPdc.pdc_cheque_status = chq.cheque_status || "Blank";
+              mappedPdc.pdc_bank_id = chq.bank_id ? String(chq.bank_id) : "";
+              mappedPdc.pdc_cheque_date = chq.cheque_date || "";
+              mappedPdc.pdc_cheque_no = chq.cheque_no || "";
+              mappedPdc.pdc_ownership = chq.ownership || "Primary";
+              mappedPdc.pdc_reference_details = chq.reference_details || "";
+            } else if (type === "CR Book" && sec.cr_book_details && sec.cr_book_details.length > 0) {
+              const book = sec.cr_book_details[0];
+              mappedPdc.pdc_book_date = book.book_date || "";
+              mappedPdc.pdc_reference_details = book.reference_details || "";
+            } else if (type === "Deed" && sec.deed_details && sec.deed_details.length > 0) {
+              const deed = sec.deed_details[0];
+              mappedPdc.pdc_reference_details = deed.reference_details || "";
+            }
+          }
+
           const mergedData = {
             ...formDataRef.current,
             ...parsed,
+            ...mappedPdc,
             ...mappedDocs
           };
 

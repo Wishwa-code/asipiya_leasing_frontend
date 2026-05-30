@@ -1,6 +1,7 @@
 import React, { useState } from "react";
 import apiClient from "../../api/apiClient";
 import PageMeta from "../../components/common/PageMeta";
+import { notification } from "../../services/notification";
 import "./Leasing.css";
 
 import { useLeaseForm } from "../../hooks/useLeaseForm";
@@ -54,7 +55,7 @@ const CreateLeasing: React.FC = () => {
 
   const submitApplication = async () => {
     if (!draftId) {
-      alert("No draft found to submit. Please fill the customer details first.");
+      notification.warning("No draft found to submit. Please fill the customer details first.");
       return;
     }
 
@@ -85,7 +86,9 @@ const CreateLeasing: React.FC = () => {
     }
 
     if (invalidSteps.length > 0) {
-      alert(`Cannot submit application. The following steps are incomplete or contain validation errors:\n- ${invalidSteps.join("\n- ")}`);
+      notification.error(`Cannot submit application. The following steps are incomplete or contain validation errors:`, {
+        description: invalidSteps.join(", ")
+      });
       return;
     }
     
@@ -178,11 +181,11 @@ const CreateLeasing: React.FC = () => {
       };
 
       const res = await apiClient.post(`/leasing-applications/${draftId}/submit`, payload);
-      alert(res.data.message || "Application submitted successfully!");
+      notification.success(res.data.message || "Application submitted successfully!");
       resetForm();
     } catch (err: any) {
       console.error(err);
-      alert("Failed to submit application: " + (err.response?.data?.error || err.message));
+      notification.error("Failed to submit application: " + (err.response?.data?.error || err.message));
     } finally {
       setIsSubmitting(false);
     }
@@ -353,13 +356,31 @@ const CreateLeasing: React.FC = () => {
                  ))}
               </div>
 
-              <button 
-                onClick={handleNextStep}
-                disabled={activeStep === 9}
-                className="flex items-center gap-2 px-6 py-2.5 bg-brand-500 hover:bg-brand-600 text-white font-bold rounded-xl transition-all shadow-theme-sm disabled:opacity-30"
+              {activeStep === 9 ? (
+                <button
+                  onClick={submitApplication}
+                  disabled={isSubmitting}
+                  className="flex items-center gap-2 px-6 py-2.5 bg-brand-500 hover:bg-brand-600 text-white font-bold rounded-xl transition-all shadow-theme-sm disabled:opacity-50"
                 >
-                Next Step <AngleRightIcon className="w-5 h-5" />
-              </button>
+                  {isSubmitting ? (
+                    <>
+                      <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin"></div>
+                      Submitting...
+                    </>
+                  ) : (
+                    <>
+                      Submit Application <CheckCircleIcon className="w-5 h-5" />
+                    </>
+                  )}
+                </button>
+              ) : (
+                <button 
+                  onClick={handleNextStep}
+                  className="flex items-center gap-2 px-6 py-2.5 bg-brand-500 hover:bg-brand-600 text-white font-bold rounded-xl transition-all shadow-theme-sm"
+                >
+                  Next Step <AngleRightIcon className="w-5 h-5" />
+                </button>
+              )}
           </div>
       </div>
     </div>
