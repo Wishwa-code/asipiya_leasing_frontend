@@ -5,8 +5,12 @@ import { AuthGuard, GuestGuard } from "./components/auth/RouteGuard";
 import AppLayout from "./layout/AppLayout";
 import { ScrollToTop } from "./components/common/ScrollToTop";
 import { ROUTES } from "./routes/paths";
+import { Toaster } from "sonner";
+import { useTheme } from "./context/ThemeContext";
 
 export default function App() {
+  const { theme } = useTheme();
+
   return (
     <Router>
       <ScrollToTop />
@@ -46,9 +50,11 @@ export default function App() {
           <Route path="*" element={<Navigate to={ROUTES.NOT_FOUND} replace />} />
         </Routes>
       </Suspense>
+      <Toaster theme={theme} closeButton richColors position="top-right" />
     </Router>
   );
 }
 
 // Helper component for Navigate in the fallback route
 import { Navigate } from "react-router";
+

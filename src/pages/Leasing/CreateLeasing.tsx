@@ -75,7 +75,7 @@ const CreateLeasing: React.FC = () => {
     }
 
     // Check optional step 6 (Guarantors)
-    const reqGuarCount = parseInt(formData.required_guarantor_count || "0") || 0;
+    const reqGuarCount = parseInt(String(formData.required_guarantor_count || "0")) || 0;
     if (reqGuarCount > 0) {
       if (stepStatuses[6] !== "complete") {
         invalidSteps.push("Guarantors");

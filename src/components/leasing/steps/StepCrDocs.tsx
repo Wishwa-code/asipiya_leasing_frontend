@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from "react";
-import { DocsIcon, DownloadIcon, CheckCircleIcon, TrashBinIcon, FileIcon } from "../../../icons";
+import { DownloadIcon, CheckCircleIcon, TrashBinIcon, FileIcon } from "../../../icons";
 import apiClient from "../../../api/apiClient";
 import DatePicker from "../../form/date-picker";
 

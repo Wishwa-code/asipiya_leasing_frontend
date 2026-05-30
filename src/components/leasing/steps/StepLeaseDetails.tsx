@@ -889,7 +889,7 @@ const StepLeaseDetails: React.FC<StepLeaseDetailsProps> = ({ formData, updateFor
                   placeholder="Select Date"
                   defaultDate={formData.tcc_collection_date || ""}
                   minDate={getTomorrowDateString()}
-                  onChange={(selectedDates, dateStr) => {
+                  onChange={(_selectedDates, dateStr) => {
                     updateFormData({ tcc_collection_date: dateStr });
                   }}
                   error={!!errors?.tcc_collection_date}
