@@ -1,7 +1,7 @@
-import { useState, useEffect, useMemo } from "react";
+import { useState, useEffect, useMemo, useRef } from "react";
 import PageMeta from "../../components/common/PageMeta";
 import { Link, useNavigate } from "react-router";
-import { PlusIcon, PencilIcon, InfoIcon, UserCircleIcon } from "../../icons";
+import { PlusIcon, PencilIcon, CloseIcon } from "../../icons";
 import apiClient from "../../api/apiClient";
 import { ROUTES } from "../../routes/paths";
 import { DataTable } from "../../components/ui/table";
@@ -149,25 +149,60 @@ export default function DraftLeasesList() {
   const navigate = useNavigate();
   const [drafts, setDrafts] = useState<DraftLeaseItem[]>([]);
   const [loading, setLoading] = useState(true);
+
+  // Search & Pagination State
+  const [searchQuery, setSearchQuery] = useState("");
   const [currentPage, setCurrentPage] = useState(1);
   const [pageSize, setPageSize] = useState(20);
 
-  // Filters
+  // Active Popover State
+  const [activePopover, setActivePopover] = useState<
+    "code" | "nic" | "name" | null
+  >(null);
+
+  // Filters State
   const [filters, setFilters] = useState({
     code: "",
     nic: "",
     name: "",
   });
 
+  // Temporary filter state (holds input before Apply)
+  const [tempFilters, setTempFilters] = useState({
+    code: "",
+    nic: "",
+    name: "",
+  });
+
+  const popoverRef = useRef<HTMLDivElement | null>(null);
+
   useEffect(() => {
     fetchDrafts();
+  }, [filters]);
+
+  useEffect(() => {
+    function handleClickOutside(event: MouseEvent) {
+      if (
+        popoverRef.current &&
+        !popoverRef.current.contains(event.target as Node)
+      ) {
+        setActivePopover(null);
+      }
+    }
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => document.removeEventListener("mousedown", handleClickOutside);
   }, []);
 
   const fetchDrafts = async () => {
     setLoading(true);
     try {
-      // NOTE: Backend needs an endpoint like GET /leasing-applications/drafts
-      const res = await apiClient.get('/leasing-applications/drafts', { params: filters });
+      const res = await apiClient.get('/leasing-applications/drafts', {
+        params: {
+          code: filters.code,
+          nic: filters.nic,
+          name: filters.name,
+        },
+      });
       setDrafts(res.data?.data || res.data || []);
     } catch (err) {
       console.error("Failed to fetch drafts", err);
@@ -176,32 +211,134 @@ export default function DraftLeasesList() {
     }
   };
 
-  const handleSearch = (e: React.FormEvent) => {
-    e.preventDefault();
-    setCurrentPage(1);
-    fetchDrafts();
+  const openFilterPopover = (
+    type: "code" | "nic" | "name"
+  ) => {
+    setTempFilters({
+      code: filters.code,
+      nic: filters.nic,
+      name: filters.name,
+    });
+    setActivePopover(type);
   };
 
-  const clearFilters = () => {
+  const handleApplyFilter = (
+    key: "code" | "nic" | "name",
+    value: string
+  ) => {
+    setFilters((prev) => ({ ...prev, [key]: value }));
+    setActivePopover(null);
+  };
+
+  const handleClearSingleFilter = (
+    key: "code" | "nic" | "name"
+  ) => {
+    setFilters((prev) => ({ ...prev, [key]: "" }));
+    setTempFilters((prev) => ({ ...prev, [key]: "" }));
+  };
+
+  const clearAllFilters = () => {
     setFilters({ code: "", nic: "", name: "" });
-    setCurrentPage(1);
-    setTimeout(fetchDrafts, 0);
+    setTempFilters({ code: "", nic: "", name: "" });
+    setActivePopover(null);
   };
 
-  const totalItems = drafts.length;
-  const pagedDrafts = useMemo(() => {
-    return drafts.slice(
-      (currentPage - 1) * pageSize,
-      currentPage * pageSize
+  const isAnyFilterActive =
+    filters.code || filters.nic || filters.name;
+
+  // Client-side search filter (runs on top of API-filtered data)
+  const searchLower = searchQuery.trim().toLowerCase();
+  const searchFiltered = searchLower
+    ? drafts.filter((d) => {
+        let parsedData: any = {};
+        try {
+          parsedData = typeof d.current_progress_data === "string" 
+            ? JSON.parse(d.current_progress_data) 
+            : d.current_progress_data;
+        } catch (e) {}
+        return (
+          d.draft_code?.toLowerCase().includes(searchLower) ||
+          d.internal_identification_name?.toLowerCase().includes(searchLower) ||
+          parsedData?.customer_name?.toLowerCase().includes(searchLower) ||
+          parsedData?.customer_code?.toLowerCase().includes(searchLower)
+        );
+      })
+    : drafts;
+
+  // Pagination derived values
+  const totalItems = searchFiltered.length;
+  const totalPages = Math.max(1, Math.ceil(totalItems / pageSize));
+  const safePage = Math.min(currentPage, totalPages);
+  const pageStart = (safePage - 1) * pageSize;
+  const pageEnd = Math.min(pageStart + pageSize, totalItems);
+  const pagedDrafts = searchFiltered.slice(pageStart, pageEnd);
+
+  // Reset to page 1 when search query or pageSize changes
+  const handleSearchChange = (q: string) => {
+    setSearchQuery(q);
+    setCurrentPage(1);
+  };
+  const handlePageSizeChange = (size: number) => {
+    setPageSize(size);
+    setCurrentPage(1);
+  };
+
+  // Reusable filter pill button
+  const FilterPill = ({
+    label,
+    activeValue,
+    onClear,
+    onOpen,
+  }: {
+    label: string;
+    activeValue: string;
+    onClear: () => void;
+    onOpen: () => void;
+  }) =>
+    activeValue ? (
+      <span className="inline-flex items-center gap-1 border border-brand-400 dark:border-brand-500/40 rounded-full px-2.5 py-0.5 text-xs font-medium text-brand-700 dark:text-brand-300 bg-brand-50 dark:bg-brand-500/10">
+        {label}: {activeValue}
+        <button
+          onClick={onClear}
+          className="ml-0.5 text-brand-400 hover:text-brand-600 transition-colors"
+        >
+          <CloseIcon className="w-3 h-3" />
+        </button>
+      </span>
+    ) : (
+      <button
+        onClick={onOpen}
+        className="inline-flex items-center gap-1 rounded-full px-2.5 py-0.5 text-xs font-medium text-gray-500 dark:text-gray-400 border border-gray-300 dark:border-gray-600 hover:border-gray-400 dark:hover:border-gray-500 transition-colors"
+      >
+        <span className="flex items-center justify-center w-3.5 h-3.5 rounded-full border border-current leading-none text-[9px] font-bold">
+          +
+        </span>
+        {label}
+      </button>
     );
-  }, [drafts, currentPage, pageSize]);
+
+  // Reusable popover container
+  const FilterPopover = ({
+    children,
+    align = "left",
+  }: {
+    children: React.ReactNode;
+    align?: "left" | "right";
+  }) => (
+    <div
+      ref={popoverRef}
+      className={`absolute ${align === "right" ? "right-0" : "left-0"} mt-2 z-50 bg-white dark:bg-gray-850 border border-gray-200 dark:border-gray-700 rounded-xl shadow-lg p-4 min-w-[240px]`}
+    >
+      {children}
+    </div>
+  );
 
   const columns = useMemo(() => [
     {
       key: "idx",
       label: "#",
       toggleable: false,
-      render: (_: any, idx: number) => <span className="text-gray-400 font-semibold">{(currentPage - 1) * pageSize + idx + 1}</span>,
+      render: (_: any, idx: number) => <span className="text-gray-400 font-semibold">{pageStart + idx + 1}</span>,
     },
     {
       key: "identity",
@@ -321,7 +458,167 @@ export default function DraftLeasesList() {
         </div>
       ),
     },
-  ], [currentPage, pageSize]);
+  ], [pageStart, pageSize]);
+
+  const filterBarLeft = (
+    <>
+      {/* Draft Code */}
+      <div className="relative">
+        <FilterPill
+          label="Draft Code"
+          activeValue={filters.code}
+          onClear={() => handleClearSingleFilter("code")}
+          onOpen={() => openFilterPopover("code")}
+        />
+        {activePopover === "code" && (
+          <FilterPopover>
+            <div className="flex flex-col gap-3">
+              <p className="text-xs font-semibold text-gray-500 dark:text-gray-400">
+                Filter by: Draft Code
+              </p>
+              <input
+                type="text"
+                placeholder="Enter draft code"
+                autoFocus
+                className="w-full text-sm px-3 py-1.5 border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-900 rounded-lg outline-none text-gray-800 dark:text-white focus:border-brand-400"
+                value={tempFilters.code}
+                onChange={(e) =>
+                  setTempFilters({ ...tempFilters, code: e.target.value })
+                }
+                onKeyDown={(e) =>
+                  e.key === "Enter" &&
+                  handleApplyFilter("code", tempFilters.code)
+                }
+              />
+              <div className="flex justify-end gap-2">
+                <button
+                  onClick={() => setActivePopover(null)}
+                  className="px-3 py-1 text-xs text-gray-500 hover:text-gray-700"
+                >
+                  Cancel
+                </button>
+                <button
+                  onClick={() =>
+                    handleApplyFilter("code", tempFilters.code)
+                  }
+                  className="px-3 py-1 bg-brand-500 hover:bg-brand-600 text-white text-xs font-semibold rounded-md transition-colors"
+                >
+                  Apply
+                </button>
+              </div>
+            </div>
+          </FilterPopover>
+        )}
+      </div>
+
+      {/* Customer NIC */}
+      <div className="relative">
+        <FilterPill
+          label="Customer NIC"
+          activeValue={filters.nic}
+          onClear={() => handleClearSingleFilter("nic")}
+          onOpen={() => openFilterPopover("nic")}
+        />
+        {activePopover === "nic" && (
+          <FilterPopover>
+            <div className="flex flex-col gap-3">
+              <p className="text-xs font-semibold text-gray-500 dark:text-gray-400">
+                Filter by: Customer NIC
+              </p>
+              <input
+                type="text"
+                placeholder="Enter NIC number"
+                autoFocus
+                className="w-full text-sm px-3 py-1.5 border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-900 rounded-lg outline-none text-gray-800 dark:text-white focus:border-brand-400"
+                value={tempFilters.nic}
+                onChange={(e) =>
+                  setTempFilters({ ...tempFilters, nic: e.target.value })
+                }
+                onKeyDown={(e) =>
+                  e.key === "Enter" &&
+                  handleApplyFilter("nic", tempFilters.nic)
+                }
+              />
+              <div className="flex justify-end gap-2">
+                <button
+                  onClick={() => setActivePopover(null)}
+                  className="px-3 py-1 text-xs text-gray-500 hover:text-gray-700"
+                >
+                  Cancel
+                </button>
+                <button
+                  onClick={() =>
+                    handleApplyFilter("nic", tempFilters.nic)
+                  }
+                  className="px-3 py-1 bg-brand-500 hover:bg-brand-600 text-white text-xs font-semibold rounded-md transition-colors"
+                >
+                  Apply
+                </button>
+              </div>
+            </div>
+          </FilterPopover>
+        )}
+      </div>
+
+      {/* Draft Name */}
+      <div className="relative">
+        <FilterPill
+          label="Draft Name"
+          activeValue={filters.name}
+          onClear={() => handleClearSingleFilter("name")}
+          onOpen={() => openFilterPopover("name")}
+        />
+        {activePopover === "name" && (
+          <FilterPopover>
+            <div className="flex flex-col gap-3">
+              <p className="text-xs font-semibold text-gray-500 dark:text-gray-400">
+                Filter by: Draft Name
+              </p>
+              <input
+                type="text"
+                placeholder="Enter draft name"
+                autoFocus
+                className="w-full text-sm px-3 py-1.5 border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-900 rounded-lg outline-none text-gray-800 dark:text-white focus:border-brand-400"
+                value={tempFilters.name}
+                onChange={(e) =>
+                  setTempFilters({ ...tempFilters, name: e.target.value })
+                }
+                onKeyDown={(e) =>
+                  e.key === "Enter" &&
+                  handleApplyFilter("name", tempFilters.name)
+                }
+              />
+              <div className="flex justify-end gap-2">
+                <button
+                  onClick={() => setActivePopover(null)}
+                  className="px-3 py-1 text-xs text-gray-500 hover:text-gray-700"
+                >
+                  Cancel
+                </button>
+                <button
+                  onClick={() =>
+                    handleApplyFilter("name", tempFilters.name)
+                  }
+                  className="px-3 py-1 bg-brand-500 hover:bg-brand-600 text-white text-xs font-semibold rounded-md transition-colors"
+                >
+                  Apply
+                </button>
+              </div>
+            </div>
+          </FilterPopover>
+        )}
+      </div>
+
+      {isAnyFilterActive && (
+        <button
+          onClick={clearAllFilters}
+          className="text-xs font-medium text-brand-500 hover:text-brand-600 transition-colors ml-1"
+        >
+          Clear filters
+        </button>
+      )}
+    </>
+  );
 
   return (
     <div className="relative pb-20">
@@ -344,92 +641,20 @@ export default function DraftLeasesList() {
         </Link>
       </div>
 
-      {/* Filter Section */}
-      <div className="bg-white dark:bg-gray-800 rounded-2xl border border-gray-200 dark:border-gray-700 shadow-sm p-5 mb-6">
-        <form onSubmit={handleSearch} className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-          {/* System Context */}
-          <div className="lg:border-r border-gray-100 dark:border-gray-700 pr-0 lg:pr-8">
-            <div className="flex items-center gap-2 text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-4">
-              <InfoIcon className="w-3.5 h-3.5" /> Reference
-            </div>
-            
-            <div className="bg-gray-50 dark:bg-gray-900/50 p-4 rounded-xl border border-gray-100 dark:border-gray-700 mb-4 shadow-sm">
-              <label className="block text-[11px] font-bold text-brand-500 uppercase mb-1">Draft Code</label>
-              <input 
-                type="text" 
-                placeholder="Enter Draft Ref"
-                className="w-full bg-transparent border-none p-0 focus:ring-0 text-lg font-bold text-gray-900 dark:text-white placeholder:text-gray-300 dark:placeholder:text-gray-600"
-                value={filters.code}
-                onChange={(e) => setFilters({...filters, code: e.target.value})}
-              />
-            </div>
-          </div>
-
-          {/* Search Criteria */}
-          <div className="lg:col-span-2">
-            <div className="flex items-center gap-2 text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-4">
-              <PlusIcon className="w-3.5 h-3.5 rotate-45" /> Search Criteria
-            </div>
-
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
-              <div>
-                <label className="block text-[11px] font-bold text-gray-500 dark:text-gray-400 uppercase mb-2">Customer NIC</label>
-                <div className="relative">
-                  <span className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400"><UserCircleIcon className="w-4 h-4" /></span>
-                  <input 
-                    type="text" 
-                    placeholder="Search by NIC"
-                    className="w-full rounded-xl border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-900 pl-11 pr-4 py-2.5 text-sm outline-none focus:border-brand-500"
-                    value={filters.nic}
-                    onChange={(e) => setFilters({...filters, nic: e.target.value})}
-                  />
-                </div>
-              </div>
-              <div>
-                <label className="block text-[11px] font-bold text-gray-500 dark:text-gray-400 uppercase mb-2">Draft Name</label>
-                <div className="relative">
-                  <span className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400"><PencilIcon className="w-4 h-4" /></span>
-                  <input 
-                    type="text" 
-                    placeholder="Search by Draft Name"
-                    className="w-full rounded-xl border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-900 pl-11 pr-4 py-2.5 text-sm outline-none focus:border-brand-500"
-                    value={filters.name}
-                    onChange={(e) => setFilters({...filters, name: e.target.value})}
-                  />
-                </div>
-              </div>
-            </div>
-
-            <div className="flex justify-end gap-3 mt-8">
-              <button 
-                type="button" 
-                onClick={clearFilters}
-                className="px-6 py-2 rounded-full border border-gray-200 dark:border-gray-700 text-sm font-bold text-gray-600 dark:text-gray-400 hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors"
-              >
-                Clear Filters
-              </button>
-              <button 
-                type="submit"
-                className="px-8 py-2 rounded-full bg-brand-500 text-white text-sm font-bold shadow-lg shadow-brand-500/20 hover:bg-brand-600 transition-colors"
-              >
-                Search Drafts
-              </button>
-            </div>
-          </div>
-        </form>
-      </div>
-
       <DataTable<DraftLeaseItem>
         data={pagedDrafts}
         columns={columns}
         loading={loading}
+        searchQuery={searchQuery}
+        onSearchChange={handleSearchChange}
+        searchPlaceholder="Search drafts…"
+        filterBarLeft={filterBarLeft}
         currentPage={currentPage}
         pageSize={pageSize}
         totalItems={totalItems}
         onPageChange={setCurrentPage}
-        onPageSizeChange={setPageSize}
+        onPageSizeChange={handlePageSizeChange}
       />
     </div>
-
   );
 }
