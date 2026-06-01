@@ -486,6 +486,7 @@ export const useLeaseForm = () => {
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [stepErrors, setStepErrors] = useState<Record<string, Record<string, string>>>({});
   const [autosavedSteps, setAutosavedSteps] = useState<Record<number, boolean>>({});
+  const [isReadOnly, setIsReadOnly] = useState(false);
   
   // Use a ref to keep track of the latest formData inside debounced functions
   const formDataRef = useRef(formData);
@@ -543,6 +544,7 @@ export const useLeaseForm = () => {
         const res = await apiClient.get(`/leasing-applications/${draftId}`);
         const app = res.data?.data;
         if (app) {
+          setIsReadOnly(app.status !== "draft");
           let parsed: Partial<LeaseFormData> = {};
           if (app.current_progress_data) {
             parsed = typeof app.current_progress_data === "string"
@@ -632,6 +634,7 @@ export const useLeaseForm = () => {
   }, [formData, draftId]);
 
   const saveDraft = async (forceData?: LeaseFormData) => {
+    if (isReadOnly) return;
     const dataToSave = forceData || formDataRef.current;
     
     // Minimal check to avoid creating draft if completely empty on step 1
@@ -692,6 +695,7 @@ export const useLeaseForm = () => {
 
   // Debounced auto-save effect
   useEffect(() => {
+    if (isReadOnly) return;
     if (!draftId && !formData.customer_db_id) return; // Don't auto-create until we have customer
     
     // Track changes to the specific step fields
@@ -708,7 +712,7 @@ export const useLeaseForm = () => {
     }, 1500);
     
     return () => clearTimeout(timeoutId);
-  }, [formData, activeStep, draftId]);
+  }, [formData, activeStep, draftId, isReadOnly]);
 
   const updateFormData = (fields: Partial<LeaseFormData>) => {
     setFormData(prev => ({ ...prev, ...fields }));
@@ -745,6 +749,7 @@ export const useLeaseForm = () => {
     for (let i = 1; i <= 9; i++) {
       lastSavedFieldsRef.current[i] = getStepFields(i, INITIAL_DATA);
     }
+    setIsReadOnly(false);
   };
 
   return {
@@ -754,6 +759,7 @@ export const useLeaseForm = () => {
     stepStatuses,
     errors,
     stepErrors,
+    isReadOnly,
     updateFormData,
     nextStep,
     prevStep,

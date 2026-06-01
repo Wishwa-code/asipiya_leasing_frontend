@@ -113,7 +113,7 @@ const AppSidebar: React.FC = () => {
         subItems: [
           { name: "New Leasing Application", path: ROUTES.CREATE_LEASE, privilege: 'CREATE_LOAN' },
           { name: "Draft Leasing Application", path: ROUTES.DRAFT_LEASES, privilege: 'CREATE_LOAN' },
-          { name: "Leasing Approval Queue", path: ROUTES.FORM_ELEMENTS },
+          { name: "Leasing Approval Queue", path: ROUTES.PENDING_LEASES },
           { name: "Leasing Disbursement", path: ROUTES.FORM_ELEMENTS, privilege: 'LOAN_DISBURSEMENT' },
         ],
       });
@@ -176,7 +176,7 @@ const AppSidebar: React.FC = () => {
         icon: <PlusIcon />,
         privilege: 'PENDING_LOAN',
         subItems: [
-          { name: "Loan Approval Queue", path: ROUTES.FORM_ELEMENTS },
+          { name: "Loan Approval Queue", path: ROUTES.PENDING_LEASES },
           { name: "Loan Disbursement", path: ROUTES.FORM_ELEMENTS, privilege: 'LOAN_DISBURSEMENT' },
         ],
       });

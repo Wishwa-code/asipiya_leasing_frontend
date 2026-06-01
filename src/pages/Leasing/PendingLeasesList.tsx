@@ -1,0 +1,417 @@
+import { useState, useEffect } from "react";
+import PageMeta from "../../components/common/PageMeta";
+import { Link, useNavigate } from "react-router";
+import { PlusIcon, EyeIcon, InfoIcon, UserCircleIcon } from "../../icons";
+import apiClient from "../../api/apiClient";
+import { ROUTES } from "../../routes/paths";
+
+type PendingLeaseItem = {
+  ID: number;
+  customer_id: number;
+  draft_code: string;
+  internal_identification_name: string;
+  current_progress_data: any;
+  status: string;
+  CreatedAt: string;
+  UpdatedAt: string;
+};
+
+const STEP_LABELS = [
+  "Customer details",
+  "Introducers",
+  "Vehicle & asset details",
+  "Insurance info",
+  "Product & loan configuration",
+  "Guarantors",
+  "PDC security",
+  "Cheque configuration",
+  "CR & compliance documents"
+];
+
+function getStepStatuses(parsedData: any) {
+  const statuses = Array(9).fill("pristine");
+  if (!parsedData) return statuses;
+
+  // Step 1: Customer
+  const step1Touched = !!parsedData.customer_db_id || !!parsedData.customer_name;
+  if (step1Touched) {
+    const step1Complete = !!parsedData.customer_db_id;
+    statuses[0] = step1Complete ? "complete" : "error";
+  }
+
+  // Step 2: Introducers (Optional)
+  const step2Touched = parsedData.introducers && parsedData.introducers.length > 0;
+  if (step2Touched) {
+    statuses[1] = "complete";
+  }
+
+  // Step 3: Vehicle Asset
+  const step3Fields = [
+    parsedData.vehicle_type_id,
+    parsedData.vehicle_make_id,
+    parsedData.vehicle_model_id,
+    parsedData.vehicle_status,
+    parsedData.engine_cc,
+    parsedData.chassis_no || parsedData.chasis_no,
+    parsedData.manu_year,
+    parsedData.color_id,
+    parsedData.usage_type,
+    parsedData.manu_country,
+    parsedData.reg_year,
+    parsedData.reg_no,
+    parsedData.supplier_id,
+    parsedData.market_value,
+    parsedData.forced_value,
+    parsedData.invoice_value
+  ];
+  const step3Touched = step3Fields.some(f => !!f);
+  if (step3Touched) {
+    const step3Complete = step3Fields.every(f => !!f && f !== "0.00" && f !== "0");
+    statuses[2] = step3Complete ? "complete" : "error";
+  }
+
+  // Step 4: Insurance
+  const step4Fields = [
+    parsedData.insurance_company,
+    parsedData.insurance_amount,
+    parsedData.insurance_premium,
+    parsedData.insurance_start_date,
+    parsedData.insurance_expiry_date
+  ];
+  const step4Touched = step4Fields.some(f => !!f);
+  if (step4Touched) {
+    const step4Complete = step4Fields.every(f => !!f);
+    statuses[3] = step4Complete ? "complete" : "error";
+  }
+
+  // Step 5: Lease Details
+  const step5Fields = [
+    parsedData.product_id,
+    parsedData.loan_amount,
+    parsedData.interest_rate,
+    parsedData.period,
+    parsedData.tcc_collection_date
+  ];
+  const step5Touched = step5Fields.some(f => !!f);
+  if (step5Touched) {
+    const step5Complete = step5Fields.every(f => !!f);
+    statuses[4] = step5Complete ? "complete" : "error";
+  }
+
+  // Step 6: Guarantors
+  const reqGuarCount = parseInt(parsedData.required_guarantor_count || "0") || 0;
+  const guarantorsCount = parsedData.guarantors ? parsedData.guarantors.length : 0;
+  if (reqGuarCount > 0 || guarantorsCount > 0) {
+    statuses[5] = (guarantorsCount >= reqGuarCount) ? "complete" : "error";
+  }
+
+  // Step 7: PDC Security
+  const step7Touched = !!parsedData.pdc_security_type || !!parsedData.pdc_reference_details;
+  if (step7Touched) {
+    let step7Complete = !!parsedData.pdc_reference_details;
+    if (parsedData.pdc_security_type === "Cheque") {
+      step7Complete = step7Complete && !!parsedData.pdc_bank_id && !!parsedData.pdc_cheque_date && !!parsedData.pdc_cheque_no && !!parsedData.pdc_ownership;
+    } else if (parsedData.pdc_security_type === "CR Book") {
+      step7Complete = step7Complete && !!parsedData.pdc_book_date;
+    }
+    statuses[6] = step7Complete ? "complete" : "error";
+  }
+
+  // Step 8: Cheque Define
+  const step8Touched = parsedData.cheques && parsedData.cheques.length > 0;
+  if (step8Touched) {
+    const allChequesValid = parsedData.cheques.every((chq: any) => 
+      !!chq.payee_name && !!chq.nic_br_no && !!chq.instructions && 
+      !!chq.bank_name && !!chq.branch_name && !!chq.account_number && 
+      parseFloat(chq.payment_amount) > 0
+    );
+    statuses[7] = allChequesValid ? "complete" : "error";
+  }
+
+  // Step 9: CR & Docs
+  const step9Fields = [
+    parsedData.cr_serial_no,
+    parsedData.url_cr_front,
+    parsedData.url_cr_back,
+    parsedData.url_invoice
+  ];
+  const step9Touched = step9Fields.some(f => !!f);
+  if (step9Touched) {
+    const step9Complete = step9Fields.every(f => !!f);
+    statuses[8] = step9Complete ? "complete" : "error";
+  }
+
+  return statuses;
+}
+
+export default function PendingLeasesList() {
+  const navigate = useNavigate();
+  const [pendingApps, setPendingApps] = useState<PendingLeaseItem[]>([]);
+  const [loading, setLoading] = useState(true);
+
+  // Filters
+  const [filters, setFilters] = useState({
+    code: "",
+    nic: "",
+    name: "",
+  });
+
+  useEffect(() => {
+    fetchPendingApps();
+  }, []);
+
+  const fetchPendingApps = async () => {
+    setLoading(true);
+    try {
+      const res = await apiClient.get('/leasing-applications/pending', { params: filters });
+      setPendingApps(res.data?.data || res.data || []);
+    } catch (err) {
+      console.error("Failed to fetch pending applications", err);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleSearch = (e: React.FormEvent) => {
+    e.preventDefault();
+    fetchPendingApps();
+  };
+
+  const clearFilters = () => {
+    setFilters({ code: "", nic: "", name: "" });
+    setTimeout(fetchPendingApps, 0);
+  };
+
+  return (
+    <div className="relative pb-20">
+      <PageMeta
+        title="Leasing Approval Queue | Asipiya Leasing"
+        description="Review and manage pending leasing applications"
+      />
+
+      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-6 mt-4">
+        <div>
+          <h1 className="text-xl sm:text-2xl font-bold text-gray-900 dark:text-white">Leasing Approval Queue</h1>
+          <p className="text-sm text-gray-500 dark:text-gray-400">Review submitted leasing applications currently awaiting approval</p>
+        </div>
+      </div>
+
+      {/* Filter Section */}
+      <div className="bg-white dark:bg-gray-800 rounded-2xl border border-gray-200 dark:border-gray-700 shadow-sm p-5 mb-6">
+        <form onSubmit={handleSearch} className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+          {/* System Context */}
+          <div className="lg:border-r border-gray-100 dark:border-gray-700 pr-0 lg:pr-8">
+            <div className="flex items-center gap-2 text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-4">
+              <InfoIcon className="w-3.5 h-3.5" /> Reference
+            </div>
+            
+            <div className="bg-gray-50 dark:bg-gray-900/50 p-4 rounded-xl border border-gray-100 dark:border-gray-700 mb-4 shadow-sm">
+              <label className="block text-[11px] font-bold text-amber-500 uppercase mb-1">Application Code</label>
+              <input 
+                type="text" 
+                placeholder="Enter Application Ref"
+                className="w-full bg-transparent border-none p-0 focus:ring-0 text-lg font-bold text-gray-900 dark:text-white placeholder:text-gray-300 dark:placeholder:text-gray-600"
+                value={filters.code}
+                onChange={(e) => setFilters({...filters, code: e.target.value})}
+              />
+            </div>
+          </div>
+
+          {/* Search Criteria */}
+          <div className="lg:col-span-2">
+            <div className="flex items-center gap-2 text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-4">
+              <PlusIcon className="w-3.5 h-3.5 rotate-45" /> Search Criteria
+            </div>
+
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
+              <div>
+                <label className="block text-[11px] font-bold text-gray-500 dark:text-gray-400 uppercase mb-2">Customer NIC</label>
+                <div className="relative">
+                  <span className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400"><UserCircleIcon className="w-4 h-4" /></span>
+                  <input 
+                    type="text" 
+                    placeholder="Search by NIC"
+                    className="w-full rounded-xl border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-900 pl-11 pr-4 py-2.5 text-sm outline-none focus:border-brand-500"
+                    value={filters.nic}
+                    onChange={(e) => setFilters({...filters, nic: e.target.value})}
+                  />
+                </div>
+              </div>
+              <div>
+                <label className="block text-[11px] font-bold text-gray-500 dark:text-gray-400 uppercase mb-2">Application Name</label>
+                <div className="relative">
+                  <span className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400"><InfoIcon className="w-4 h-4" /></span>
+                  <input 
+                    type="text" 
+                    placeholder="Search by Name"
+                    className="w-full rounded-xl border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-900 pl-11 pr-4 py-2.5 text-sm outline-none focus:border-brand-500"
+                    value={filters.name}
+                    onChange={(e) => setFilters({...filters, name: e.target.value})}
+                  />
+                </div>
+              </div>
+            </div>
+
+            <div className="flex justify-end gap-3 mt-8">
+              <button 
+                type="button" 
+                onClick={clearFilters}
+                className="px-6 py-2 rounded-full border border-gray-200 dark:border-gray-700 text-sm font-bold text-gray-600 dark:text-gray-400 hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors"
+              >
+                Clear Filters
+              </button>
+              <button 
+                type="submit"
+                className="px-8 py-2 rounded-full bg-brand-500 text-white text-sm font-bold shadow-lg shadow-brand-500/20 hover:bg-brand-600 transition-colors"
+              >
+                Search Queue
+              </button>
+            </div>
+          </div>
+        </form>
+      </div>
+
+      {/* Table Section */}
+      <div className="bg-white dark:bg-gray-800 rounded-2xl border border-gray-200 dark:border-gray-700 shadow-sm overflow-hidden">
+        <div className="overflow-x-auto">
+          <table className="w-full whitespace-nowrap text-left text-sm text-gray-500 dark:text-gray-400">
+            <thead className="bg-gray-50/50 dark:bg-gray-800/50 text-[10px] font-bold uppercase tracking-widest text-gray-400 border-b border-gray-200 dark:border-gray-700">
+              <tr>
+                <th className="px-6 py-4 w-12 text-center">#</th>
+                <th className="px-6 py-4">Application Identity</th>
+                <th className="px-6 py-4">Customer Details</th>
+                <th className="px-6 py-4">Application Progress</th>
+                <th className="px-6 py-4">Submitted At</th>
+                <th className="px-6 py-4 text-right">Action</th>
+              </tr>
+            </thead>
+            <tbody className="divide-y divide-gray-100 dark:divide-gray-800">
+              {loading ? (
+                <tr>
+                  <td colSpan={6} className="px-6 py-12 text-center">
+                    <span className="inline-block w-8 h-8 border-4 border-brand-500/30 border-t-brand-500 rounded-full animate-spin"></span>
+                    <p className="mt-4 text-xs font-bold uppercase tracking-widest text-brand-500">Retrieving Queue...</p>
+                  </td>
+                </tr>
+              ) : pendingApps.length === 0 ? (
+                <tr>
+                  <td colSpan={6} className="px-6 py-16 text-center text-gray-400">
+                    <p className="font-semibold text-base">No pending applications found</p>
+                    <p className="text-sm">Try adjusting your search filters</p>
+                  </td>
+                </tr>
+              ) : (
+                pendingApps.map((app, idx) => {
+                  let parsedData: any = {};
+                  try {
+                    parsedData = typeof app.current_progress_data === "string" 
+                      ? JSON.parse(app.current_progress_data) 
+                      : app.current_progress_data;
+                  } catch (e) {}
+
+                  return (
+                    <tr key={`${app.ID}-${idx}`} className="group hover:bg-gray-50/50 dark:hover:bg-gray-900/30 transition-colors">
+                      <td className="px-6 py-5 text-center font-bold text-gray-400">{idx + 1}</td>
+                      <td className="px-6 py-5">
+                        <div className="flex items-center gap-3">
+                          <div className="w-10 h-10 rounded-full bg-amber-50 dark:bg-amber-500/10 text-amber-500 flex items-center justify-center font-bold text-lg border border-amber-100 dark:border-amber-500/20">
+                            P
+                          </div>
+                          <div>
+                            <div className="flex items-center gap-2 mb-1">
+                              <span className="px-2 py-0.5 bg-amber-500/10 text-amber-500 text-[10px] font-black rounded-md uppercase tracking-wider">
+                                {app.draft_code || `LSE-PENDING-${app.ID}`}
+                              </span>
+                            </div>
+                            <h4 className="font-bold text-gray-900 dark:text-white mb-0.5">
+                              {app.internal_identification_name || "Unnamed Application"}
+                            </h4>
+                            <span className="text-[10px] font-bold text-gray-400 uppercase tracking-tighter block">ID: {app.ID}</span>
+                          </div>
+                        </div>
+                      </td>
+                      <td className="px-6 py-5">
+                        <div className="space-y-1.5">
+                          <div className="flex items-center gap-2 text-sm font-bold text-gray-700 dark:text-gray-300">
+                            {parsedData?.customer_name || "Unknown Customer"}
+                          </div>
+                          <div className="flex items-center gap-2 text-xs font-medium text-gray-500">
+                            Code: {parsedData?.customer_code || "-"}
+                          </div>
+                        </div>
+                      </td>
+                      <td className="px-6 py-5">
+                        {(() => {
+                          const statuses = getStepStatuses(parsedData);
+                          const completedCount = statuses.filter(s => s === "complete").length;
+                          return (
+                            <div className="flex flex-col gap-1.5 min-w-[200px]">
+                              <div className="flex items-center justify-between text-xs font-bold text-gray-500 dark:text-gray-400">
+                                <span>Completed Steps</span>
+                                <span className="text-amber-500">{completedCount} / 9</span>
+                              </div>
+                              <div className="flex items-center gap-1">
+                                {statuses.map((status, i) => {
+                                  let bgClass = "bg-gray-100 text-gray-400 border border-gray-200 dark:bg-gray-900/50 dark:text-gray-650 dark:border-gray-800";
+                                  if (status === "complete") {
+                                    bgClass = "bg-emerald-500 text-white shadow-sm shadow-emerald-500/10 border-emerald-600";
+                                  } else if (status === "error") {
+                                    bgClass = "bg-orange-500 text-white shadow-sm shadow-orange-500/10 border-orange-600";
+                                  }
+                                  
+                                  return (
+                                    <div
+                                      key={i}
+                                      className={`w-6 h-6 rounded-md flex items-center justify-center text-[10px] font-black select-none transition-transform hover:scale-110 cursor-help ${bgClass}`}
+                                      title={`Step ${i + 1}: ${STEP_LABELS[i]} (${status === "complete" ? "Complete" : status === "error" ? "Incomplete / Error" : "Pristine"})`}
+                                    >
+                                      {i + 1}
+                                    </div>
+                                  );
+                                })}
+                              </div>
+                            </div>
+                          );
+                        })()}
+                      </td>
+                      <td className="px-6 py-5">
+                        <div className="space-y-1.5 text-xs text-gray-500">
+                          <div>{new Date(app.UpdatedAt).toLocaleDateString()}</div>
+                          <div>{new Date(app.UpdatedAt).toLocaleTimeString()}</div>
+                        </div>
+                      </td>
+                      <td className="px-6 py-5 text-right">
+                        <div className="flex justify-end gap-2">
+                          <button 
+                            onClick={() => navigate(`${ROUTES.CREATE_LEASE}?draftId=${app.ID}`)}
+                            className="p-2.5 bg-gray-50 hover:bg-amber-50 text-gray-400 hover:text-amber-500 dark:bg-gray-900 dark:hover:bg-amber-500/10 rounded-xl transition-all shadow-sm border border-gray-100 dark:border-gray-700 flex items-center gap-2"
+                            title="Review Application"
+                          >
+                            <EyeIcon className="w-4 h-4" />
+                            <span className="text-xs font-bold uppercase tracking-widest hidden sm:inline-block">Review</span>
+                          </button>
+                        </div>
+                      </td>
+                    </tr>
+                  )
+                })
+              )}
+            </tbody>
+          </table>
+        </div>
+
+        {/* Pagination */}
+        <div className="px-6 py-4 bg-gray-50/50 dark:bg-gray-800/50 border-t border-gray-200 dark:border-gray-700 flex flex-col sm:flex-row justify-between items-center gap-4">
+          <p className="text-[11px] font-bold text-gray-400 uppercase tracking-widest">
+            Showing {pendingApps.length > 0 ? 1 : 0} to {pendingApps.length} of {pendingApps.length} entries
+          </p>
+          <div className="flex gap-2">
+            <button className="px-4 py-1.5 rounded-lg border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-900 text-xs font-bold text-gray-400 cursor-not-allowed uppercase tracking-widest">Previous</button>
+            <div className="w-8 h-8 rounded-lg bg-brand-500 text-white flex items-center justify-center text-xs font-bold">1</div>
+            <button className="px-4 py-1.5 rounded-lg border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-900 text-xs font-bold text-gray-400 cursor-not-allowed uppercase tracking-widest">Next</button>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}
