@@ -260,7 +260,7 @@ const AppSidebar: React.FC = () => {
   };
 
   const renderMenuItems = (items: NavItem[]) => (
-    <ul className="flex flex-col gap-2">
+    <ul className="flex flex-col gap-[3px]">
       {items.map((nav, index) => {
         // Filter sub-items by privilege
         const visibleSubItems = nav.subItems?.filter(sub => hasPrivilege(sub.privilege));
@@ -281,7 +281,7 @@ const AppSidebar: React.FC = () => {
                   <span className="menu-item-text">{nav.name}</span>
                 )}
                 {(isExpanded || isHovered || isMobileOpen) && (
-                  <ChevronDownIcon className={`ml-auto w-5 h-5 transition-transform duration-200 ${openSubmenu?.index === index ? "rotate-180 text-brand-500" : ""}`} />
+                  <ChevronDownIcon className={`ml-auto w-3.5 h-3.5 transition-transform duration-200 ${openSubmenu?.index === index ? "rotate-180 text-brand-500" : ""}`} />
                 )}
               </button>
             ) : (
@@ -302,7 +302,7 @@ const AppSidebar: React.FC = () => {
                 className="overflow-hidden transition-all duration-300"
                 style={{ height: openSubmenu?.index === index ? `${subMenuHeight[`main-${index}`]}px` : "0px" }}
               >
-                <ul className="mt-2 space-y-1 ml-9">
+                <ul className="mt-1 space-y-[3px] ml-[28px]">
                   {visibleSubItems?.map((subItem) => (
                     <li key={subItem.name}>
                       <Link to={subItem.path} className={`menu-dropdown-item ${isActive(subItem.path) ? "menu-dropdown-item-active" : "menu-dropdown-item-inactive"}`}>
@@ -381,25 +381,28 @@ const AppSidebar: React.FC = () => {
         )}
       </div>
 
-      {/* Brand Logo (Desktop) */}
-      <div className={`py-8 flex ${!isExpanded && !isHovered ? "lg:justify-center" : "justify-start"}`}>
-        <Link to="/" className="flex items-center gap-3 overflow-hidden">
-          <div className="min-w-[42px]">
-            <img
-              src="https://accountcenter.asipiya.com/asipiya.svg"
-              alt="Logo"
-              className="w-[42px] h-[42px] rounded-full shadow-sm"
-            />
-          </div>
-          {(isExpanded || isHovered || isMobileOpen) && (
-            <div className="flex flex-col justify-center">
-              <span className="font-bold text-gray-900 dark:text-white text-lg leading-tight truncate max-w-[180px]">
+      {/* Brand Logo / Workspace Switcher (Desktop) */}
+      <div className={`pt-5 pb-4 flex ${!isExpanded && !isHovered ? "justify-center" : "justify-start"} w-full`}>
+        {isExpanded || isHovered || isMobileOpen ? (
+          <div className="flex items-center gap-2.5 overflow-hidden w-full cursor-pointer hover:bg-slate-50/50 dark:hover:bg-white/5 p-1 rounded-lg transition-colors select-none">
+            <div className="w-7 h-7 rounded-lg bg-slate-50 dark:bg-gray-800 text-slate-850 dark:text-gray-250 border border-slate-200 dark:border-gray-700 font-bold flex items-center justify-center shadow-theme-xs text-xs shrink-0 uppercase">
+              {user?.company_name?.[0] || "A"}
+            </div>
+            <div className="flex flex-col text-left overflow-hidden grow">
+              <span className="font-semibold text-slate-850 dark:text-gray-255 text-[12.5px] leading-tight truncate max-w-[150px] lowercase">
+                {(user?.company_name || "Asipiya")} sandbox
+              </span>
+              <span className="text-slate-400 dark:text-gray-400 text-[10.5px] leading-tight truncate max-w-[150px] lowercase">
                 {user?.company_name || "Asipiya"}
               </span>
-              <span className="text-gray-500 text-xs font-medium">Leasing Center</span>
             </div>
-          )}
-        </Link>
+            <ChevronDownIcon className="w-3.5 h-3.5 text-slate-400 shrink-0" />
+          </div>
+        ) : (
+          <div className="w-7 h-7 rounded-lg bg-slate-50 dark:bg-gray-800 text-slate-850 dark:text-gray-255 border border-slate-200 dark:border-gray-700 font-bold flex items-center justify-center shadow-theme-xs text-xs uppercase select-none">
+            {user?.company_name?.[0] || "A"}
+          </div>
+        )}
       </div>
 
       {/* Sidebar Menu */}
@@ -407,8 +410,8 @@ const AppSidebar: React.FC = () => {
         <nav className="mb-6">
           <div className="flex flex-col gap-4">
             <div>
-              <h2 className={`mb-4 text-xs font-semibold uppercase tracking-wider text-gray-400 ${!isExpanded && !isHovered ? "lg:justify-center" : "justify-start"}`}>
-                {isExpanded || isHovered || isMobileOpen ? "Menu" : <HorizontaLDots className="size-6" />}
+              <h2 className={`mb-1.5 text-[11px] font-medium tracking-wide text-slate-400 dark:text-slate-500 ${!isExpanded && !isHovered ? "lg:justify-center" : "justify-start ml-2 mt-2"}`}>
+                {isExpanded || isHovered || isMobileOpen ? "Menu" : <HorizontaLDots className="size-4 text-slate-400" />}
               </h2>
               {renderMenuItems(navItems)}
             </div>

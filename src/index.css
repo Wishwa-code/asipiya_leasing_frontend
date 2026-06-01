@@ -186,24 +186,24 @@ layer(base);
     cursor: pointer;
   }
   body {
-    @apply relative font-normal font-outfit z-1 bg-gray-50;
+    @apply relative font-normal font-outfit z-1 bg-white;
   }
 }
 
 @utility menu-item {
-  @apply relative flex items-center w-full gap-3 px-3 py-2 font-medium rounded-lg text-theme-sm;
+  @apply relative flex items-center w-full gap-2.5 px-2 py-[5px] font-medium rounded-lg text-[13px] transition-all;
 }
 
 @utility menu-item-active {
-  @apply bg-brand-50 text-brand-500 dark:bg-brand-500/[0.12] dark:text-brand-400;
+  @apply text-brand-500 bg-transparent dark:text-brand-400 font-semibold;
 }
 
 @utility menu-item-inactive {
-  @apply text-gray-700 hover:bg-gray-100 group-hover:text-gray-700 dark:text-gray-300 dark:hover:bg-white/5 dark:hover:text-gray-300;
+  @apply text-slate-600 hover:text-slate-900 hover:bg-slate-50/50 group-hover:text-slate-900 dark:text-slate-400 dark:hover:text-white dark:hover:bg-white/5 dark:hover:text-white;
 }
 
 @utility menu-item-icon {
-  @apply text-gray-500 group-hover:text-gray-700 dark:text-gray-400;
+  @apply text-slate-400 group-hover:text-slate-600 dark:text-slate-500;
 }
 
 @utility menu-item-icon-active {
@@ -212,12 +212,12 @@ layer(base);
 
 @utility menu-item-icon-size {
   & svg {
-    @apply !size-6;
+    @apply !size-4 shrink-0;
   }
 }
 
 @utility menu-item-icon-inactive {
-  @apply text-gray-500 group-hover:text-gray-700 dark:text-gray-400 dark:group-hover:text-gray-300;
+  @apply text-slate-400 group-hover:text-slate-600 dark:text-slate-500 dark:group-hover:text-slate-300;
 }
 
 @utility menu-item-arrow {
@@ -229,19 +229,19 @@ layer(base);
 }
 
 @utility menu-item-arrow-inactive {
-  @apply text-gray-500 group-hover:text-gray-700 dark:text-gray-400 dark:group-hover:text-gray-300;
+  @apply text-slate-400 group-hover:text-slate-650 dark:text-slate-500 dark:group-hover:text-slate-300;
 }
 
 @utility menu-dropdown-item {
-  @apply relative flex items-center gap-3 rounded-lg px-3 py-2.5 text-theme-sm font-medium;
+  @apply relative flex items-center gap-2.5 rounded-lg px-2 py-[4px] text-[12px] font-medium transition-all;
 }
 
 @utility menu-dropdown-item-active {
-  @apply bg-brand-50 text-brand-500 dark:bg-brand-500/[0.12] dark:text-brand-400;
+  @apply text-brand-500 bg-transparent dark:text-brand-400 font-semibold;
 }
 
 @utility menu-dropdown-item-inactive {
-  @apply text-gray-700 hover:bg-gray-100 dark:text-gray-300 dark:hover:bg-white/5;
+  @apply text-slate-500 hover:text-slate-800 hover:bg-slate-50/30 dark:text-slate-400 dark:hover:text-white dark:hover:bg-white/5;
 }
 
 @utility menu-dropdown-badge {
