@@ -3,6 +3,7 @@ export const ROUTES = {
   SIGNIN: "/signin",
   SIGNUP: "/signup",
   RESET_PASSWORD: "/reset-password",
+  AUTO_LOGIN: "/auto-login",
 
   // Authenticated Routes
   DASHBOARD: "/",

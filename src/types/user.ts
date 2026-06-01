@@ -8,6 +8,7 @@ export interface User {
   privileges: string[];
   logo?: string;
   company_name?: string;
+  company_id?: number;
   branches?: { idBranch: number; Name: string }[];
   branch_access?: number;
 }

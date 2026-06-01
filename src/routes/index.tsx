@@ -48,8 +48,11 @@ const BarChart = lazy(() => import("../pages/Charts/BarChart"));
 // Auth
 const SignIn = lazy(() => import("../pages/AuthPages/SignIn"));
 const SignUp = lazy(() => import("../pages/AuthPages/SignUp"));
+const AutoLogin = lazy(() => import("../pages/AuthPages/AutoLogin"));
 const NotFound = lazy(() => import("../pages/OtherPage/NotFound"));
 
+// Public routes — accessible without authentication
+// AutoLogin is listed here but handled separately in App.tsx (outside GuestGuard)
 export const publicRoutes = [
   {
     path: ROUTES.SIGNIN,
@@ -64,6 +67,13 @@ export const publicRoutes = [
     element: <NotFound />,
   },
 ];
+
+// AutoLogin route — exported separately so App.tsx can place it outside GuestGuard
+export const autoLoginRoute = {
+  path: ROUTES.AUTO_LOGIN,
+  element: <AutoLogin />,
+};
+
 
 export const privateRoutes = [
   {

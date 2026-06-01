@@ -1,6 +1,6 @@
 import { Suspense } from "react";
-import { BrowserRouter as Router, Routes, Route } from "react-router";
-import { privateRoutes, publicRoutes } from "./routes";
+import { BrowserRouter as Router, Routes, Route, Navigate } from "react-router";
+import { privateRoutes, publicRoutes, autoLoginRoute } from "./routes";
 import { AuthGuard, GuestGuard } from "./components/auth/RouteGuard";
 import AppLayout from "./layout/AppLayout";
 import { ScrollToTop } from "./components/common/ScrollToTop";
@@ -22,6 +22,16 @@ export default function App() {
         }
       >
         <Routes>
+          {/* ─────────────────────────────────────────────────────────────────
+              Account Center SSO callback — must be OUTSIDE both guards so:
+              • Authenticated users can still hit it (e.g., token refresh scenarios)
+              • Unauthenticated users are NOT redirected away before the login completes
+          ───────────────────────────────────────────────────────────────── */}
+          <Route
+            path={autoLoginRoute.path}
+            element={autoLoginRoute.element}
+          />
+
           {/* Dashboard Layout - Protected Routes */}
           <Route element={<AuthGuard />}>
             <Route element={<AppLayout />}>
@@ -54,7 +64,3 @@ export default function App() {
     </Router>
   );
 }
-
-// Helper component for Navigate in the fallback route
-import { Navigate } from "react-router";
-

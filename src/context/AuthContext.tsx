@@ -2,6 +2,10 @@ import React, { createContext, useContext, useState } from "react";
 import Cookies from "js-cookie";
 import { User } from "../types/user";
 
+// Account Center URL — used for logout redirect and unauthenticated redirect
+const ACCOUNT_CENTER_URL =
+  import.meta.env.VITE_ACCOUNT_CENTER_URL || "http://localhost:8000";
+
 interface AuthContextType {
   user: User | null;
   isAuthenticated: boolean;
@@ -10,6 +14,7 @@ interface AuthContextType {
   isHeadOffice: boolean;
   currentBranchId: number | null;
   switchBranch: (branchId: number) => void;
+  accountCenterUrl: string;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -33,6 +38,7 @@ const DEV_USER: User = {
   ],
   logo: "/images/user/user-01.jpg",
   company_name: "Asipiya",
+  company_id: 1,
   branches: [
     { idBranch: 1, Name: "Head Office" },
     { idBranch: 2, Name: "Kandy Branch" },
@@ -102,13 +108,23 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     Cookies.remove("refresh_token");
     Cookies.remove("user_data");
     Cookies.remove("current_branch_id");
-    window.location.href = "/signin";
+    // Redirect to Account Center's system selection page
+    window.location.href = `${ACCOUNT_CENTER_URL}/systems`;
   };
 
   const isHeadOffice = user && currentBranchId ? currentBranchId === user.head_branch_id : false;
 
   return (
-    <AuthContext.Provider value={{ user, isAuthenticated: !!user, login, logout, isHeadOffice, currentBranchId, switchBranch }}>
+    <AuthContext.Provider value={{
+      user,
+      isAuthenticated: !!user,
+      login,
+      logout,
+      isHeadOffice,
+      currentBranchId,
+      switchBranch,
+      accountCenterUrl: ACCOUNT_CENTER_URL,
+    }}>
       {children}
     </AuthContext.Provider>
   );

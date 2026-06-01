@@ -3,6 +3,7 @@ import Cookies from "js-cookie";
 
 const serverURL = import.meta.env.VITE_APP_API_URL || "http://localhost:8084/";
 const baseURL = serverURL.endsWith("/") ? `${serverURL}api/v1/` : `${serverURL}/api/v1/`;
+const accountCenterURL = import.meta.env.VITE_ACCOUNT_CENTER_URL || "http://localhost:8000";
 
 const instance = axios.create({
   baseURL: baseURL,
@@ -39,11 +40,13 @@ instance.interceptors.response.use(
     const originalRequest = error.config;
 
     // If error is 401 and we haven't retried this request yet
-    // Do NOT trigger refresh for the login endpoint itself
+    // Do NOT trigger refresh for the login, auto-login, or refresh endpoints themselves
     if (
       error.response &&
       error.response.status === 401 &&
       !originalRequest.url?.includes("login") &&
+      !originalRequest.url?.includes("auto-login") &&
+      !originalRequest.url?.includes("refresh") &&
       !originalRequest._retry
     ) {
       originalRequest._retry = true;
@@ -73,9 +76,13 @@ instance.interceptors.response.use(
           return instance(originalRequest);
         }
       } catch (refreshError) {
-        // If refresh fails, the refresh token is likely expired too
+        // Refresh token is invalid/expired — send user back to Account Center
         console.error("Refresh token expired or invalid", refreshError);
-        // handleLogout();
+        Cookies.remove("auth_token");
+        Cookies.remove("refresh_token");
+        Cookies.remove("user_data");
+        Cookies.remove("current_branch_id");
+        window.location.href = `${accountCenterURL}/systems`;
       }
     }
 
