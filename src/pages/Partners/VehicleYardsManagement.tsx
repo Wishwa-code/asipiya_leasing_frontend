@@ -1,7 +1,8 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useMemo } from "react";
 import PageMeta from "../../components/common/PageMeta";
 import { PlusIcon } from "../../icons";
 import apiClient from "../../api/apiClient";
+import { DataTable } from "../../components/ui/table";
 
 type VehicleYard = {
   ID: number;
@@ -21,6 +22,8 @@ export default function VehicleYardsManagement() {
   const [yards, setYards] = useState<VehicleYard[]>([]);
   const [loading, setLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState("");
+  const [currentPage, setCurrentPage] = useState(1);
+  const [pageSize, setPageSize] = useState(20);
 
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [editId, setEditId] = useState<number | null>(null);
@@ -137,11 +140,97 @@ export default function VehicleYardsManagement() {
     }
   };
 
-  const filteredData = yards.filter(y =>
-    (y.yard_name && y.yard_name.toLowerCase().includes(searchQuery.toLowerCase())) ||
-    (y.contact_person && y.contact_person.toLowerCase().includes(searchQuery.toLowerCase())) ||
-    (y.district && y.district.toLowerCase().includes(searchQuery.toLowerCase()))
-  );
+  const filteredData = useMemo(() => {
+    const q = searchQuery.toLowerCase().trim();
+    if (!q) return yards;
+    return yards.filter(
+      (y) =>
+        (y.yard_name && y.yard_name.toLowerCase().includes(q)) ||
+        (y.contact_person && y.contact_person.toLowerCase().includes(q)) ||
+        (y.district && y.district.toLowerCase().includes(q)) ||
+        (y.dsd && y.dsd.toLowerCase().includes(q))
+    );
+  }, [yards, searchQuery]);
+
+  const totalItems = filteredData.length;
+  const pagedData = useMemo(() => {
+    return filteredData.slice(
+      (currentPage - 1) * pageSize,
+      currentPage * pageSize
+    );
+  }, [filteredData, currentPage, pageSize]);
+
+  const handleSearchChange = (q: string) => {
+    setSearchQuery(q);
+    setCurrentPage(1);
+  };
+
+  const columns = useMemo(() => [
+    {
+      key: "idx",
+      label: "#",
+      toggleable: false,
+      render: (_: any, idx: number) => <span className="text-gray-400 font-semibold">{(currentPage - 1) * pageSize + idx + 1}</span>,
+    },
+    {
+      key: "yard_name",
+      label: "Yard Name",
+      toggleable: false,
+      render: (y: VehicleYard) => <span className="font-semibold text-gray-900 dark:text-white">{y.yard_name}</span>,
+    },
+    {
+      key: "contact_person",
+      label: "Contact Person",
+      toggleable: true,
+      render: (y: VehicleYard) => y.contact_person || "—",
+    },
+    {
+      key: "mobile_no",
+      label: "Mobile No",
+      toggleable: true,
+      render: (y: VehicleYard) => y.mobile_no || "—",
+    },
+    {
+      key: "yard_contact_no",
+      label: "Landline No",
+      toggleable: true,
+      render: (y: VehicleYard) => y.yard_contact_no || "—",
+    },
+    {
+      key: "location",
+      label: "Location",
+      toggleable: true,
+      render: (y: VehicleYard) => {
+        if (y.district && y.dsd) return `${y.district} (${y.dsd})`;
+        return y.district || y.dsd || "—";
+      },
+    },
+    {
+      key: "status",
+      label: "Status",
+      toggleable: true,
+      render: (y: VehicleYard) => (
+        <span className={`inline-flex items-center px-1.5 py-0.5 rounded text-[11px] font-medium transition-colors ${y.status === 1 ? 'bg-green-50 text-green-700 dark:bg-green-500/10 dark:text-green-400' : 'bg-red-50 text-red-700 dark:bg-red-500/10 dark:text-red-400'}`}>
+          {y.status === 1 ? 'Active' : 'Inactive'}
+        </span>
+      ),
+    },
+    {
+      key: "actions",
+      label: "",
+      toggleable: false,
+      render: (y: VehicleYard) => (
+        <div className="flex items-center justify-center gap-1.5">
+          <button onClick={() => openEditModal(y)} className="p-1 text-blue-600 hover:bg-blue-50 dark:hover:bg-blue-950/40 rounded transition-colors" title="Edit">
+            <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" /></svg>
+          </button>
+          <button onClick={() => handleDelete(y.ID)} className="p-1 text-red-600 hover:bg-red-50 dark:hover:bg-red-950/40 rounded transition-colors" title="Delete">
+            <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" /></svg>
+          </button>
+        </div>
+      ),
+    },
+  ], [currentPage, pageSize]);
 
   return (
     <div className="relative pb-20">
@@ -152,106 +241,26 @@ export default function VehicleYardsManagement() {
         <p className="text-sm text-gray-500 dark:text-gray-400 mt-1">Create and manage Vehicle Yards.</p>
       </div>
 
-      <div className="bg-white dark:bg-gray-800 rounded-2xl border border-gray-200 dark:border-gray-700 shadow-sm overflow-hidden">
-        <div className="p-4 sm:p-5 flex flex-col sm:flex-row justify-between items-start sm:items-center border-b border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 gap-4">
-          <div className="flex items-center text-xs font-bold uppercase tracking-wider text-gray-500">
-            <svg className="w-4 h-4 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4" />
-            </svg>
-            Existing Yards
-          </div>
-          <button
-            onClick={openCreateModal}
-            className="flex items-center justify-center gap-2 px-5 py-2.5 bg-brand-500 hover:bg-brand-600 text-white font-semibold rounded-xl transition-colors shadow-sm text-sm"
-          >
-            <PlusIcon className="w-4 h-4" />
-            Add Vehicle Yard
-          </button>
-        </div>
-
-        <div className="px-5 py-4 flex flex-col sm:flex-row justify-between gap-4 border-b border-gray-100 dark:border-gray-700">
-          <div className="flex items-center gap-2">
-            <select className="rounded-xl border border-gray-200 bg-gray-50 px-3 py-2 text-sm outline-none focus:border-brand-500 dark:border-gray-700 dark:bg-gray-900 transition-colors cursor-pointer">
-              <option value="10">10 entries</option>
-              <option value="25">25 entries</option>
-              <option value="50">50 entries</option>
-            </select>
-          </div>
-          <input
-            type="text"
-            placeholder="Search Yard Name or District..."
-            className="w-full sm:w-64 rounded-xl border border-gray-200 bg-gray-50 px-4 py-2 text-sm outline-none focus:border-brand-500 focus:bg-white dark:border-gray-700 dark:bg-gray-900 dark:focus:bg-gray-800 transition-colors"
-            value={searchQuery}
-            onChange={(e) => setSearchQuery(e.target.value)}
-          />
-        </div>
-
-        <div className="overflow-x-auto">
-          {loading ? (
-            <div className="p-10 text-center text-gray-500 dark:text-gray-400">Loading yards...</div>
-          ) : (
-            <table className="w-full text-left border-collapse">
-              <thead>
-                <tr className="bg-gray-50/50 dark:bg-gray-800/50 text-gray-500 dark:text-gray-400 text-xs font-semibold uppercase tracking-wider border-b border-gray-200 dark:border-gray-700">
-                  <th className="px-5 py-4">#</th>
-                  <th className="px-5 py-4">Yard Name</th>
-                  <th className="px-5 py-4">Contact Person</th>
-                  <th className="px-5 py-4">Location</th>
-                  <th className="px-5 py-4 text-center">Status</th>
-                  <th className="px-5 py-4 text-center">Actions</th>
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-gray-100 dark:divide-gray-800 text-sm">
-                {filteredData.length === 0 ? (
-                  <tr>
-                    <td colSpan={6} className="px-5 py-8 text-center text-gray-500">No yards found.</td>
-                  </tr>
-                ) : (
-                  filteredData.map((y, idx) => (
-                    <tr key={y.ID} className="hover:bg-gray-50 dark:hover:bg-gray-800/80 transition-colors">
-                      <td className="px-5 py-4 text-gray-600 dark:text-gray-400 font-medium">{idx + 1}</td>
-                      <td className="px-5 py-4 font-bold text-gray-900 dark:text-white">
-                        {y.yard_name}
-                      </td>
-                      <td className="px-5 py-4">
-                        <div className="text-gray-700 dark:text-gray-300">
-                          {y.contact_person || 'N/A'}
-                        </div>
-                        <div className="text-xs text-gray-500 mt-1">
-                          {y.mobile_no} {y.yard_contact_no ? ` / ${y.yard_contact_no}` : ''}
-                        </div>
-                      </td>
-                      <td className="px-5 py-4">
-                        <div className="font-medium text-gray-900 dark:text-gray-300">
-                          {y.district || 'N/A'}
-                        </div>
-                        <div className="text-xs text-gray-500 mt-1">
-                          {y.dsd || ''}
-                        </div>
-                      </td>
-                      <td className="px-5 py-4 text-center">
-                        <span className={`px-2.5 py-1 rounded-full text-xs font-medium ${y.status === 1 ? 'bg-green-100 text-green-700' : 'bg-red-100 text-red-700'}`}>
-                          {y.status === 1 ? 'Active' : 'Inactive'}
-                        </span>
-                      </td>
-                      <td className="px-5 py-4 text-center">
-                        <div className="flex items-center justify-center gap-2">
-                          <button onClick={() => openEditModal(y)} className="p-1.5 text-blue-600 hover:bg-blue-50 focus:bg-blue-50 rounded-lg transition-colors" title="Edit">
-                            <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" /></svg>
-                          </button>
-                          <button onClick={() => handleDelete(y.ID)} className="p-1.5 text-red-600 hover:bg-red-50 focus:bg-red-50 rounded-lg transition-colors" title="Delete">
-                            <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" /></svg>
-                          </button>
-                        </div>
-                      </td>
-                    </tr>
-                  ))
-                )}
-              </tbody>
-            </table>
-          )}
-        </div>
-      </div>
+      <DataTable<VehicleYard>
+        data={pagedData}
+        columns={columns}
+        loading={loading}
+        searchQuery={searchQuery}
+        onSearchChange={handleSearchChange}
+        searchPlaceholder="Search Yard Name or District..."
+        createButton={{
+          label: "Add Vehicle Yard",
+          onClick: openCreateModal,
+        }}
+        currentPage={currentPage}
+        pageSize={pageSize}
+        totalItems={totalItems}
+        onPageChange={setCurrentPage}
+        onPageSizeChange={(size) => {
+          setPageSize(size);
+          setCurrentPage(1);
+        }}
+      />
 
       {isModalOpen && (
         <div className="fixed inset-0 z-50 flex items-center justify-center overflow-y-auto overflow-x-hidden bg-black/50 p-4">

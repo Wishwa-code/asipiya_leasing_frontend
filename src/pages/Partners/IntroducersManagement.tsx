@@ -1,7 +1,8 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useMemo } from "react";
 import PageMeta from "../../components/common/PageMeta";
 import { PlusIcon } from "../../icons";
 import apiClient from "../../api/apiClient";
+import { DataTable } from "../../components/ui/table";
 
 type Introducer = {
   ID: number;
@@ -24,6 +25,8 @@ export default function IntroducersManagement() {
   const [introducers, setIntroducers] = useState<Introducer[]>([]);
   const [loading, setLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState("");
+  const [currentPage, setCurrentPage] = useState(1);
+  const [pageSize, setPageSize] = useState(20);
 
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [editIntroducerId, setEditIntroducerId] = useState<number | null>(null);
@@ -146,11 +149,104 @@ export default function IntroducersManagement() {
     }
   };
 
-  const filteredIntroducers = introducers.filter(s =>
-    (s.name && s.name.toLowerCase().includes(searchQuery.toLowerCase())) ||
-    (s.registration_no && s.registration_no.toLowerCase().includes(searchQuery.toLowerCase())) ||
-    (s.primary_contact && s.primary_contact.toLowerCase().includes(searchQuery.toLowerCase()))
-  );
+  const filteredIntroducers = useMemo(() => {
+    const q = searchQuery.toLowerCase().trim();
+    if (!q) return introducers;
+    return introducers.filter(
+      (s) =>
+        (s.name && s.name.toLowerCase().includes(q)) ||
+        (s.registration_no && s.registration_no.toLowerCase().includes(q)) ||
+        (s.primary_contact && s.primary_contact.toLowerCase().includes(q)) ||
+        (s.email && s.email.toLowerCase().includes(q))
+    );
+  }, [introducers, searchQuery]);
+
+  const totalItems = filteredIntroducers.length;
+  const pagedIntroducers = useMemo(() => {
+    return filteredIntroducers.slice(
+      (currentPage - 1) * pageSize,
+      currentPage * pageSize
+    );
+  }, [filteredIntroducers, currentPage, pageSize]);
+
+  const handleSearchChange = (q: string) => {
+    setSearchQuery(q);
+    setCurrentPage(1);
+  };
+
+  const columns = useMemo(() => [
+    {
+      key: "idx",
+      label: "#",
+      toggleable: false,
+      render: (_: any, idx: number) => <span className="text-gray-400 font-semibold">{(currentPage - 1) * pageSize + idx + 1}</span>,
+    },
+    {
+      key: "name",
+      label: "Name",
+      toggleable: false,
+      render: (s: Introducer) => <span className="font-semibold text-gray-900 dark:text-white">{s.name}</span>,
+    },
+    {
+      key: "introducer_type",
+      label: "Type",
+      toggleable: true,
+      render: (s: Introducer) => (
+        <span className="text-xs font-medium bg-gray-100 dark:bg-gray-800 text-gray-600 dark:text-gray-400 px-2 py-0.5 rounded-md">
+          {s.introducer_type}
+        </span>
+      ),
+    },
+    {
+      key: "registration_no",
+      label: "Reg / NIC",
+      toggleable: true,
+      render: (s: Introducer) => s.registration_no || "—",
+    },
+    {
+      key: "primary_contact",
+      label: "Primary Contact",
+      toggleable: true,
+      render: (s: Introducer) => s.primary_contact || "—",
+    },
+    {
+      key: "email",
+      label: "Email",
+      toggleable: true,
+      render: (s: Introducer) => s.email || "—",
+    },
+    {
+      key: "commission_rate",
+      label: "Commission Rate",
+      toggleable: true,
+      render: (s: Introducer) => s.commission_rate || "—",
+    },
+    {
+      key: "status",
+      label: "Status",
+      toggleable: true,
+      render: (s: Introducer) => (
+        <span className={`inline-flex items-center px-1.5 py-0.5 rounded text-[11px] font-medium transition-colors ${s.status === 1 ? 'bg-green-50 text-green-700 dark:bg-green-500/10 dark:text-green-400' : 'bg-red-50 text-red-700 dark:bg-red-500/10 dark:text-red-400'}`}>
+          {s.status === 1 ? 'Active' : 'Inactive'}
+        </span>
+      ),
+    },
+    {
+      key: "actions",
+      label: "",
+      toggleable: false,
+      render: (s: Introducer) => (
+        <div className="flex items-center justify-center gap-1.5">
+          <button onClick={() => openEditModal(s)} className="p-1 text-blue-600 hover:bg-blue-50 dark:hover:bg-blue-950/40 rounded transition-colors" title="Edit">
+            <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" /></svg>
+          </button>
+          <button onClick={() => handleDelete(s.ID)} className="p-1 text-red-600 hover:bg-red-50 dark:hover:bg-red-950/40 rounded transition-colors" title="Delete">
+            <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" /></svg>
+          </button>
+        </div>
+      ),
+    },
+  ], [currentPage, pageSize]);
 
   return (
     <div className="relative pb-20">
@@ -161,109 +257,26 @@ export default function IntroducersManagement() {
         <p className="text-sm text-gray-500 dark:text-gray-400 mt-1">Quickly create and manage Introducers.</p>
       </div>
 
-      <div className="bg-white dark:bg-gray-800 rounded-2xl border border-gray-200 dark:border-gray-700 shadow-sm overflow-hidden">
-        {/* Table Header area */}
-        <div className="p-4 sm:p-5 flex flex-col sm:flex-row justify-between items-start sm:items-center border-b border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 gap-4">
-          <div className="flex items-center text-xs font-bold uppercase tracking-wider text-gray-500">
-            <svg className="w-4 h-4 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 10h18M3 14h18m-9-4v8m-7 0h14a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v8a2 2 0 002 2z" />
-            </svg>
-            Existing Introducers
-          </div>
-          <button
-            onClick={openCreateModal}
-            className="flex items-center justify-center gap-2 px-5 py-2.5 bg-brand-500 hover:bg-brand-600 text-white font-semibold rounded-xl transition-colors shadow-sm text-sm"
-          >
-            <PlusIcon className="w-4 h-4" />
-            Create Introducer
-          </button>
-        </div>
-
-        {/* Table Filters area */}
-        <div className="px-5 py-4 flex flex-col sm:flex-row justify-between gap-4 border-b border-gray-100 dark:border-gray-700">
-          <div className="flex items-center gap-2">
-            <select className="rounded-xl border border-gray-200 bg-gray-50 px-3 py-2 text-sm outline-none focus:border-brand-500 dark:border-gray-700 dark:bg-gray-900 transition-colors cursor-pointer">
-              <option value="10">10 entries</option>
-              <option value="25">25 entries</option>
-              <option value="50">50 entries</option>
-            </select>
-          </div>
-          <input
-            type="text"
-            placeholder="Search Name or Reg No..."
-            className="w-full sm:w-64 rounded-xl border border-gray-200 bg-gray-50 px-4 py-2 text-sm outline-none focus:border-brand-500 focus:bg-white dark:border-gray-700 dark:bg-gray-900 dark:focus:bg-gray-800 transition-colors"
-            value={searchQuery}
-            onChange={(e) => setSearchQuery(e.target.value)}
-          />
-        </div>
-
-        {/* Table area */}
-        <div className="overflow-x-auto">
-          {loading ? (
-            <div className="p-10 text-center text-gray-500 dark:text-gray-400">Loading introducers...</div>
-          ) : (
-            <table className="w-full text-left border-collapse">
-              <thead>
-                <tr className="bg-gray-50/50 dark:bg-gray-800/50 text-gray-500 dark:text-gray-400 text-xs font-semibold uppercase tracking-wider border-b border-gray-200 dark:border-gray-700">
-                  <th className="px-5 py-4">#</th>
-                  <th className="px-5 py-4">Introducer Name</th>
-                  <th className="px-5 py-4">Contact Info</th>
-                  <th className="px-5 py-4">Commission</th>
-                  <th className="px-5 py-4 text-center">Status</th>
-                  <th className="px-5 py-4 text-center">Actions</th>
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-gray-100 dark:divide-gray-800 text-sm">
-                {filteredIntroducers.length === 0 ? (
-                  <tr>
-                    <td colSpan={6} className="px-5 py-8 text-center text-gray-500">No introducers found.</td>
-                  </tr>
-                ) : (
-                  filteredIntroducers.map((s, idx) => (
-                    <tr key={s.ID} className="hover:bg-gray-50 dark:hover:bg-gray-800/80 transition-colors">
-                      <td className="px-5 py-4 text-gray-600 dark:text-gray-400 font-medium">{idx + 1}</td>
-                      <td className="px-5 py-4">
-                        <div className="font-semibold text-gray-900 dark:text-white">
-                          {s.name} <span className="text-xs font-medium bg-gray-100 text-gray-600 px-2 py-0.5 rounded-md ml-2">{s.introducer_type}</span>
-                        </div>
-                        <div className="text-gray-500 text-xs mt-1">
-                          Reg: {s.registration_no || 'N/A'}
-                        </div>
-                      </td>
-                      <td className="px-5 py-4">
-                        <div className="text-gray-700 dark:text-gray-300">
-                          {s.primary_contact}
-                        </div>
-                        {s.email && <div className="text-gray-500 text-xs mt-1">{s.email}</div>}
-                      </td>
-                      <td className="px-5 py-4">
-                        <div className="text-gray-700 dark:text-gray-300">
-                          {s.commission_rate || 'N/A'}
-                        </div>
-                      </td>
-                      <td className="px-5 py-4 text-center">
-                        <span className={`px-2.5 py-1 rounded-full text-xs font-medium ${s.status === 1 ? 'bg-green-100 text-green-700' : 'bg-red-100 text-red-700'}`}>
-                          {s.status === 1 ? 'Active' : 'Inactive'}
-                        </span>
-                      </td>
-                      <td className="px-5 py-4 text-center">
-                        <div className="flex items-center justify-center gap-2">
-                          <button onClick={() => openEditModal(s)} className="p-1.5 text-blue-600 hover:bg-blue-50 focus:bg-blue-50 rounded-lg transition-colors" title="Edit">
-                            <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" /></svg>
-                          </button>
-                          <button onClick={() => handleDelete(s.ID)} className="p-1.5 text-red-600 hover:bg-red-50 focus:bg-red-50 rounded-lg transition-colors" title="Delete">
-                            <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" /></svg>
-                          </button>
-                        </div>
-                      </td>
-                    </tr>
-                  ))
-                )}
-              </tbody>
-            </table>
-          )}
-        </div>
-      </div>
+      <DataTable<Introducer>
+        data={pagedIntroducers}
+        columns={columns}
+        loading={loading}
+        searchQuery={searchQuery}
+        onSearchChange={handleSearchChange}
+        searchPlaceholder="Search Name or Reg No..."
+        createButton={{
+          label: "Create Introducer",
+          onClick: openCreateModal,
+        }}
+        currentPage={currentPage}
+        pageSize={pageSize}
+        totalItems={totalItems}
+        onPageChange={setCurrentPage}
+        onPageSizeChange={(size) => {
+          setPageSize(size);
+          setCurrentPage(1);
+        }}
+      />
 
       {/* Save Modal */}
       {isModalOpen && (

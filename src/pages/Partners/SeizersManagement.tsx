@@ -1,7 +1,9 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useMemo } from "react";
 import PageMeta from "../../components/common/PageMeta";
-import { PlusIcon } from "../../icons";
 import apiClient from "../../api/apiClient";
+import { DataTable } from "../../components/ui/table";
+import { PlusIcon } from "../../icons";
+
 
 type Seizer = {
   ID: number;
@@ -24,6 +26,8 @@ export default function SeizersManagement() {
   const [seizers, setSeizers] = useState<Seizer[]>([]);
   const [loading, setLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState("");
+  const [currentPage, setCurrentPage] = useState(1);
+  const [pageSize, setPageSize] = useState(20);
 
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [editSeizerId, setEditSeizerId] = useState<number | null>(null);
@@ -143,11 +147,97 @@ export default function SeizersManagement() {
     }
   };
 
-  const filteredSeizers = seizers.filter(s =>
-    (s.company_name && s.company_name.toLowerCase().includes(searchQuery.toLowerCase())) ||
-    (s.nic && s.nic.toLowerCase().includes(searchQuery.toLowerCase())) ||
-    (s.seizer_type && s.seizer_type.toLowerCase().includes(searchQuery.toLowerCase()))
+  const filteredSeizers = useMemo(() => {
+    const q = searchQuery.toLowerCase().trim();
+    if (!q) return seizers;
+    return seizers.filter(
+      (s) =>
+        (s.company_name && s.company_name.toLowerCase().includes(q)) ||
+        (s.nic && s.nic.toLowerCase().includes(q)) ||
+        (s.company_registration && s.company_registration.toLowerCase().includes(q)) ||
+        (s.seizer_contact_no && s.seizer_contact_no.toLowerCase().includes(q)) ||
+        (s.mobile_no && s.mobile_no.toLowerCase().includes(q))
+    );
+  }, [seizers, searchQuery]);
+
+  const totalItems = filteredSeizers.length;
+  const pagedSeizers = filteredSeizers.slice(
+    (currentPage - 1) * pageSize,
+    currentPage * pageSize
   );
+
+  const handleSearchChange = (q: string) => {
+    setSearchQuery(q);
+    setCurrentPage(1);
+  };
+
+  const columns = useMemo(() => [
+    {
+      key: "idx",
+      label: "#",
+      toggleable: false,
+      render: (_: any, idx: number) => <span className="text-gray-400 font-semibold">{ (currentPage - 1) * pageSize + idx + 1 }</span>,
+    },
+    {
+      key: "name_nic",
+      label: "Seizer Name/NIC",
+      toggleable: false,
+      render: (s: Seizer) => (
+        <span className="font-semibold text-gray-900 dark:text-white">
+          {s.company_name || s.nic || '—'}
+        </span>
+      ),
+    },
+    {
+      key: "seizer_type",
+      label: "Seizer Type",
+      toggleable: true,
+      render: (s: Seizer) => (
+        <span className="text-xs font-medium bg-gray-100 dark:bg-gray-800 text-gray-600 dark:text-gray-400 px-2 py-0.5 rounded-md">
+          {s.seizer_type}
+        </span>
+      ),
+    },
+    {
+      key: "registration",
+      label: "Registration No / Mobile",
+      toggleable: true,
+      render: (s: Seizer) =>
+        s.seizer_type === 'Company' ? s.company_registration || '—' : s.mobile_no || '—',
+    },
+    {
+      key: "contact_no",
+      label: "Contact No",
+      toggleable: true,
+      render: (s: Seizer) =>
+        s.seizer_type === 'Company' ? s.company_contact_no || '—' : s.seizer_contact_no || '—',
+    },
+    {
+      key: "status",
+      label: "Status",
+      toggleable: true,
+      render: (s: Seizer) => (
+        <span className={`inline-flex items-center px-1.5 py-0.5 rounded text-[11px] font-medium transition-colors ${s.status === 'Active' ? 'bg-green-50 text-green-700 dark:bg-green-500/10 dark:text-green-400' : 'bg-red-50 text-red-700 dark:bg-red-500/10 dark:text-red-400'}`}>
+          {s.status}
+        </span>
+      ),
+    },
+    {
+      key: "actions",
+      label: "",
+      toggleable: false,
+      render: (s: Seizer) => (
+        <div className="flex items-center justify-center gap-1.5">
+          <button onClick={() => openEditModal(s)} className="p-1 text-blue-600 hover:bg-blue-50 dark:hover:bg-blue-950/40 rounded transition-colors" title="Edit">
+            <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" /></svg>
+          </button>
+          <button onClick={() => handleDelete(s.ID)} className="p-1 text-red-600 hover:bg-red-50 dark:hover:bg-red-950/40 rounded transition-colors" title="Delete">
+            <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" /></svg>
+          </button>
+        </div>
+      ),
+    },
+  ], [currentPage, pageSize]);
 
   return (
     <div className="relative pb-20">
@@ -158,102 +248,27 @@ export default function SeizersManagement() {
         <p className="text-sm text-gray-500 dark:text-gray-400 mt-1">Quickly create and manage Seizers.</p>
       </div>
 
-      <div className="bg-white dark:bg-gray-800 rounded-2xl border border-gray-200 dark:border-gray-700 shadow-sm overflow-hidden">
-        {/* Table Header area */}
-        <div className="p-4 sm:p-5 flex flex-col sm:flex-row justify-between items-start sm:items-center border-b border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 gap-4">
-          <div className="flex items-center text-xs font-bold uppercase tracking-wider text-gray-500">
-            <svg className="w-4 h-4 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 10h18M3 14h18m-9-4v8m-7 0h14a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v8a2 2 0 002 2z" />
-            </svg>
-            Existing Seizers
-          </div>
-          <button
-            onClick={openCreateModal}
-            className="flex items-center justify-center gap-2 px-5 py-2.5 bg-brand-500 hover:bg-brand-600 text-white font-semibold rounded-xl transition-colors shadow-sm text-sm"
-          >
-            <PlusIcon className="w-4 h-4" />
-            Create Seizer
-          </button>
-        </div>
+      <DataTable<Seizer>
+        data={pagedSeizers}
+        columns={columns}
+        loading={loading}
+        searchQuery={searchQuery}
+        onSearchChange={handleSearchChange}
+        searchPlaceholder="Search NIC or Company Name..."
+        createButton={{
+          label: "Create Seizer",
+          onClick: openCreateModal,
+        }}
+        currentPage={currentPage}
+        pageSize={pageSize}
+        totalItems={totalItems}
+        onPageChange={setCurrentPage}
+        onPageSizeChange={(size) => {
+          setPageSize(size);
+          setCurrentPage(1);
+        }}
+      />
 
-        {/* Table Filters area */}
-        <div className="px-5 py-4 flex flex-col sm:flex-row justify-between gap-4 border-b border-gray-100 dark:border-gray-700">
-          <div className="flex items-center gap-2">
-            <select className="rounded-xl border border-gray-200 bg-gray-50 px-3 py-2 text-sm outline-none focus:border-brand-500 dark:border-gray-700 dark:bg-gray-900 transition-colors cursor-pointer">
-              <option value="10">10 entries</option>
-              <option value="25">25 entries</option>
-              <option value="50">50 entries</option>
-            </select>
-          </div>
-          <input
-            type="text"
-            placeholder="Search NIC or Company Name..."
-            className="w-full sm:w-64 rounded-xl border border-gray-200 bg-gray-50 px-4 py-2 text-sm outline-none focus:border-brand-500 focus:bg-white dark:border-gray-700 dark:bg-gray-900 dark:focus:bg-gray-800 transition-colors"
-            value={searchQuery}
-            onChange={(e) => setSearchQuery(e.target.value)}
-          />
-        </div>
-
-        {/* Table area */}
-        <div className="overflow-x-auto">
-          {loading ? (
-            <div className="p-10 text-center text-gray-500 dark:text-gray-400">Loading seizers...</div>
-          ) : (
-            <table className="w-full text-left border-collapse">
-              <thead>
-                <tr className="bg-gray-50/50 dark:bg-gray-800/50 text-gray-500 dark:text-gray-400 text-xs font-semibold uppercase tracking-wider border-b border-gray-200 dark:border-gray-700">
-                  <th className="px-5 py-4">#</th>
-                  <th className="px-5 py-4">Type & Info</th>
-                  <th className="px-5 py-4">Contact Info</th>
-                  <th className="px-5 py-4 text-center">Status</th>
-                  <th className="px-5 py-4 text-center">Actions</th>
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-gray-100 dark:divide-gray-800 text-sm">
-                {filteredSeizers.length === 0 ? (
-                  <tr>
-                    <td colSpan={5} className="px-5 py-8 text-center text-gray-500">No seizers found.</td>
-                  </tr>
-                ) : (
-                  filteredSeizers.map((s, idx) => (
-                    <tr key={s.ID} className="hover:bg-gray-50 dark:hover:bg-gray-800/80 transition-colors">
-                      <td className="px-5 py-4 text-gray-600 dark:text-gray-400 font-medium">{idx + 1}</td>
-                      <td className="px-5 py-4">
-                        <div className="font-semibold text-gray-900 dark:text-white">
-                          {s.company_name || s.nic || 'N/A'} <span className="text-xs font-medium bg-gray-100 text-gray-600 px-2 py-0.5 rounded-md ml-2">{s.seizer_type}</span>
-                        </div>
-                        <div className="text-gray-500 text-xs mt-1">
-                          {s.seizer_type === 'Company' ? `Reg: ${s.company_registration || 'N/A'}` : `M: ${s.mobile_no || 'N/A'}`}
-                        </div>
-                      </td>
-                      <td className="px-5 py-4">
-                        <div className="text-gray-700 dark:text-gray-300">
-                          {s.seizer_type === 'Company' ? s.company_contact_no : s.seizer_contact_no}
-                        </div>
-                      </td>
-                      <td className="px-5 py-4 text-center">
-                        <span className={`px-2.5 py-1 rounded-full text-xs font-medium ${s.status === 'Active' ? 'bg-green-100 text-green-700' : 'bg-red-100 text-red-700'}`}>
-                          {s.status}
-                        </span>
-                      </td>
-                      <td className="px-5 py-4 text-center">
-                        <div className="flex items-center justify-center gap-2">
-                          <button onClick={() => openEditModal(s)} className="p-1.5 text-blue-600 hover:bg-blue-50 focus:bg-blue-50 rounded-lg transition-colors" title="Edit">
-                            <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" /></svg>
-                          </button>
-                          <button onClick={() => handleDelete(s.ID)} className="p-1.5 text-red-600 hover:bg-red-50 focus:bg-red-50 rounded-lg transition-colors" title="Delete">
-                            <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" /></svg>
-                          </button>
-                        </div>
-                      </td>
-                    </tr>
-                  ))
-                )}
-              </tbody>
-            </table>
-          )}
-        </div>
-      </div>
 
       {/* Save Modal */}
       {isModalOpen && (

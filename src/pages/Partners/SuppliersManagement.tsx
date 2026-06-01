@@ -1,9 +1,10 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useMemo } from "react";
 import PageMeta from "../../components/common/PageMeta";
-import { PlusIcon } from "../../icons";
 import apiClient from "../../api/apiClient";
 import { MapContainer, TileLayer, Marker, useMapEvents } from "react-leaflet";
 import "leaflet/dist/leaflet.css";
+import { DataTable } from "../../components/ui/table";
+
 
 // SVG icon for Leaflet Marker
 import L from "leaflet";
@@ -65,6 +66,8 @@ export default function SuppliersManagement() {
   const [suppliers, setSuppliers] = useState<Supplier[]>([]);
   const [loading, setLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState("");
+  const [currentPage, setCurrentPage] = useState(1);
+  const [pageSize, setPageSize] = useState(20);
 
   // Modal states
   const [isModalOpen, setIsModalOpen] = useState(false);
@@ -205,6 +208,123 @@ export default function SuppliersManagement() {
     (s.nic && s.nic.toLowerCase().includes(searchQuery.toLowerCase()))
   );
 
+  const totalItems = filteredSuppliers.length;
+  const pagedSuppliers = filteredSuppliers.slice(
+    (currentPage - 1) * pageSize,
+    currentPage * pageSize
+  );
+
+  const handleSearchChange = (q: string) => {
+    setSearchQuery(q);
+    setCurrentPage(1);
+  };
+
+  const columns = useMemo(() => [
+    {
+      key: "idx",
+      label: "#",
+      toggleable: false,
+      render: (_: any, idx: number) => <span className="text-gray-400 font-semibold">{ (currentPage - 1) * pageSize + idx + 1 }</span>,
+    },
+    {
+      key: "name",
+      label: "Name",
+      toggleable: false,
+      render: (s: Supplier) => (
+        <span className="font-semibold text-gray-900 dark:text-white capitalize">
+          {s.name || "-"}
+        </span>
+      ),
+    },
+    {
+      key: "nic",
+      label: "NIC",
+      toggleable: true,
+      render: (s: Supplier) => s.nic || "—",
+    },
+    {
+      key: "coordinates",
+      label: "Coordinates",
+      toggleable: true,
+      render: (s: Supplier) =>
+        s.latitude && s.longitude ? (
+          <span className="font-medium text-gray-700 dark:text-gray-300">
+            {s.latitude}, {s.longitude}
+          </span>
+        ) : (
+          "—"
+        ),
+    },
+    {
+      key: "address",
+      label: "Address",
+      toggleable: true,
+      render: (s: Supplier) => (
+        <span className="truncate max-w-[200px] block" title={s.address}>
+          {s.address || "—"}
+        </span>
+      ),
+    },
+    {
+      key: "contact_no",
+      label: "Contact No",
+      toggleable: true,
+      render: (s: Supplier) => s.contact_no || "—",
+    },
+    {
+      key: "occupation",
+      label: "Occupation",
+      toggleable: true,
+      render: (s: Supplier) => s.occupation || "—",
+    },
+    {
+      key: "income",
+      label: "Income",
+      toggleable: true,
+      render: (s: Supplier) =>
+        s.income ? parseFloat(s.income.toString()).toFixed(2) : "—",
+    },
+    {
+      key: "name_in_cheque",
+      label: "Name in Cheque",
+      toggleable: true,
+      render: (s: Supplier) => s.name_in_cheque || "—",
+    },
+    {
+      key: "CreatedAt",
+      label: "Created At",
+      toggleable: true,
+      render: (s: Supplier) => s.CreatedAt || "—",
+    },
+    {
+      key: "actions",
+      label: "",
+      toggleable: false,
+      render: (s: Supplier) => (
+        <div className="flex items-center justify-center gap-1.5">
+          <button
+            onClick={() => openEditModal(s)}
+            className="p-1 text-blue-600 hover:bg-blue-50 dark:hover:bg-blue-950/40 rounded transition-colors"
+            aria-label="Edit"
+          >
+            <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z" />
+            </svg>
+          </button>
+          <button
+            onClick={() => handleDelete(s.ID)}
+            className="p-1 text-red-600 hover:bg-red-50 dark:hover:bg-red-950/40 rounded transition-colors"
+            aria-label="Delete"
+          >
+            <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+            </svg>
+          </button>
+        </div>
+      ),
+    },
+  ], [currentPage, pageSize]);
+
   return (
     <div className="relative pb-20">
       <PageMeta title="Supplier Management | Asipiya Leasing" description="Quickly create and manage suppliers." />
@@ -214,140 +334,27 @@ export default function SuppliersManagement() {
         <p className="text-sm text-gray-500 dark:text-gray-400 mt-1">Quickly create and manage suppliers.</p>
       </div>
 
-      <div className="bg-white dark:bg-gray-800 rounded-2xl border border-gray-200 dark:border-gray-700 shadow-sm overflow-hidden">
-        {/* Table Header area */}
-        <div className="p-4 sm:p-5 flex flex-col sm:flex-row justify-between items-start sm:items-center border-b border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 gap-4">
-          <div className="flex items-center text-xs font-bold uppercase tracking-wider text-gray-500">
-            <svg className="w-4 h-4 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 10h18M3 14h18m-9-4v8m-7 0h14a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v8a2 2 0 002 2z" />
-            </svg>
-            Existing Suppliers
-          </div>
-          <button
-            onClick={openCreateModal}
-            className="flex items-center justify-center gap-2 px-5 py-2.5 bg-brand-500 hover:bg-brand-600 text-white font-semibold rounded-xl transition-colors shadow-sm text-sm"
-          >
-            <PlusIcon className="w-4 h-4" />
-            Create Supplier
-          </button>
-        </div>
+      <DataTable<Supplier>
+        data={pagedSuppliers}
+        columns={columns}
+        loading={loading}
+        searchQuery={searchQuery}
+        onSearchChange={handleSearchChange}
+        searchPlaceholder="Search NIC or Name..."
+        createButton={{
+          label: "Create Supplier",
+          onClick: openCreateModal,
+        }}
+        currentPage={currentPage}
+        pageSize={pageSize}
+        totalItems={totalItems}
+        onPageChange={setCurrentPage}
+        onPageSizeChange={(size) => {
+          setPageSize(size);
+          setCurrentPage(1);
+        }}
+      />
 
-        {/* Table Filters area */}
-        <div className="px-5 py-4 flex flex-col sm:flex-row justify-between gap-4 border-b border-gray-100 dark:border-gray-700">
-          <div className="flex items-center gap-2">
-            <select className="rounded-xl border border-gray-200 bg-gray-50 px-3 py-2 text-sm outline-none focus:border-brand-500 dark:border-gray-700 dark:bg-gray-900 transition-colors cursor-pointer">
-              <option value="10">10 entries</option>
-              <option value="25">25 entries</option>
-              <option value="50">50 entries</option>
-            </select>
-          </div>
-          <input
-            type="text"
-            placeholder="Search NIC or Name..."
-            className="w-full sm:w-64 rounded-xl border border-gray-200 bg-gray-50 px-4 py-2 text-sm outline-none focus:border-brand-500 focus:bg-white dark:border-gray-700 dark:bg-gray-900 dark:focus:bg-gray-800 transition-colors"
-            value={searchQuery}
-            onChange={(e) => setSearchQuery(e.target.value)}
-          />
-        </div>
-
-        {/* Table */}
-        <div className="overflow-x-auto">
-          <table className="w-full whitespace-nowrap text-left text-sm text-gray-500 dark:text-gray-400">
-            <thead className="bg-gray-50/50 dark:bg-gray-800/50 text-xs font-bold uppercase tracking-wider text-gray-500 dark:text-gray-400">
-              <tr>
-                <th className="px-5 py-4 w-12">#</th>
-                <th className="px-5 py-4">Name</th>
-                <th className="px-5 py-4">NIC / Contact</th>
-                <th className="px-5 py-4">Coordinates</th>
-                <th className="px-5 py-4 min-w-[200px]">Address</th>
-                <th className="px-5 py-4">Contact No</th>
-                <th className="px-5 py-4">Occupation</th>
-                <th className="px-5 py-4">Income</th>
-                <th className="px-5 py-4">Name in Cheque</th>
-                <th className="px-5 py-4">Created At</th>
-                <th className="px-5 py-4 text-center">Actions</th>
-              </tr>
-            </thead>
-            <tbody className="divide-y divide-gray-100 dark:divide-gray-800 bg-white dark:bg-gray-800">
-              {loading ? (
-                <tr>
-                  <td colSpan={11} className="px-5 py-8 text-center text-gray-500">
-                   <div className="flex flex-col items-center justify-center">
-                    <span className="inline-block w-6 h-6 border-2 border-brand-500/30 border-t-brand-500 rounded-full animate-spin mb-2"></span>
-                    <p className="font-medium text-xs uppercase tracking-widest text-brand-500">Loading Data...</p>
-                   </div>
-                  </td>
-                </tr>
-              ) : filteredSuppliers.length === 0 ? (
-                <tr>
-                  <td colSpan={11} className="px-5 py-12 text-center text-gray-500">
-                    <p className="font-semibold text-sm">No suppliers found</p>
-                  </td>
-                </tr>
-              ) : (
-                filteredSuppliers.map((supplier, idx) => (
-                  <tr key={`${supplier.ID}-${idx}`} className="group hover:bg-gray-50 dark:hover:bg-gray-800/80 transition-colors">
-                    <td className="px-5 py-4 font-semibold text-gray-900 dark:text-gray-200">{idx + 1}</td>
-                    <td className="px-5 py-4 font-bold text-gray-900 dark:text-white capitalize">{supplier.name || '-'}</td>
-                    <td className="px-5 py-4 font-medium">{supplier.nic || '-'}</td>
-                    <td className="px-5 py-4">
-                      {supplier.latitude && supplier.longitude ? (
-                        <div className="flex items-center gap-2">
-                           <span className="font-medium">{supplier.latitude},<br/>{supplier.longitude}</span>
-                           <span className="flex items-center justify-center w-8 h-8 rounded-full border border-brand-200 text-brand-500 bg-brand-50">
-                             <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
-                               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
-                             </svg>
-                           </span>
-                        </div>
-                      ) : '-'}
-                    </td>
-                    <td className="px-5 py-4 whitespace-normal"><p className="text-xs">{supplier.address || '-'}</p></td>
-                    <td className="px-5 py-4">{supplier.contact_no || '-'}</td>
-                    <td className="px-5 py-4">{supplier.occupation || '-'}</td>
-                    <td className="px-5 py-4 font-medium">{supplier.income ? parseFloat(supplier.income.toString()).toFixed(2) : '-'}</td>
-                    <td className="px-5 py-4">{supplier.name_in_cheque || '-'}</td>
-                    <td className="px-5 py-4 text-xs font-medium">{supplier.CreatedAt || '-'}</td>
-                    <td className="px-5 py-4 text-center">
-                      <div className="flex items-center justify-center gap-2">
-                        <button onClick={() => openEditModal(supplier)} className="p-1.5 text-brand-500 hover:bg-brand-50 rounded transition-colors" aria-label="Edit">
-                          <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z" />
-                          </svg>
-                        </button>
-                        <button onClick={() => handleDelete(supplier.ID)} className="p-1.5 text-error-500 hover:bg-error-50 rounded transition-colors" aria-label="Delete">
-                          <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
-                          </svg>
-                        </button>
-                      </div>
-                    </td>
-                  </tr>
-                ))
-              )}
-            </tbody>
-          </table>
-        </div>
-
-        {/* Pagination Dummy */}
-        <div className="p-4 sm:p-5 flex flex-col sm:flex-row justify-between items-center gap-4 bg-gray-50/30 dark:bg-gray-800/30 border-t border-gray-200 dark:border-gray-700">
-          <p className="text-xs font-semibold text-gray-500">
-            Showing {filteredSuppliers.length > 0 ? 1 : 0} to {filteredSuppliers.length} of {filteredSuppliers.length} entries
-          </p>
-          <div className="flex items-center gap-2">
-            <button className="px-3 py-1.5 rounded-lg border border-gray-200 bg-white text-xs font-bold text-gray-400 cursor-not-allowed hidden sm:block">
-              Previous
-            </button>
-            <button className="w-8 h-8 flex items-center justify-center rounded-lg bg-brand-500 text-white text-xs font-bold shadow hover:bg-brand-600 transition-colors">
-              1
-            </button>
-            <button className="px-3 py-1.5 rounded-lg border border-gray-200 bg-white text-xs font-bold text-gray-400 cursor-not-allowed hidden sm:block">
-              Next
-            </button>
-          </div>
-        </div>
-      </div>
 
       {/* CREATE/EDIT MODAL */}
       {isModalOpen && (

@@ -216,9 +216,9 @@ const CreateLeasing: React.FC = () => {
         description="Create a new finance lease application"
       />
 
-      {/* Sticky Header */}
-      <div className="sticky top-0 z-40 bg-gray-50/90 dark:bg-gray-900/90 backdrop-blur-md pt-5 pb-4 px-4 sm:px-6 -mx-4 sm:-mx-6 border-b border-gray-200 dark:border-gray-800 shadow-sm">
-        <div className="flex flex-col xl:flex-row justify-between items-start xl:items-center gap-4 max-w-[1600px] mx-auto">
+      {/* Page Header (No Card) */}
+      <div className="max-w-[1600px] mx-auto mb-6 pt-2">
+        <div className="flex flex-col xl:flex-row justify-between items-start xl:items-center gap-4">
           <div>
             <h1 className="text-xl sm:text-2xl font-bold">
               {isReadOnly ? "Review Leasing Application" : "New Leasing Application"}
@@ -242,20 +242,20 @@ const CreateLeasing: React.FC = () => {
                     resetForm();
                   }
                 }}
-                className="flex-1 sm:flex-none px-5 py-2.5 bg-white dark:bg-gray-800 border border-red-200 dark:border-red-800/50 text-red-600 dark:text-red-400 font-semibold rounded-xl hover:bg-red-50 dark:hover:bg-red-900/20 transition-all shadow-theme-xs flex items-center justify-center gap-2"
+                className="flex-1 sm:flex-none px-5 py-2.5 bg-white dark:bg-gray-800 border border-red-200 dark:border-red-800/50 text-red-600 dark:text-red-400 font-semibold rounded-xl hover:bg-red-50 dark:hover:bg-red-900/20 transition-all shadow-theme-xs flex items-center justify-center gap-2 cursor-pointer"
               >
                 Reset Draft
               </button>
               <button 
                 onClick={() => saveDraft()}
-                className="flex-1 sm:flex-none px-5 py-2.5 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 text-gray-700 dark:text-gray-300 font-semibold rounded-xl hover:bg-gray-50 transition-all shadow-theme-xs flex items-center justify-center gap-2"
+                className="flex-1 sm:flex-none px-5 py-2.5 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 text-gray-700 dark:text-gray-300 font-semibold rounded-xl hover:bg-gray-50 transition-all shadow-theme-xs flex items-center justify-center gap-2 cursor-pointer"
               >
                  Save Draft
               </button>
               <button 
                 onClick={submitApplication}
                 disabled={isSubmitting}
-                className="flex-1 sm:flex-none px-6 py-2.5 bg-brand-500 hover:bg-brand-600 text-white font-semibold rounded-xl transition-all shadow-theme-sm border border-brand-600 flex items-center justify-center gap-2 disabled:opacity-50"
+                className="flex-1 sm:flex-none px-6 py-2.5 bg-brand-500 hover:bg-brand-600 text-white font-semibold rounded-xl transition-all shadow-theme-sm border border-brand-600 flex items-center justify-center gap-2 disabled:opacity-50 cursor-pointer"
               >
                  {isSubmitting ? "Submitting..." : "Submit Application"}
               </button>
@@ -264,16 +264,18 @@ const CreateLeasing: React.FC = () => {
             <div className="flex items-center gap-3 w-full xl:w-auto">
               <Link
                 to={ROUTES.PENDING_LEASES}
-                className="flex-1 sm:flex-none px-6 py-2.5 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 text-gray-700 dark:text-gray-300 font-semibold rounded-xl hover:bg-gray-50 transition-all shadow-theme-xs flex items-center justify-center gap-2"
+                className="flex-1 sm:flex-none px-6 py-2.5 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 text-gray-700 dark:text-gray-300 font-semibold rounded-xl hover:bg-gray-50 transition-all shadow-theme-xs flex items-center justify-center gap-2 cursor-pointer"
               >
                 Back to Queue
               </Link>
             </div>
           )}
         </div>
+      </div>
 
-        {/* Stepper Inside Header for better visibility */}
-        <div className="mt-6 max-w-[1600px] mx-auto overflow-x-auto no-scrollbar pb-1">
+      {/* Sticky Stepper Card */}
+      <div className="sticky top-[78px] lg:top-[78px] max-md:top-[70px] z-30 max-w-[1600px] mx-auto mb-6">
+        <div className="bg-white/95 dark:bg-gray-900/95 backdrop-blur-md border border-gray-250 dark:border-gray-700 rounded-2xl p-4 shadow-sm overflow-x-auto no-scrollbar">
           <div className="flex items-center gap-4 min-w-[1000px]">
             {STEPS.map((step) => {
               const status = stepStatuses[step.id] || "";
@@ -291,9 +293,9 @@ const CreateLeasing: React.FC = () => {
               <button
                 key={step.id}
                 onClick={() => handleGoToStep(step.id)}
-                className={`flex items-center gap-3 p-2.5 rounded-xl transition-all grow group ${
+                className={`flex items-center gap-3 p-2.5 rounded-xl transition-all grow group cursor-pointer ${
                   activeStep === step.id 
-                  ? "bg-white dark:bg-gray-800 shadow-theme-sm ring-1 ring-brand-500/10" 
+                  ? "bg-brand-50/70 dark:bg-brand-500/10 shadow-theme-sm ring-1 ring-brand-500/20 border border-brand-100 dark:border-brand-500/20" 
                   : "opacity-60 hover:opacity-100"
                 }`}
               >
@@ -302,12 +304,12 @@ const CreateLeasing: React.FC = () => {
                 </div>
                 <div className="text-left">
                   <p className={`text-[10px] font-bold uppercase tracking-wider ${
-                    activeStep === step.id ? "text-brand-500" : "text-gray-400"
+                    activeStep === step.id ? "text-brand-600 dark:text-brand-400" : "text-gray-400"
                   }`}>
                     Step 0{step.id}
                   </p>
                   <p className={`text-sm font-bold truncate ${
-                    activeStep === step.id ? "text-gray-900 dark:text-white" : "text-gray-500"
+                    activeStep === step.id ? "text-brand-900 dark:text-white" : "text-gray-500"
                   }`}>
                     {step.label}
                   </p>
@@ -319,7 +321,7 @@ const CreateLeasing: React.FC = () => {
       </div>
 
       {/* Content Area */}
-      <div className="mt-8 max-w-[1600px] mx-auto min-h-[60vh]">
+      <div className="max-w-[1600px] mx-auto min-h-[60vh]">
           {/* Read-Only Mode Banner */}
           {isReadOnly && (
             <div className="mb-6 p-4 bg-amber-50 dark:bg-amber-500/10 border border-amber-200 dark:border-amber-500/20 rounded-2xl text-amber-850 dark:text-amber-300 shadow-theme-xs flex items-start gap-3.5 animate-fadeIn">

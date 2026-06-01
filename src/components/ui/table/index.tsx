@@ -62,3 +62,5 @@ const TableCell: React.FC<TableCellProps> = ({
 };
 
 export { Table, TableHeader, TableBody, TableRow, TableCell };
+export { default as DataTable } from "./DataTable";
+

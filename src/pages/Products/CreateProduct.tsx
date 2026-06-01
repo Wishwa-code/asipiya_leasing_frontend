@@ -41,7 +41,6 @@ export default function CreateProduct() {
   const { id } = useParams();
   const isEdit = !!id;
   const [activeTab, setActiveTab] = useState("general");
-  const [isScrolled, setIsScrolled] = useState(false);
   const [loading, setLoading] = useState(isEdit);
 
   const sectionRefs = {
@@ -160,8 +159,6 @@ export default function CreateProduct() {
     const isClickScrolling = false;
     const handleScroll = () => {
       if (isClickScrolling) return;
-      setIsScrolled(window.scrollY > 50);
-
       let current = "general";
       const scrollPosition = window.scrollY + 220; // offset
 
@@ -275,11 +272,9 @@ export default function CreateProduct() {
         description="Define financial rules and collection cycles"
       />
 
-      {/* Sticky Header Container */}
-      <div className={`sticky top-0 z-40 bg-gray-50/90 dark:bg-gray-900/90 backdrop-blur-md pt-5 pb-4 px-4 sm:px-6 -mx-4 sm:-mx-6 transition-shadow ${isScrolled ? 'shadow-sm border-b border-gray-200 dark:border-gray-800' : ''}`}>
-
-        {/* Action Header */}
-        <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-5">
+      {/* Page Header (No Card) */}
+      <div className="max-w-[1600px] mx-auto mb-6 pt-2">
+        <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
           <div>
             <h1 className="text-xl sm:text-2xl font-bold text-gray-900 dark:text-white">{isEdit ? 'Edit Product' : 'Create Product'}</h1>
             <p className="text-sm text-gray-500 dark:text-gray-400">{isEdit ? 'Modify existing financial rules' : 'Define financial rules and collection cycles'}</p>
@@ -290,7 +285,7 @@ export default function CreateProduct() {
                 type="button"
                 onClick={handleSaveProduct}
                 disabled={isSubmitting}
-                className={`flex-1 sm:flex-none flex items-center justify-center gap-2 px-6 py-2.5 bg-brand-500 hover:bg-brand-600 text-white font-semibold rounded-xl transition-colors shadow-sm ${isSubmitting ? 'opacity-70 cursor-not-allowed' : ''}`}
+                className={`flex-1 sm:flex-none flex items-center justify-center gap-2 px-6 py-2.5 bg-brand-500 hover:bg-brand-600 text-white font-semibold rounded-xl transition-colors shadow-sm cursor-pointer ${isSubmitting ? 'opacity-70 cursor-not-allowed' : ''}`}
               >
                 {isSubmitting ? (
                   <span className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin"></span>
@@ -299,7 +294,7 @@ export default function CreateProduct() {
                 )}
                 {isSubmitting ? 'Saving...' : isEdit ? 'Update Product' : 'Save Product'}
               </button>
-              <Link to="/" className="flex-1 sm:flex-none flex items-center justify-center gap-2 px-6 py-2.5 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-700 text-gray-700 dark:text-gray-300 font-semibold rounded-xl transition-colors shadow-sm">
+              <Link to="/" className="flex-1 sm:flex-none flex items-center justify-center gap-2 px-6 py-2.5 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-700 text-gray-700 dark:text-gray-300 font-semibold rounded-xl transition-colors shadow-sm cursor-pointer">
                 <CloseLineIcon className="w-5 h-5" />
                 Cancel
               </Link>
@@ -312,41 +307,45 @@ export default function CreateProduct() {
             )}
           </div>
         </div>
+      </div>
 
-        {/* Stepper */}
-        <div className="flex overflow-x-auto no-scrollbar gap-2 sm:gap-4 pb-2">
-          {steps.map((step) => (
-            <button
-              type="button"
-              key={step.id}
-              onClick={() => scrollToSection(step.id as keyof typeof sectionRefs)}
-              className={`flex min-w-[150px] items-center gap-3 p-3 rounded-xl border transition-all ${activeTab === step.id
-                ? "bg-white dark:bg-gray-800 border-brand-500 dark:border-brand-500 shadow-sm"
-                : "bg-transparent border-transparent hover:bg-gray-100 hover:dark:bg-gray-800 opacity-70"
-                }`}
-            >
-              <div className={`p-2.5 rounded-lg ${activeTab === step.id ? 'bg-brand-500 text-white shadow-brand-500/20 shadow-md' : 'bg-gray-100 dark:bg-gray-700 text-gray-500 dark:text-gray-400'}`}>
-                {step.icon}
-              </div>
-              <div className="text-left">
-                <span className={`block font-bold text-[13px] uppercase tracking-wide ${activeTab === step.id ? 'text-gray-900 dark:text-white' : 'text-gray-600 dark:text-gray-400'}`}>
-                  {step.label}
-                </span>
-                <span className="block text-[11px] font-medium text-gray-400">{step.step}</span>
-              </div>
-            </button>
-          ))}
+      {/* Sticky Stepper Card */}
+      <div className="sticky top-[78px] lg:top-[78px] max-md:top-[70px] z-30 max-w-[1600px] mx-auto mb-6">
+        <div className="bg-white/95 dark:bg-gray-900/95 backdrop-blur-md border border-gray-250 dark:border-gray-700 rounded-2xl p-4 shadow-sm overflow-x-auto no-scrollbar">
+          <div className="flex overflow-x-auto no-scrollbar gap-2 sm:gap-4 pb-1">
+            {steps.map((step) => (
+              <button
+                type="button"
+                key={step.id}
+                onClick={() => scrollToSection(step.id as keyof typeof sectionRefs)}
+                className={`flex min-w-[150px] items-center gap-3 p-3 rounded-xl border transition-all cursor-pointer ${activeTab === step.id
+                  ? "bg-brand-50/70 dark:bg-brand-500/10 shadow-theme-sm ring-1 ring-brand-500/20 border-brand-100 dark:border-brand-500/20"
+                  : "bg-transparent border-transparent hover:bg-gray-100 hover:dark:bg-gray-800 opacity-70"
+                  }`}
+              >
+                <div className={`p-2.5 rounded-lg ${activeTab === step.id ? 'bg-brand-500 text-white shadow-brand-500/20 shadow-md' : 'bg-gray-100 dark:bg-gray-700 text-gray-500 dark:text-gray-400'}`}>
+                  {step.icon}
+                </div>
+                <div className="text-left">
+                  <span className={`block font-bold text-[13px] uppercase tracking-wide ${activeTab === step.id ? 'text-brand-900 dark:text-white' : 'text-gray-600 dark:text-gray-400'}`}>
+                    {step.label}
+                  </span>
+                  <span className={`block text-[11px] font-medium ${activeTab === step.id ? 'text-brand-600 dark:text-brand-400' : 'text-gray-400'}`}>{step.step}</span>
+                </div>
+              </button>
+            ))}
+          </div>
         </div>
       </div>
 
       {/* Main Content Areas */}
       {loading ? (
-        <div className="flex flex-col items-center justify-center py-20 text-brand-500 bg-white dark:bg-gray-800 rounded-2xl border border-gray-200 dark:border-gray-700 mt-6 shadow-sm">
+        <div className="flex flex-col items-center justify-center py-20 text-brand-500 bg-white dark:bg-gray-800 rounded-2xl border border-gray-200 dark:border-gray-700 mt-6 shadow-sm max-w-[1600px] mx-auto">
           <span className="w-8 h-8 border-4 border-brand-500/30 border-t-brand-500 rounded-full animate-spin mb-4"></span>
           <p className="font-semibold text-sm">Loading product details...</p>
         </div>
       ) : (
-        <div className="space-y-6 mt-6">
+        <div className="space-y-6 mt-6 max-w-[1600px] mx-auto">
 
         {/* General Section */}
         <div ref={sectionRefs.general} className={`p-5 sm:p-7 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-2xl shadow-sm transition-all ${activeTab === 'general' ? 'ring-2 ring-brand-500/10' : ''}`}>

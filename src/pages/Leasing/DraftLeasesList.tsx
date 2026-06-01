@@ -1,9 +1,10 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useMemo } from "react";
 import PageMeta from "../../components/common/PageMeta";
 import { Link, useNavigate } from "react-router";
 import { PlusIcon, PencilIcon, InfoIcon, UserCircleIcon } from "../../icons";
 import apiClient from "../../api/apiClient";
 import { ROUTES } from "../../routes/paths";
+import { DataTable } from "../../components/ui/table";
 
 type DraftLeaseItem = {
   ID: number;
@@ -148,6 +149,8 @@ export default function DraftLeasesList() {
   const navigate = useNavigate();
   const [drafts, setDrafts] = useState<DraftLeaseItem[]>([]);
   const [loading, setLoading] = useState(true);
+  const [currentPage, setCurrentPage] = useState(1);
+  const [pageSize, setPageSize] = useState(20);
 
   // Filters
   const [filters, setFilters] = useState({
@@ -175,13 +178,150 @@ export default function DraftLeasesList() {
 
   const handleSearch = (e: React.FormEvent) => {
     e.preventDefault();
+    setCurrentPage(1);
     fetchDrafts();
   };
 
   const clearFilters = () => {
     setFilters({ code: "", nic: "", name: "" });
+    setCurrentPage(1);
     setTimeout(fetchDrafts, 0);
   };
+
+  const totalItems = drafts.length;
+  const pagedDrafts = useMemo(() => {
+    return drafts.slice(
+      (currentPage - 1) * pageSize,
+      currentPage * pageSize
+    );
+  }, [drafts, currentPage, pageSize]);
+
+  const columns = useMemo(() => [
+    {
+      key: "idx",
+      label: "#",
+      toggleable: false,
+      render: (_: any, idx: number) => <span className="text-gray-400 font-semibold">{(currentPage - 1) * pageSize + idx + 1}</span>,
+    },
+    {
+      key: "identity",
+      label: "Draft Identity",
+      toggleable: false,
+      render: (draft: DraftLeaseItem) => {
+        return (
+          <div className="flex items-center gap-3">
+            <div className="w-6 h-6 rounded-full bg-brand-50 dark:bg-brand-500/10 text-brand-500 flex items-center justify-center font-bold text-xs border border-brand-100 dark:border-brand-500/20 shrink-0">
+              D
+            </div>
+            <div>
+              <div className="flex items-center gap-1.5 mb-0.5">
+                <span className="px-1.5 py-0.25 bg-brand-500/10 text-brand-500 text-[9px] font-black rounded uppercase tracking-wider">
+                  {draft.draft_code || `LSE-DRAFT-${draft.ID}`}
+                </span>
+              </div>
+              <h4 className="font-bold text-gray-900 dark:text-white text-xs">
+                {draft.internal_identification_name || "Unnamed Draft"}
+              </h4>
+            </div>
+          </div>
+        );
+      }
+    },
+    {
+      key: "customer",
+      label: "Customer Details",
+      toggleable: true,
+      render: (draft: DraftLeaseItem) => {
+        let parsedData: any = {};
+        try {
+          parsedData = typeof draft.current_progress_data === "string" 
+            ? JSON.parse(draft.current_progress_data) 
+            : draft.current_progress_data;
+        } catch (e) {}
+        return (
+          <div>
+            <div className="font-semibold text-gray-700 dark:text-gray-300">
+              {parsedData?.customer_name || "Unknown Customer"}
+            </div>
+            <div className="text-gray-500 text-[10px]">
+              Code: {parsedData?.customer_code || "-"}
+            </div>
+          </div>
+        );
+      }
+    },
+    {
+      key: "progress",
+      label: "Application Progress",
+      toggleable: true,
+      render: (draft: DraftLeaseItem) => {
+        let parsedData: any = {};
+        try {
+          parsedData = typeof draft.current_progress_data === "string" 
+            ? JSON.parse(draft.current_progress_data) 
+            : draft.current_progress_data;
+        } catch (e) {}
+        const statuses = getStepStatuses(parsedData);
+        const completedCount = statuses.filter(s => s === "complete").length;
+        return (
+          <div className="flex items-center gap-3">
+            <span className="text-xs font-bold text-gray-500 dark:text-gray-400 whitespace-nowrap">
+              {completedCount} / 9
+            </span>
+            <div className="flex items-center gap-0.5">
+              {statuses.map((status, i) => {
+                let bgClass = "bg-gray-150 dark:bg-gray-800 border-gray-200 dark:border-gray-750 text-gray-400";
+                if (status === "complete") {
+                  bgClass = "bg-emerald-500 border-emerald-600 text-white";
+                } else if (status === "error") {
+                  bgClass = "bg-orange-500 border-orange-600 text-white";
+                }
+                
+                return (
+                  <div
+                    key={i}
+                    className={`w-4 h-4 rounded flex items-center justify-center text-[8px] font-black border select-none transition-transform hover:scale-110 cursor-help ${bgClass}`}
+                    title={`Step ${i + 1}: ${STEP_LABELS[i]} (${status === "complete" ? "Complete" : status === "error" ? "Incomplete / Error" : "Pristine"})`}
+                  >
+                    {i + 1}
+                  </div>
+                );
+              })}
+            </div>
+          </div>
+        );
+      }
+    },
+    {
+      key: "updated_at",
+      label: "Last Updated",
+      toggleable: true,
+      render: (draft: DraftLeaseItem) => {
+        return (
+          <div className="text-xs text-gray-500">
+            {new Date(draft.UpdatedAt).toLocaleDateString()} {new Date(draft.UpdatedAt).toLocaleTimeString()}
+          </div>
+        );
+      }
+    },
+    {
+      key: "actions",
+      label: "",
+      toggleable: false,
+      render: (draft: DraftLeaseItem) => (
+        <div className="flex justify-end">
+          <button 
+            onClick={() => navigate(`${ROUTES.CREATE_LEASE}?draftId=${draft.ID}`)}
+            className="p-1 px-2.5 bg-gray-50 hover:bg-brand-50 text-gray-500 hover:text-brand-500 dark:bg-gray-900 dark:hover:bg-brand-500/10 rounded-lg transition-all border border-gray-100 dark:border-gray-700 flex items-center gap-1.5"
+            title="Resume Application"
+          >
+            <PencilIcon className="w-3.5 h-3.5" />
+            <span className="text-[10px] font-bold uppercase tracking-wider">Resume</span>
+          </button>
+        </div>
+      ),
+    },
+  ], [currentPage, pageSize]);
 
   return (
     <div className="relative pb-20">
@@ -279,147 +419,17 @@ export default function DraftLeasesList() {
         </form>
       </div>
 
-      {/* Table Section */}
-      <div className="bg-white dark:bg-gray-800 rounded-2xl border border-gray-200 dark:border-gray-700 shadow-sm overflow-hidden">
-        <div className="overflow-x-auto">
-          <table className="w-full whitespace-nowrap text-left text-sm text-gray-500 dark:text-gray-400">
-            <thead className="bg-gray-50/50 dark:bg-gray-800/50 text-[10px] font-bold uppercase tracking-widest text-gray-400 border-b border-gray-200 dark:border-gray-700">
-              <tr>
-                <th className="px-6 py-4 w-12 text-center">#</th>
-                <th className="px-6 py-4">Draft Identity</th>
-                <th className="px-6 py-4">Customer Details</th>
-                <th className="px-6 py-4">Application Progress</th>
-                <th className="px-6 py-4">Last Updated</th>
-                <th className="px-6 py-4 text-right">Action</th>
-              </tr>
-            </thead>
-            <tbody className="divide-y divide-gray-100 dark:divide-gray-800">
-              {loading ? (
-                <tr>
-                  <td colSpan={6} className="px-6 py-12 text-center">
-                    <span className="inline-block w-8 h-8 border-4 border-brand-500/30 border-t-brand-500 rounded-full animate-spin"></span>
-                    <p className="mt-4 text-xs font-bold uppercase tracking-widest text-brand-500">Retrieving Drafts...</p>
-                  </td>
-                </tr>
-              ) : drafts.length === 0 ? (
-                <tr>
-                  <td colSpan={6} className="px-6 py-16 text-center text-gray-400">
-                    <p className="font-semibold text-base">No drafts found</p>
-                    <p className="text-sm">Try adjusting your search filters</p>
-                  </td>
-                </tr>
-              ) : (
-                drafts.map((draft, idx) => {
-                  let parsedData: any = {};
-                  try {
-                    parsedData = typeof draft.current_progress_data === "string" 
-                      ? JSON.parse(draft.current_progress_data) 
-                      : draft.current_progress_data;
-                  } catch (e) {}
-
-                  return (
-                    <tr key={`${draft.ID}-${idx}`} className="group hover:bg-gray-50/50 dark:hover:bg-gray-900/30 transition-colors">
-                      <td className="px-6 py-5 text-center font-bold text-gray-400">{idx + 1}</td>
-                      <td className="px-6 py-5">
-                        <div className="flex items-center gap-3">
-                          <div className="w-10 h-10 rounded-full bg-brand-50 dark:bg-brand-500/10 text-brand-500 flex items-center justify-center font-bold text-lg border border-brand-100 dark:border-brand-500/20">
-                            D
-                          </div>
-                          <div>
-                            <div className="flex items-center gap-2 mb-1">
-                              <span className="px-2 py-0.5 bg-brand-500/10 text-brand-500 text-[10px] font-black rounded-md uppercase tracking-wider">
-                                {draft.draft_code || `LSE-DRAFT-${draft.ID}`}
-                              </span>
-                            </div>
-                            <h4 className="font-bold text-gray-900 dark:text-white mb-0.5">
-                              {draft.internal_identification_name || "Unnamed Draft"}
-                            </h4>
-                            <span className="text-[10px] font-bold text-gray-400 uppercase tracking-tighter block">ID: {draft.ID}</span>
-                          </div>
-                        </div>
-                      </td>
-                      <td className="px-6 py-5">
-                        <div className="space-y-1.5">
-                          <div className="flex items-center gap-2 text-sm font-bold text-gray-700 dark:text-gray-300">
-                            {parsedData?.customer_name || "Unknown Customer"}
-                          </div>
-                          <div className="flex items-center gap-2 text-xs font-medium text-gray-500">
-                            Code: {parsedData?.customer_code || "-"}
-                          </div>
-                        </div>
-                      </td>
-                      <td className="px-6 py-5">
-                        {(() => {
-                          const statuses = getStepStatuses(parsedData);
-                          const completedCount = statuses.filter(s => s === "complete").length;
-                          return (
-                            <div className="flex flex-col gap-1.5 min-w-[200px]">
-                              <div className="flex items-center justify-between text-xs font-bold text-gray-500 dark:text-gray-400">
-                                <span>Completed Steps</span>
-                                <span className="text-brand-500">{completedCount} / 9</span>
-                              </div>
-                              <div className="flex items-center gap-1">
-                                {statuses.map((status, i) => {
-                                  let bgClass = "bg-gray-100 text-gray-400 border border-gray-200 dark:bg-gray-900/50 dark:text-gray-650 dark:border-gray-800";
-                                  if (status === "complete") {
-                                    bgClass = "bg-emerald-500 text-white shadow-sm shadow-emerald-500/10 border-emerald-600";
-                                  } else if (status === "error") {
-                                    bgClass = "bg-orange-500 text-white shadow-sm shadow-orange-500/10 border-orange-600";
-                                  }
-                                  
-                                  return (
-                                    <div
-                                      key={i}
-                                      className={`w-6 h-6 rounded-md flex items-center justify-center text-[10px] font-black select-none transition-transform hover:scale-110 cursor-help ${bgClass}`}
-                                      title={`Step ${i + 1}: ${STEP_LABELS[i]} (${status === "complete" ? "Complete" : status === "error" ? "Incomplete / Error" : "Pristine"})`}
-                                    >
-                                      {i + 1}
-                                    </div>
-                                  );
-                                })}
-                              </div>
-                            </div>
-                          );
-                        })()}
-                      </td>
-                      <td className="px-6 py-5">
-                        <div className="space-y-1.5 text-xs text-gray-500">
-                          <div>{new Date(draft.UpdatedAt).toLocaleDateString()}</div>
-                          <div>{new Date(draft.UpdatedAt).toLocaleTimeString()}</div>
-                        </div>
-                      </td>
-                      <td className="px-6 py-5 text-right">
-                        <div className="flex justify-end gap-2">
-                          <button 
-                            onClick={() => navigate(`${ROUTES.CREATE_LEASE}?draftId=${draft.ID}`)}
-                            className="p-2.5 bg-gray-50 hover:bg-brand-50 text-gray-400 hover:text-brand-500 dark:bg-gray-900 dark:hover:bg-brand-500/10 rounded-xl transition-all shadow-sm border border-gray-100 dark:border-gray-700 flex items-center gap-2"
-                            title="Resume Application"
-                          >
-                            <PencilIcon className="w-4 h-4" />
-                            <span className="text-xs font-bold uppercase tracking-widest hidden sm:inline-block">Resume</span>
-                          </button>
-                        </div>
-                      </td>
-                    </tr>
-                  )
-                })
-              )}
-            </tbody>
-          </table>
-        </div>
-
-        {/* Pagination */}
-        <div className="px-6 py-4 bg-gray-50/50 dark:bg-gray-800/50 border-t border-gray-200 dark:border-gray-700 flex flex-col sm:flex-row justify-between items-center gap-4">
-          <p className="text-[11px] font-bold text-gray-400 uppercase tracking-widest">
-            Showing {drafts.length > 0 ? 1 : 0} to {drafts.length} of {drafts.length} entries
-          </p>
-          <div className="flex gap-2">
-            <button className="px-4 py-1.5 rounded-lg border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-900 text-xs font-bold text-gray-400 cursor-not-allowed uppercase tracking-widest">Previous</button>
-            <div className="w-8 h-8 rounded-lg bg-brand-500 text-white flex items-center justify-center text-xs font-bold">1</div>
-            <button className="px-4 py-1.5 rounded-lg border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-900 text-xs font-bold text-gray-400 cursor-not-allowed uppercase tracking-widest">Next</button>
-          </div>
-        </div>
-      </div>
+      <DataTable<DraftLeaseItem>
+        data={pagedDrafts}
+        columns={columns}
+        loading={loading}
+        currentPage={currentPage}
+        pageSize={pageSize}
+        totalItems={totalItems}
+        onPageChange={setCurrentPage}
+        onPageSizeChange={setPageSize}
+      />
     </div>
+
   );
 }
