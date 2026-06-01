@@ -4,7 +4,7 @@ import { User } from "../types/user";
 
 // Account Center URL — used for logout redirect and unauthenticated redirect
 const ACCOUNT_CENTER_URL =
-  import.meta.env.VITE_ACCOUNT_CENTER_URL || "http://localhost:8000";
+  import.meta.env.VITE_ACCOUNT_CENTER_URL || "http://localhost:3000";
 
 interface AuthContextType {
   user: User | null;
@@ -20,7 +20,7 @@ interface AuthContextType {
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
 // --- DEV MODE CONFIGURATION ---
-const DEV_MODE = false; // Set to true to use hardcoded values
+const DEV_MODE = false; // Set to true to bypass SSO and use DEV_USER for local testing
 const DEV_USER: User = {
   id: 1,
   full_name: "Admin",
@@ -51,12 +51,12 @@ const DEV_USER: User = {
 export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const [user, setUser] = useState<User | null>(() => {
     if (DEV_MODE) return DEV_USER;
-    const savedUser = Cookies.get("user_data");
+    const savedUser = localStorage.getItem("user_data");
     if (savedUser) {
       try {
         return JSON.parse(savedUser);
       } catch (e) {
-        console.error("Failed to parse user data from cookies", e);
+        console.error("Failed to parse user data from localStorage", e);
         return null;
       }
     }
@@ -64,12 +64,12 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   });
 
   const [currentBranchId, setCurrentBranchId] = useState<number | null>(() => {
-    const savedBranchId = Cookies.get("current_branch_id");
+    const savedBranchId = localStorage.getItem("current_branch_id") || Cookies.get("current_branch_id");
     if (savedBranchId) return parseInt(savedBranchId);
 
     if (DEV_MODE) return DEV_USER.branch_id;
 
-    const savedUser = Cookies.get("user_data");
+    const savedUser = localStorage.getItem("user_data");
     if (savedUser) {
       try {
         const parsedUser = JSON.parse(savedUser);
@@ -83,17 +83,26 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     if (DEV_MODE) return;
     setUser(userData);
     setCurrentBranchId(userData.branch_id);
-    Cookies.set("auth_token", token, { expires: 7, secure: true, sameSite: "strict" });
+    
+    // Save tokens and user data in localStorage (bypasses 4KB size limits for large privilege lists)
+    localStorage.setItem("auth_token", token);
     if (refreshToken) {
-      Cookies.set("refresh_token", refreshToken, { expires: 7, secure: true, sameSite: "strict" });
+      localStorage.setItem("refresh_token", refreshToken);
     }
-    Cookies.set("user_data", JSON.stringify(userData), { expires: 7, secure: true, sameSite: "strict" });
-    Cookies.set("current_branch_id", userData.branch_id.toString(), { expires: 7, secure: true, sameSite: "strict" });
+    localStorage.setItem("user_data", JSON.stringify(userData));
+    localStorage.setItem("current_branch_id", userData.branch_id.toString());
+
+    // Also write current_branch_id to cookies since some older subsystems might read it
+    const isSecure = window.location.protocol === "https:";
+    Cookies.set("current_branch_id", userData.branch_id.toString(), { expires: 7, secure: isSecure, sameSite: "strict", path: "/" });
   };
 
   const switchBranch = (branchId: number) => {
     setCurrentBranchId(branchId);
-    Cookies.set("current_branch_id", branchId.toString(), { expires: 7, secure: true, sameSite: "strict" });
+    localStorage.setItem("current_branch_id", branchId.toString());
+
+    const isSecure = window.location.protocol === "https:";
+    Cookies.set("current_branch_id", branchId.toString(), { expires: 7, secure: isSecure, sameSite: "strict", path: "/" });
   };
 
   const logout = () => {
@@ -104,10 +113,19 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     }
     setUser(null);
     setCurrentBranchId(null);
-    Cookies.remove("auth_token");
-    Cookies.remove("refresh_token");
-    Cookies.remove("user_data");
-    Cookies.remove("current_branch_id");
+
+    // Clear localStorage
+    localStorage.removeItem("auth_token");
+    localStorage.removeItem("refresh_token");
+    localStorage.removeItem("user_data");
+    localStorage.removeItem("current_branch_id");
+
+    // Clear legacy cookies
+    Cookies.remove("auth_token", { path: "/" });
+    Cookies.remove("refresh_token", { path: "/" });
+    Cookies.remove("user_data", { path: "/" });
+    Cookies.remove("current_branch_id", { path: "/" });
+
     // Redirect to Account Center's system selection page
     window.location.href = `${ACCOUNT_CENTER_URL}/systems`;
   };

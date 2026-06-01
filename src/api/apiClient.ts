@@ -3,7 +3,7 @@ import Cookies from "js-cookie";
 
 const serverURL = import.meta.env.VITE_APP_API_URL || "http://localhost:8084/";
 const baseURL = serverURL.endsWith("/") ? `${serverURL}api/v1/` : `${serverURL}/api/v1/`;
-const accountCenterURL = import.meta.env.VITE_ACCOUNT_CENTER_URL || "http://localhost:8000";
+const accountCenterURL = import.meta.env.VITE_ACCOUNT_CENTER_URL || "http://localhost:3000";
 
 const instance = axios.create({
   baseURL: baseURL,
@@ -17,7 +17,7 @@ const instance = axios.create({
 // Request Interceptor
 instance.interceptors.request.use(
   (config) => {
-    const token = Cookies.get("auth_token");
+    const token = localStorage.getItem("auth_token");
     const xsrfToken = Cookies.get("laravel_session");
 
     if (token) {
@@ -52,7 +52,7 @@ instance.interceptors.response.use(
       originalRequest._retry = true;
 
       try {
-        const refreshToken = Cookies.get("refresh_token");
+        const refreshToken = localStorage.getItem("refresh_token");
 
         // Call backend refresh endpoint
         // Note: We use axios directly here, not 'instance', to avoid interceptor loops
@@ -65,9 +65,11 @@ instance.interceptors.response.use(
           const access_token = res.data?.tokens?.access_token || res.data?.access_token;
           const refresh_token = res.data?.tokens?.refresh_token || res.data?.refresh_token;
 
-          // 1. Save new tokens
-          Cookies.set("auth_token", access_token, { expires: 7, secure: true, sameSite: "strict" });
-          Cookies.set("refresh_token", refresh_token || "", { expires: 7, secure: true, sameSite: "strict" });
+          // 1. Save new tokens to localStorage
+          localStorage.setItem("auth_token", access_token);
+          if (refresh_token) {
+            localStorage.setItem("refresh_token", refresh_token);
+          }
 
           // 2. Update the header for the original request
           originalRequest.headers.set("Authorization", `Bearer ${access_token}`);
@@ -78,10 +80,17 @@ instance.interceptors.response.use(
       } catch (refreshError) {
         // Refresh token is invalid/expired — send user back to Account Center
         console.error("Refresh token expired or invalid", refreshError);
-        Cookies.remove("auth_token");
-        Cookies.remove("refresh_token");
-        Cookies.remove("user_data");
-        Cookies.remove("current_branch_id");
+        localStorage.removeItem("auth_token");
+        localStorage.removeItem("refresh_token");
+        localStorage.removeItem("user_data");
+        localStorage.removeItem("current_branch_id");
+
+        // Clear legacy cookies too
+        Cookies.remove("auth_token", { path: "/" });
+        Cookies.remove("refresh_token", { path: "/" });
+        Cookies.remove("user_data", { path: "/" });
+        Cookies.remove("current_branch_id", { path: "/" });
+
         window.location.href = `${accountCenterURL}/systems`;
       }
     }

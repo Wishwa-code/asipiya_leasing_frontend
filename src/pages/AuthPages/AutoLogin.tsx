@@ -7,7 +7,7 @@ import { User } from "../../types/user";
 
 const serverURL = import.meta.env.VITE_APP_API_URL || "http://localhost:8084/";
 const accountCenterURL =
-  import.meta.env.VITE_ACCOUNT_CENTER_URL || "http://localhost:8000";
+  import.meta.env.VITE_ACCOUNT_CENTER_URL || "http://localhost:3000";
 
 type Status = "loading" | "success" | "error";
 
