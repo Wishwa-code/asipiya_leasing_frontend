@@ -348,7 +348,7 @@ export default function CreateProduct() {
         <div className="space-y-6 mt-6 max-w-[1600px] mx-auto">
 
         {/* General Section */}
-        <div ref={sectionRefs.general} className={`p-5 sm:p-7 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-2xl shadow-sm transition-all ${activeTab === 'general' ? 'ring-2 ring-brand-500/10' : ''}`}>
+        <div ref={sectionRefs.general} className="p-5 sm:p-7 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-2xl shadow-sm transition-all">
           <h2 className="text-sm font-bold text-gray-900 dark:text-white mb-6 uppercase tracking-wider flex items-center gap-3">
             <div className="p-2 bg-gray-100 dark:bg-gray-700 rounded-lg text-gray-500"><BoxIcon className="w-4 h-4" /></div> GENERAL INFORMATION
           </h2>
@@ -409,7 +409,7 @@ export default function CreateProduct() {
         <div>
 
           {/* Configuration Section */}
-          <div ref={sectionRefs.config} className={`p-5 sm:p-7 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-2xl shadow-sm transition-all ${activeTab === 'config' ? 'ring-2 ring-brand-500/10' : ''}`}>
+          <div ref={sectionRefs.config} className="p-5 sm:p-7 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-2xl shadow-sm transition-all">
             <h2 className="text-sm font-bold text-gray-900 dark:text-white mb-6 uppercase tracking-wider flex items-center gap-3">
               <div className="p-2 bg-gray-100 dark:bg-gray-700 rounded-lg text-gray-500"><PlugInIcon className="w-4 h-4" /></div> CONFIGURATION SUB PRODUCTS
             </h2>
@@ -528,7 +528,7 @@ export default function CreateProduct() {
         <div className="grid grid-cols-1 xl:grid-cols-2 gap-6">
 
           {/* Charges Section */}
-          <div ref={sectionRefs.charges} className={`p-5 sm:p-7 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-2xl shadow-sm transition-all ${activeTab === 'charges' ? 'ring-2 ring-brand-500/10' : ''}`}>
+          <div ref={sectionRefs.charges} className="p-5 sm:p-7 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-2xl shadow-sm transition-all">
             <h2 className="text-sm font-bold text-gray-900 dark:text-white mb-6 uppercase tracking-wider flex items-center gap-3">
               <div className="p-2 bg-gray-100 dark:bg-gray-700 rounded-lg text-gray-500"><ListIcon className="w-4 h-4" /></div> ADDITIONAL CHARGES
             </h2>
@@ -580,7 +580,7 @@ export default function CreateProduct() {
           </div>
 
           {/* Documents Section */}
-          <div ref={sectionRefs.documents} className={`p-5 sm:p-7 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-2xl shadow-sm transition-all ${activeTab === 'documents' ? 'ring-2 ring-brand-500/10' : ''}`}>
+          <div ref={sectionRefs.documents} className="p-5 sm:p-7 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-2xl shadow-sm transition-all">
             <h2 className="text-sm font-bold text-gray-900 dark:text-white mb-6 uppercase tracking-wider flex items-center gap-3">
               <div className="p-2 bg-brand-50 dark:bg-brand-900/20 text-brand-500 rounded-lg"><HorizontaLDots className="w-4 h-4" /></div> REQUIRED DOCUMENTS
             </h2>
