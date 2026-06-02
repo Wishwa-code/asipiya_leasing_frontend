@@ -22,6 +22,7 @@ export const ROUTES = {
   DRAFT_LEASES: "/leasing/drafts",
   PENDING_LEASES: "/leasing/pending",
   PENDING_APPROVALS: "/approvals/pending",
+  LEASING_DISBURSEMENT: "/leasing/disbursement",
   
   // Leasing Partners
   SUPPLIERS: "/leasing-partners/suppliers",

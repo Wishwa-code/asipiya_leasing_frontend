@@ -114,7 +114,7 @@ const AppSidebar: React.FC = () => {
           { name: "New Leasing Application", path: ROUTES.CREATE_LEASE, privilege: 'CREATE_LOAN' },
           { name: "Draft Leasing Application", path: ROUTES.DRAFT_LEASES, privilege: 'CREATE_LOAN' },
           // { name: "Leasing Approval Queue", path: ROUTES.PENDING_LEASES },
-          { name: "Leasing Disbursement", path: ROUTES.FORM_ELEMENTS, privilege: 'LOAN_DISBURSEMENT' },
+          { name: "Leasing Disbursement", path: ROUTES.LEASING_DISBURSEMENT, privilege: 'LOAN_DISBURSEMENT' },
         ],
       });
 
