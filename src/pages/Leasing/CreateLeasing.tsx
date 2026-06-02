@@ -44,6 +44,13 @@ import StepPdcSecurity from "../../components/leasing/steps/StepPdcSecurity";
 import StepChequeDefine from "../../components/leasing/steps/StepChequeDefine";
 import StepCrDocs from "../../components/leasing/steps/StepCrDocs";
 
+// ─────────────────────────────────────────────────────────────────────────────
+// 🛠️ DEV MODE — Set to `false` before going to production!
+//    When true: bypasses all step validation so you can submit with just
+//    Step 1 filled, making it easy to test the approval flow end-to-end.
+// ─────────────────────────────────────────────────────────────────────────────
+const DEV_MODE = true;
+
 const CreateLeasing: React.FC = () => {
   const { formData, activeStep, draftId, stepStatuses, errors, isReadOnly, nextStep, prevStep, goToStep, updateFormData, saveDraft, resetForm } = useLeaseForm();
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -56,43 +63,46 @@ const CreateLeasing: React.FC = () => {
     nextStep();
   };
 
-  const submitApplication = async () => {
+  const submitApplication = async (devBypass = false) => {
     if (!draftId) {
       notification.warning("No draft found to submit. Please fill the customer details first.");
       return;
     }
 
-    // Validate all wizard steps before submission
-    const requiredSteps = [1, 3, 4, 5, 7, 8, 9];
-    const invalidSteps: string[] = [];
+    // ── DEV MODE: skip all validation when bypassing ──────────────────────
+    if (!DEV_MODE || !devBypass) {
+      // Validate all wizard steps before submission
+      const requiredSteps = [1, 3, 4, 5, 7, 8, 9];
+      const invalidSteps: string[] = [];
 
-    requiredSteps.forEach(stepId => {
-      if (stepStatuses[stepId] !== "complete") {
-        const stepLabel = STEPS.find(s => s.id === stepId)?.label || `Step ${stepId}`;
-        invalidSteps.push(stepLabel);
+      requiredSteps.forEach(stepId => {
+        if (stepStatuses[stepId] !== "complete") {
+          const stepLabel = STEPS.find(s => s.id === stepId)?.label || `Step ${stepId}`;
+          invalidSteps.push(stepLabel);
+        }
+      });
+
+      // Check optional step 2 (Introducers)
+      if (stepStatuses[2] === "error") {
+        invalidSteps.push("Introducers");
       }
-    });
 
-    // Check optional step 2 (Introducers)
-    if (stepStatuses[2] === "error") {
-      invalidSteps.push("Introducers");
-    }
-
-    // Check optional step 6 (Guarantors)
-    const reqGuarCount = parseInt(String(formData.required_guarantor_count || "0")) || 0;
-    if (reqGuarCount > 0) {
-      if (stepStatuses[6] !== "complete") {
+      // Check optional step 6 (Guarantors)
+      const reqGuarCount = parseInt(String(formData.required_guarantor_count || "0")) || 0;
+      if (reqGuarCount > 0) {
+        if (stepStatuses[6] !== "complete") {
+          invalidSteps.push("Guarantors");
+        }
+      } else if (stepStatuses[6] === "error") {
         invalidSteps.push("Guarantors");
       }
-    } else if (stepStatuses[6] === "error") {
-      invalidSteps.push("Guarantors");
-    }
 
-    if (invalidSteps.length > 0) {
-      notification.error(`Cannot submit application. The following steps are incomplete or contain validation errors:`, {
-        description: invalidSteps.join(", ")
-      });
-      return;
+      if (invalidSteps.length > 0) {
+        notification.error(`Cannot submit application. The following steps are incomplete or contain validation errors:`, {
+          description: invalidSteps.join(", ")
+        });
+        return;
+      }
     }
     
     setIsSubmitting(true);
@@ -215,6 +225,30 @@ const CreateLeasing: React.FC = () => {
         title="New Leasing Application | Asipiya Leasing"
         description="Create a new finance lease application"
       />
+
+      {/* ── DEV MODE BANNER ─────────────────────────────────────────────── */}
+      {DEV_MODE && (
+        <div className="max-w-[1600px] mx-auto mb-4 px-4 py-3 bg-yellow-400/20 border border-yellow-400/50 rounded-2xl flex items-center justify-between gap-4">
+          <div className="flex items-center gap-3">
+            <span className="text-lg">🛠️</span>
+            <div>
+              <p className="text-xs font-extrabold uppercase tracking-widest text-yellow-700 dark:text-yellow-300">Dev Mode Active</p>
+              <p className="text-xs text-yellow-600/80 dark:text-yellow-400/80 font-medium">
+                Step validation is bypassed. Fill Step 1 (Customer) then use <strong>Quick Submit ↓</strong> to test the approval flow.
+              </p>
+            </div>
+          </div>
+          {!isReadOnly && draftId && (
+            <button
+              onClick={() => submitApplication(true)}
+              disabled={isSubmitting}
+              className="shrink-0 px-4 py-2 bg-yellow-400 hover:bg-yellow-500 text-yellow-900 font-bold rounded-xl text-sm transition-all shadow-sm disabled:opacity-50 flex items-center gap-2 cursor-pointer"
+            >
+              {isSubmitting ? "Submitting..." : "⚡ Quick Submit (Dev)"}
+            </button>
+          )}
+        </div>
+      )}
 
       {/* Page Header (No Card) */}
       <div className="max-w-[1600px] mx-auto mb-6 pt-2">
