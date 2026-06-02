@@ -123,10 +123,10 @@ const AppSidebar: React.FC = () => {
         icon: <DollarLineIcon />,
         privilege: 'CURRENT_LOANS',
         subItems: [
-          { name: "Active Leases", path: ROUTES.FORM_ELEMENTS },
+          { name: "Active Leases", path: ROUTES.ACTIVE_LEASES },
           { name: "Write-Off Management", path: ROUTES.FORM_ELEMENTS },
           { name: "Lease Reschedule", path: ROUTES.FORM_ELEMENTS, privilege: 'LOAN_RESCHEDULE' },
-          { name: "Leases List", path: ROUTES.FORM_ELEMENTS, privilege: 'FULL_LOAN_DETAIL' },
+          { name: "Leases List", path: ROUTES.LEASES_LIST, privilege: 'FULL_LOAN_DETAIL' },
         ],
       });
 
@@ -186,8 +186,8 @@ const AppSidebar: React.FC = () => {
         icon: <DollarLineIcon />,
         privilege: 'CURRENT_LOANS',
         subItems: [
-          { name: "Active Leases", path: ROUTES.FORM_ELEMENTS },
-          { name: "Leases List", path: ROUTES.FORM_ELEMENTS, privilege: 'FULL_LOAN_DETAIL' },
+          { name: "Active Leases", path: ROUTES.ACTIVE_LEASES },
+          { name: "Leases List", path: ROUTES.LEASES_LIST, privilege: 'FULL_LOAN_DETAIL' },
         ],
       });
 

@@ -19,6 +19,8 @@ const CreateLeasing = lazy(() => import("../pages/Leasing/CreateLeasing"));
 const DraftLeasesList = lazy(() => import("../pages/Leasing/DraftLeasesList"));
 const PendingLeasesList = lazy(() => import("../pages/Leasing/PendingLeasesList"));
 const LeasingDisbursementList = lazy(() => import("../pages/Leasing/LeasingDisbursementList"));
+const ActiveLeasesList = lazy(() => import("../pages/Leasing/ActiveLeasesList"));
+const LeasesList = lazy(() => import("../pages/Leasing/LeasesList"));
 const PendingApprovalsList = lazy(() => import("../pages/Approvals/PendingApprovalsList"));
 
 const FormElements = lazy(() => import("../pages/Forms/FormElements"));
@@ -133,6 +135,14 @@ export const privateRoutes = [
   {
     path: ROUTES.LEASING_DISBURSEMENT,
     element: <LeasingDisbursementList />,
+  },
+  {
+    path: ROUTES.ACTIVE_LEASES,
+    element: <ActiveLeasesList />,
+  },
+  {
+    path: ROUTES.LEASES_LIST,
+    element: <LeasesList />,
   },
   {
     path: ROUTES.PENDING_APPROVALS,
