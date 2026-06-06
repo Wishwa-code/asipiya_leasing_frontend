@@ -11,6 +11,7 @@ import {
   PlusIcon
 } from "../../icons";
 import apiClient from "../../api/apiClient";
+import { Button } from "@/components/ui/button";
 
 // Types for our internal lists
 type SubProduct = {
@@ -264,11 +265,12 @@ export default function CreateProduct() {
           </div>
           <div className="flex flex-col w-full sm:w-auto items-end gap-3">
             <div className="flex w-full sm:w-auto items-center gap-3">
-              <button
+              <Button
                 type="button"
                 onClick={handleSaveProduct}
                 disabled={isSubmitting}
-                className={`flex-1 sm:flex-none flex items-center justify-center gap-2 px-6 py-2.5 bg-brand-500 hover:bg-brand-600 text-white font-semibold rounded-xl transition-colors shadow-sm cursor-pointer ${isSubmitting ? 'opacity-70 cursor-not-allowed' : ''}`}
+                variant="default"
+                className="flex-1 sm:flex-none h-10 px-6 font-semibold"
               >
                 {isSubmitting ? (
                   <span className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin"></span>
@@ -276,11 +278,13 @@ export default function CreateProduct() {
                   <CheckCircleIcon className="w-5 h-5" />
                 )}
                 {isSubmitting ? 'Saving...' : isEdit ? 'Update Product' : 'Save Product'}
-              </button>
-              <Link to="/" className="flex-1 sm:flex-none flex items-center justify-center gap-2 px-6 py-2.5 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-700 text-gray-700 dark:text-gray-300 font-semibold rounded-xl transition-colors shadow-sm cursor-pointer">
-                <CloseLineIcon className="w-5 h-5" />
-                Cancel
-              </Link>
+              </Button>
+              <Button asChild variant="outline" className="flex-1 sm:flex-none h-10 px-6 font-semibold">
+                <Link to="/">
+                  <CloseLineIcon className="w-5 h-5" />
+                  Cancel
+                </Link>
+              </Button>
             </div>
 
             {(submitSuccess || submitError) && (
@@ -471,9 +475,9 @@ export default function CreateProduct() {
               </div>
 
               <div className="mt-5 flex justify-end">
-                <button onClick={handleAddSubProduct} type="button" className="flex items-center gap-1.5 bg-brand-500 hover:bg-brand-600 text-white px-4 py-2 rounded-xl text-sm font-semibold transition-colors shadow-sm">
+                <Button onClick={handleAddSubProduct} type="button" variant="default" size="sm" className="font-semibold gap-1.5">
                   <PlusIcon className="w-4 h-4" /> Add to List
-                </button>
+                </Button>
               </div>
             </div>
 
@@ -506,7 +510,9 @@ export default function CreateProduct() {
                         <td className="px-4 py-3">{sp.penaltyRate}%</td>
                         <td className="px-4 py-3">{sp.guarantors}</td>
                         <td className="px-4 py-3 text-right">
-                          <button onClick={() => setSubProducts(subProducts.filter((_, i) => i !== idx))} type="button" className="text-error-500 hover:bg-error-50 p-1.5 rounded-lg transition-colors"><CloseLineIcon className="w-4 h-4" /></button>
+                          <Button onClick={() => setSubProducts(subProducts.filter((_, i) => i !== idx))} type="button" variant="ghost" size="icon-sm" className="text-error-500 hover:text-error-600 hover:bg-error-50">
+                            <CloseLineIcon className="w-4 h-4" />
+                          </Button>
                         </td>
                       </tr>
                     ))
@@ -557,9 +563,9 @@ export default function CreateProduct() {
                     <option value="as_first_installment">As First Installment</option>
                   </select>
                 </div>
-                <button onClick={handleAddCharge} type="button" className="w-full bg-brand-500 hover:bg-brand-600 text-white px-4 py-2 rounded-xl text-sm font-semibold transition-colors shadow-sm">
+                <Button onClick={handleAddCharge} type="button" variant="default" className="w-full font-semibold">
                   Add Charge
-                </button>
+                </Button>
               </div>
             </div>
 
@@ -571,7 +577,9 @@ export default function CreateProduct() {
                     <h4 className="font-bold text-sm text-gray-800 dark:text-gray-200">{charge.description}</h4>
                     <p className="text-xs text-gray-500 dark:text-gray-400">{charge.amount} {charge.type === 'percentage' ? '%' : ''}</p>
                   </div>
-                  <button onClick={() => setCharges(charges.filter((_, i) => i !== idx))} type="button" className="text-error-500 p-1.5 hover:bg-error-50 rounded-lg"><CloseLineIcon className="w-4 h-4" /></button>
+                  <Button onClick={() => setCharges(charges.filter((_, i) => i !== idx))} type="button" variant="ghost" size="icon-sm" className="text-error-500 hover:text-error-600 hover:bg-error-50">
+                    <CloseLineIcon className="w-4 h-4" />
+                  </Button>
                 </div>
               ))}
             </div>
@@ -594,9 +602,9 @@ export default function CreateProduct() {
                 <option value="Required">Required</option>
                 <option value="Optional">Optional</option>
               </select>
-              <button onClick={handleAddDoc} type="button" className="bg-brand-500 hover:bg-brand-600 text-white px-6 py-2.5 rounded-xl text-sm font-semibold transition-colors shadow-sm">
+              <Button onClick={handleAddDoc} type="button" variant="default" className="h-10 px-6 font-semibold">
                 Add
-              </button>
+              </Button>
             </div>
 
             <div className="bg-gray-50 dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl overflow-hidden">
@@ -614,7 +622,9 @@ export default function CreateProduct() {
                       <span className={`${doc.status === 'Required' ? 'text-error-500' : 'text-gray-500'} text-xs font-semibold`}>{doc.status}</span>
                     </div>
                     <div className="w-10 text-right">
-                      <button onClick={() => setDocuments(documents.filter((_, i) => i !== idx))} type="button" className="text-error-500 hover:text-error-600"><CloseLineIcon className="w-4 h-4" /></button>
+                      <Button onClick={() => setDocuments(documents.filter((_, i) => i !== idx))} type="button" variant="ghost" size="icon-sm" className="text-error-500 hover:text-error-600">
+                        <CloseLineIcon className="w-4 h-4" />
+                      </Button>
                     </div>
                   </div>
                 ))}

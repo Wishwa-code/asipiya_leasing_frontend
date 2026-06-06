@@ -168,7 +168,17 @@ layer(base);
   --z-index-999: 999;
   --z-index-9999: 9999;
   --z-index-99999: 99999;
-  --z-index-999999: 999999;
+  --color-primary: var(--color-brand-500);
+  --color-primary-foreground: var(--color-white);
+  --color-destructive: var(--color-error-500);
+  --color-destructive-foreground: var(--color-white);
+  --color-muted: var(--color-gray-100);
+  --color-muted-foreground: var(--color-gray-500);
+  --color-accent: var(--color-gray-100);
+  --color-accent-foreground: var(--color-gray-900);
+  --color-border: var(--color-gray-200);
+  --color-input: var(--color-gray-200);
+  --color-ring: var(--color-brand-500);
 }
 
 /*

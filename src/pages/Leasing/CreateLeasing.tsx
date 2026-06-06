@@ -287,7 +287,7 @@ const CreateLeasing: React.FC = () => {
                  Save Draft
               </button>
               <button 
-                onClick={submitApplication}
+                onClick={() => submitApplication()}
                 disabled={isSubmitting}
                 className="flex-1 sm:flex-none px-6 py-2.5 bg-brand-500 hover:bg-brand-600 text-white font-semibold rounded-xl transition-all shadow-theme-sm border border-brand-600 flex items-center justify-center gap-2 disabled:opacity-50 cursor-pointer"
               >
@@ -426,7 +426,7 @@ const CreateLeasing: React.FC = () => {
               {activeStep === 9 ? (
                 !isReadOnly ? (
                   <button
-                    onClick={submitApplication}
+                    onClick={() => submitApplication()}
                     disabled={isSubmitting}
                     className="flex items-center gap-2 px-6 py-2.5 bg-brand-500 hover:bg-brand-600 text-white font-bold rounded-xl transition-all shadow-theme-sm disabled:opacity-50"
                   >
