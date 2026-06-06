@@ -12,6 +12,7 @@ import {
 } from "../../icons";
 import apiClient from "../../api/apiClient";
 import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
 import {
   Select,
   SelectContent,
@@ -354,11 +355,11 @@ export default function CreateProduct() {
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-x-6 gap-y-5">
             <div>
               <label className="mb-1.5 block text-xs font-bold text-gray-700 dark:text-gray-400 uppercase tracking-wide">Product Name <span className="text-error-500">*</span></label>
-              <input value={generalForm.name} onChange={(e) => setGeneralForm({ ...generalForm, name: e.target.value })} type="text" placeholder="e.g. Personal Loan" className="w-full rounded-xl border border-gray-200 bg-white px-4 py-2.5 text-sm outline-none focus:border-brand-500 dark:border-gray-700 dark:bg-gray-900" />
+              <Input value={generalForm.name} onChange={(e) => setGeneralForm({ ...generalForm, name: e.target.value })} type="text" placeholder="e.g. Personal Loan" />
             </div>
             <div>
               <label className="mb-1.5 block text-xs font-bold text-gray-700 dark:text-gray-400 uppercase tracking-wide">Product Code <span className="text-error-500">*</span></label>
-              <input value={generalForm.code} onChange={(e) => setGeneralForm({ ...generalForm, code: e.target.value })} type="text" placeholder="PL-001" className="w-full rounded-xl border border-gray-200 bg-white px-4 py-2.5 text-sm outline-none focus:border-brand-500 dark:border-gray-700 dark:bg-gray-900" />
+              <Input value={generalForm.code} onChange={(e) => setGeneralForm({ ...generalForm, code: e.target.value })} type="text" placeholder="PL-001" />
             </div>
             <div className="sm:col-span-2 lg:col-span-1">
               <label className="mb-1.5 block text-xs font-bold text-gray-700 dark:text-gray-400 uppercase tracking-wide">Interest Method <span className="text-error-500">*</span></label>
@@ -440,7 +441,7 @@ export default function CreateProduct() {
             </div>
             <div>
               <label className="mb-1.5 block text-xs font-bold text-gray-700 dark:text-gray-400 uppercase tracking-wide">Global Guarantors</label>
-              <input value={generalForm.globalGuarantors} onChange={(e) => setGeneralForm({ ...generalForm, globalGuarantors: e.target.value })} type="number" placeholder="0" className="w-full rounded-xl border border-gray-200 bg-white px-4 py-2.5 text-sm outline-none focus:border-brand-500 dark:border-gray-700 dark:bg-gray-900" />
+              <Input value={generalForm.globalGuarantors} onChange={(e) => setGeneralForm({ ...generalForm, globalGuarantors: e.target.value })} type="number" placeholder="0" />
             </div>
           </div>
         </div>
@@ -462,7 +463,7 @@ export default function CreateProduct() {
               <div className="grid grid-cols-1 md:grid-cols-3 gap-x-5 gap-y-4">
                 <div>
                   <label className="mb-1.5 block text-[11px] font-bold text-gray-700 dark:text-gray-400 uppercase tracking-wide">Sub Product Label</label>
-                  <input value={spForm.label} onChange={(e) => setSpForm({ ...spForm, label: e.target.value })} type="text" placeholder="e.g. Gold Tier" className="w-full rounded-xl border border-gray-200 bg-white px-3 py-2 text-sm outline-none focus:border-brand-500 dark:border-gray-700 dark:bg-gray-800" />
+                  <Input value={spForm.label} onChange={(e) => setSpForm({ ...spForm, label: e.target.value })} type="text" placeholder="e.g. Gold Tier" className="px-3 py-2 dark:bg-gray-800" />
                 </div>
                 <div>
                   <label className="mb-1.5 block text-[11px] font-bold text-gray-700 dark:text-gray-400 uppercase tracking-wide">Loan Amount Range</label>
@@ -505,7 +506,7 @@ export default function CreateProduct() {
                 <div className="grid grid-cols-1 md:grid-cols-4 gap-x-5 gap-y-4">
                   <div>
                     <label className="mb-1.5 block text-[11px] font-bold text-gray-700 dark:text-gray-400 uppercase tracking-wide">Req. Guarantors</label>
-                    <input value={spForm.guarantors} onChange={(e) => setSpForm({ ...spForm, guarantors: e.target.value })} type="number" placeholder="Count" className="w-full rounded-xl border border-gray-200 bg-white px-3 py-2 text-sm outline-none focus:border-brand-500 dark:border-gray-700 dark:bg-gray-800" />
+                    <Input value={spForm.guarantors} onChange={(e) => setSpForm({ ...spForm, guarantors: e.target.value })} type="number" placeholder="Count" className="px-3 py-2 dark:bg-gray-800" />
                   </div>
                   <div className="md:col-span-2">
                     <label className="mb-1.5 block text-[11px] font-bold text-gray-700 dark:text-gray-400 uppercase tracking-wide">Penalty Method</label>
@@ -524,7 +525,7 @@ export default function CreateProduct() {
                   </div>
                   <div>
                     <label className="mb-1.5 block text-[11px] font-bold text-gray-700 dark:text-gray-400 uppercase tracking-wide">Penalty %</label>
-                    <input value={spForm.penaltyRate} onChange={(e) => setSpForm({ ...spForm, penaltyRate: e.target.value })} type="number" placeholder="0.00" className="w-full rounded-xl border border-gray-200 bg-white px-3 py-2 text-sm outline-none focus:border-brand-500 dark:border-gray-700 dark:bg-gray-800" />
+                    <Input value={spForm.penaltyRate} onChange={(e) => setSpForm({ ...spForm, penaltyRate: e.target.value })} type="number" placeholder="0.00" className="px-3 py-2 dark:bg-gray-800" />
                   </div>
                 </div>
               </div>
@@ -596,12 +597,12 @@ export default function CreateProduct() {
               <div className="space-y-4">
                 <div>
                   <label className="mb-1.5 block text-[11px] font-bold text-gray-700 dark:text-gray-400 uppercase tracking-wide">Description</label>
-                  <input value={chargeForm.description} onChange={(e) => setChargeForm({ ...chargeForm, description: e.target.value })} type="text" placeholder="e.g. Document Fee" className="w-full rounded-xl border border-gray-200 bg-white px-3 py-2 text-sm outline-none focus:border-brand-500 dark:border-gray-700 dark:bg-gray-800" />
+                  <Input value={chargeForm.description} onChange={(e) => setChargeForm({ ...chargeForm, description: e.target.value })} type="text" placeholder="e.g. Document Fee" className="px-3 py-2 dark:bg-gray-800" />
                 </div>
                 <div className="flex gap-4">
                   <div className="flex-1">
                     <label className="mb-1.5 block text-[11px] font-bold text-gray-700 dark:text-gray-400 uppercase tracking-wide">Amount</label>
-                    <input value={chargeForm.amount} onChange={(e) => setChargeForm({ ...chargeForm, amount: e.target.value })} type="number" placeholder="0.00" className="w-full rounded-xl border border-gray-200 bg-white px-3 py-2 text-sm outline-none focus:border-brand-500 dark:border-gray-700 dark:bg-gray-800" />
+                    <Input value={chargeForm.amount} onChange={(e) => setChargeForm({ ...chargeForm, amount: e.target.value })} type="number" placeholder="0.00" className="px-3 py-2 dark:bg-gray-800" />
                   </div>
                   <div className="flex-1">
                     <label className="mb-1.5 block text-[11px] font-bold text-gray-700 dark:text-gray-400 uppercase tracking-wide">Type</label>
@@ -668,7 +669,7 @@ export default function CreateProduct() {
             </h2>
 
             <div className="flex flex-col sm:flex-row gap-3 mb-6">
-              <input value={docForm.name} onChange={(e) => setDocForm({ ...docForm, name: e.target.value })} type="text" placeholder="e.g. NIC Copy" className="flex-1 rounded-xl border border-gray-200 bg-white px-4 py-2.5 text-sm outline-none focus:border-brand-500 dark:border-gray-700 dark:bg-gray-900" />
+              <Input value={docForm.name} onChange={(e) => setDocForm({ ...docForm, name: e.target.value })} type="text" placeholder="e.g. NIC Copy" className="flex-1" />
               <Select
                 value={docForm.status}
                 onValueChange={(val) => setDocForm({ ...docForm, status: val })}
