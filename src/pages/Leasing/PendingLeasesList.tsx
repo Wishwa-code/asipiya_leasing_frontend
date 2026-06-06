@@ -1,7 +1,7 @@
 import { useState, useEffect, useMemo, useRef } from "react";
 import PageMeta from "../../components/common/PageMeta";
 import { useNavigate } from "react-router";
-import { PlusIcon, EyeIcon, CloseIcon, InfoIcon, UserCircleIcon } from "../../icons";
+import { EyeIcon, CloseIcon } from "../../icons";
 import apiClient from "../../api/apiClient";
 import { ROUTES } from "../../routes/paths";
 import { DataTable } from "../../components/ui/table";

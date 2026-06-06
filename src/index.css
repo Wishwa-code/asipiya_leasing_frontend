@@ -179,6 +179,8 @@ layer(base);
   --color-border: var(--color-gray-200);
   --color-input: var(--color-gray-200);
   --color-ring: var(--color-brand-500);
+  --color-popover: var(--color-white);
+  --color-popover-foreground: var(--color-gray-900);
 }
 
 /*

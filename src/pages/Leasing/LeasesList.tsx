@@ -62,7 +62,7 @@ const formatCurrency = (val: number) =>
     : "0.00";
 
 export default function LeasesList() {
-  const { user, isHeadOffice } = useAuth();
+  const { isHeadOffice } = useAuth();
   const [items, setItems] = useState<LeaseListItem[]>([]);
   const [loading, setLoading] = useState(true);
 

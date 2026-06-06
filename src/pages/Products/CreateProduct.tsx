@@ -12,6 +12,13 @@ import {
 } from "../../icons";
 import apiClient from "../../api/apiClient";
 import { Button } from "@/components/ui/button";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 
 // Types for our internal lists
 type SubProduct = {
@@ -355,41 +362,81 @@ export default function CreateProduct() {
             </div>
             <div className="sm:col-span-2 lg:col-span-1">
               <label className="mb-1.5 block text-xs font-bold text-gray-700 dark:text-gray-400 uppercase tracking-wide">Interest Method <span className="text-error-500">*</span></label>
-              <select value={generalForm.interestMethod} onChange={(e) => setGeneralForm({ ...generalForm, interestMethod: e.target.value })} className="w-full rounded-xl border border-gray-200 bg-white px-4 py-2.5 text-sm outline-none focus:border-brand-500 dark:border-gray-700 dark:bg-gray-900">
-                <option value="flat_rate">Flat Rate</option>
-                <option value="reducing_balance">Reducing Balance</option>
-                <option value="draft">Draft</option>
-              </select>
+              <Select
+                value={generalForm.interestMethod}
+                onValueChange={(val) => setGeneralForm({ ...generalForm, interestMethod: val })}
+              >
+                <SelectTrigger className="w-full">
+                  <SelectValue placeholder="Select interest method" />
+                </SelectTrigger>
+                <SelectContent className="bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-800 rounded-xl shadow-theme-md">
+                  <SelectItem value="flat_rate">Flat Rate</SelectItem>
+                  <SelectItem value="reducing_balance">Reducing Balance</SelectItem>
+                  <SelectItem value="draft">Draft</SelectItem>
+                </SelectContent>
+              </Select>
             </div>
             <div>
               <label className="mb-1.5 block text-xs font-bold text-gray-700 dark:text-gray-400 uppercase tracking-wide">Loan Period Type</label>
-              <select value={generalForm.loanPeriodType} onChange={(e) => setGeneralForm({ ...generalForm, loanPeriodType: e.target.value })} className="w-full rounded-xl border border-gray-200 bg-white px-4 py-2.5 text-sm outline-none focus:border-brand-500 dark:border-gray-700 dark:bg-gray-900">
-                <option value="months">Months</option>
-                <option value="weeks">Weeks</option>
-                <option value="days">Days</option>
-              </select>
+              <Select
+                value={generalForm.loanPeriodType}
+                onValueChange={(val) => setGeneralForm({ ...generalForm, loanPeriodType: val })}
+              >
+                <SelectTrigger className="w-full">
+                  <SelectValue placeholder="Select type" />
+                </SelectTrigger>
+                <SelectContent className="bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-800 rounded-xl shadow-theme-md">
+                  <SelectItem value="months">Months</SelectItem>
+                  <SelectItem value="weeks">Weeks</SelectItem>
+                  <SelectItem value="days">Days</SelectItem>
+                </SelectContent>
+              </Select>
             </div>
             <div>
               <label className="mb-1.5 block text-xs font-bold text-gray-700 dark:text-gray-400 uppercase tracking-wide">Interest Period Type</label>
-              <select value={generalForm.interestPeriodType} onChange={(e) => setGeneralForm({ ...generalForm, interestPeriodType: e.target.value })} className="w-full rounded-xl border border-gray-200 bg-white px-4 py-2.5 text-sm outline-none focus:border-brand-500 dark:border-gray-700 dark:bg-gray-900">
-                <option value="per_month">Per Month</option>
-                <option value="per_week">Per Week</option>
-              </select>
+              <Select
+                value={generalForm.interestPeriodType}
+                onValueChange={(val) => setGeneralForm({ ...generalForm, interestPeriodType: val })}
+              >
+                <SelectTrigger className="w-full">
+                  <SelectValue placeholder="Select type" />
+                </SelectTrigger>
+                <SelectContent className="bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-800 rounded-xl shadow-theme-md">
+                  <SelectItem value="per_month">Per Month</SelectItem>
+                  <SelectItem value="per_week">Per Week</SelectItem>
+                </SelectContent>
+              </Select>
             </div>
             <div>
               <label className="mb-1.5 block text-xs font-bold text-gray-700 dark:text-gray-400 uppercase tracking-wide">Collection Period Type</label>
-              <select value={generalForm.collectionPeriodType} onChange={(e) => setGeneralForm({ ...generalForm, collectionPeriodType: e.target.value })} className="w-full rounded-xl border border-gray-200 bg-white px-4 py-2.5 text-sm outline-none focus:border-brand-500 dark:border-gray-700 dark:bg-gray-900">
-                <option value="daily">Daily</option>
-                <option value="weekly">Weekly</option>
-                <option value="first_of_month">First of Month</option>
-              </select>
+              <Select
+                value={generalForm.collectionPeriodType}
+                onValueChange={(val) => setGeneralForm({ ...generalForm, collectionPeriodType: val })}
+              >
+                <SelectTrigger className="w-full">
+                  <SelectValue placeholder="Select type" />
+                </SelectTrigger>
+                <SelectContent className="bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-800 rounded-xl shadow-theme-md">
+                  <SelectItem value="daily">Daily</SelectItem>
+                  <SelectItem value="weekly">Weekly</SelectItem>
+                  <SelectItem value="first_of_month">First of Month</SelectItem>
+                </SelectContent>
+              </Select>
             </div>
             <div>
               <label className="mb-1.5 block text-xs font-bold text-gray-700 dark:text-gray-400 uppercase tracking-wide">Collection Date Strategy</label>
-              <select value={generalForm.collectionDateStrategy} onChange={(e) => setGeneralForm({ ...generalForm, collectionDateStrategy: e.target.value })} className="w-full rounded-xl border border-gray-200 bg-white px-4 py-2.5 text-sm outline-none focus:border-brand-500 dark:border-gray-700 dark:bg-gray-900">
-                <option value="same_as_installment">Same as Installment</option>
-                <option value="according_to_route">According to Route</option>
-              </select>
+              <Select
+                value={generalForm.collectionDateStrategy}
+                onValueChange={(val) => setGeneralForm({ ...generalForm, collectionDateStrategy: val })}
+              >
+                <SelectTrigger className="w-full">
+                  <SelectValue placeholder="Select strategy" />
+                </SelectTrigger>
+                <SelectContent className="bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-800 rounded-xl shadow-theme-md">
+                  <SelectItem value="same_as_installment">Same as Installment</SelectItem>
+                  <SelectItem value="according_to_route">According to Route</SelectItem>
+                </SelectContent>
+              </Select>
             </div>
             <div>
               <label className="mb-1.5 block text-xs font-bold text-gray-700 dark:text-gray-400 uppercase tracking-wide">Global Guarantors</label>
@@ -462,10 +509,18 @@ export default function CreateProduct() {
                   </div>
                   <div className="md:col-span-2">
                     <label className="mb-1.5 block text-[11px] font-bold text-gray-700 dark:text-gray-400 uppercase tracking-wide">Penalty Method</label>
-                    <select value={spForm.penaltyType} onChange={(e) => setSpForm({ ...spForm, penaltyType: e.target.value })} className="w-full rounded-xl border border-gray-200 bg-white px-3 py-2 text-sm outline-none focus:border-brand-500 dark:border-gray-700 dark:bg-gray-800">
-                      <option value="every_installment">Apply Penalty For Every Installment</option>
-                      <option value="loan_after_maturity">Apply Penalty For Loan After Maturity</option>
-                    </select>
+                    <Select
+                      value={spForm.penaltyType}
+                      onValueChange={(val) => setSpForm({ ...spForm, penaltyType: val })}
+                    >
+                      <SelectTrigger className="w-full h-9 data-[size=default]:h-9 rounded-xl py-2 px-3 border-gray-200 dark:border-gray-700">
+                        <SelectValue placeholder="Select penalty method" />
+                      </SelectTrigger>
+                      <SelectContent className="bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-800 rounded-xl shadow-theme-md">
+                        <SelectItem value="every_installment">Apply Penalty For Every Installment</SelectItem>
+                        <SelectItem value="loan_after_maturity">Apply Penalty For Loan After Maturity</SelectItem>
+                      </SelectContent>
+                    </Select>
                   </div>
                   <div>
                     <label className="mb-1.5 block text-[11px] font-bold text-gray-700 dark:text-gray-400 uppercase tracking-wide">Penalty %</label>
@@ -550,18 +605,34 @@ export default function CreateProduct() {
                   </div>
                   <div className="flex-1">
                     <label className="mb-1.5 block text-[11px] font-bold text-gray-700 dark:text-gray-400 uppercase tracking-wide">Type</label>
-                    <select value={chargeForm.type} onChange={(e) => setChargeForm({ ...chargeForm, type: e.target.value })} className="w-full rounded-xl border border-gray-200 bg-white px-3 py-2 text-sm outline-none focus:border-brand-500 dark:border-gray-700 dark:bg-gray-800">
-                      <option value="fixed">Fixed</option>
-                      <option value="percentage">% Percentage</option>
-                    </select>
+                    <Select
+                      value={chargeForm.type}
+                      onValueChange={(val) => setChargeForm({ ...chargeForm, type: val })}
+                    >
+                      <SelectTrigger className="w-full h-9 data-[size=default]:h-9 rounded-xl py-2 px-3 border-gray-200 dark:border-gray-700">
+                        <SelectValue placeholder="Select type" />
+                      </SelectTrigger>
+                      <SelectContent className="bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-800 rounded-xl shadow-theme-md">
+                        <SelectItem value="fixed">Fixed</SelectItem>
+                        <SelectItem value="percentage">% Percentage</SelectItem>
+                      </SelectContent>
+                    </Select>
                   </div>
                 </div>
                 <div>
                   <label className="mb-1.5 block text-[11px] font-bold text-gray-700 dark:text-gray-400 uppercase tracking-wide">Deduction Method</label>
-                  <select value={chargeForm.deduction} onChange={(e) => setChargeForm({ ...chargeForm, deduction: e.target.value })} className="w-full rounded-xl border border-gray-200 bg-white px-3 py-2 text-sm outline-none focus:border-brand-500 dark:border-gray-700 dark:bg-gray-800">
-                    <option value="on_loan_disbursement">On Loan Disbursement</option>
-                    <option value="as_first_installment">As First Installment</option>
-                  </select>
+                  <Select
+                    value={chargeForm.deduction}
+                    onValueChange={(val) => setChargeForm({ ...chargeForm, deduction: val })}
+                  >
+                    <SelectTrigger className="w-full h-9 data-[size=default]:h-9 rounded-xl py-2 px-3 border-gray-200 dark:border-gray-700">
+                      <SelectValue placeholder="Select deduction" />
+                    </SelectTrigger>
+                    <SelectContent className="bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-800 rounded-xl shadow-theme-md">
+                      <SelectItem value="on_loan_disbursement">On Loan Disbursement</SelectItem>
+                      <SelectItem value="as_first_installment">As First Installment</SelectItem>
+                    </SelectContent>
+                  </Select>
                 </div>
                 <Button onClick={handleAddCharge} type="button" variant="default" className="w-full font-semibold">
                   Add Charge
@@ -598,10 +669,18 @@ export default function CreateProduct() {
 
             <div className="flex flex-col sm:flex-row gap-3 mb-6">
               <input value={docForm.name} onChange={(e) => setDocForm({ ...docForm, name: e.target.value })} type="text" placeholder="e.g. NIC Copy" className="flex-1 rounded-xl border border-gray-200 bg-white px-4 py-2.5 text-sm outline-none focus:border-brand-500 dark:border-gray-700 dark:bg-gray-900" />
-              <select value={docForm.status} onChange={(e) => setDocForm({ ...docForm, status: e.target.value })} className="sm:w-32 rounded-xl border border-gray-200 bg-white px-3 py-2.5 text-sm outline-none focus:border-brand-500 dark:border-gray-700 dark:bg-gray-900">
-                <option value="Required">Required</option>
-                <option value="Optional">Optional</option>
-              </select>
+              <Select
+                value={docForm.status}
+                onValueChange={(val) => setDocForm({ ...docForm, status: val })}
+              >
+                <SelectTrigger className="sm:w-32">
+                  <SelectValue placeholder="Select status" />
+                </SelectTrigger>
+                <SelectContent className="bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-800 rounded-xl shadow-theme-md">
+                  <SelectItem value="Required">Required</SelectItem>
+                  <SelectItem value="Optional">Optional</SelectItem>
+                </SelectContent>
+              </Select>
               <Button onClick={handleAddDoc} type="button" variant="default" className="h-10 px-6 font-semibold">
                 Add
               </Button>

@@ -1,6 +1,6 @@
 import { useState, useEffect, useMemo } from "react";
 import PageMeta from "../../components/common/PageMeta";
-import { EyeIcon, CloseIcon, CheckCircleIcon, CloseLineIcon, InfoIcon, CalenderIcon, UserIcon, BuildingIcon } from "../../icons";
+import { EyeIcon, CheckCircleIcon, CloseLineIcon, InfoIcon, CalenderIcon, UserIcon, BuildingIcon } from "../../icons";
 import apiClient from "../../api/apiClient";
 import { DataTable } from "../../components/ui/table";
 import { useAuth } from "../../context/AuthContext";
@@ -490,7 +490,6 @@ export default function PendingApprovalsList() {
                     {selectedItem.approvals.map((app: any, idx: number) => {
                       const isApproved = String(app.status) === "1";
                       const isRejected = String(app.status) === "2";
-                      const isActiveStage = String(app.status) === "0";
 
                       return (
                         <div key={idx} className="relative pl-6">

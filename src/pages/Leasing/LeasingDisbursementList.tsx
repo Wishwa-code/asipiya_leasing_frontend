@@ -10,7 +10,6 @@ import {
 } from "../../icons";
 import apiClient from "../../api/apiClient";
 import { DataTable } from "../../components/ui/table";
-import { useAuth } from "../../context/AuthContext";
 
 type DisbursementItem = {
   id: number;
@@ -38,7 +37,6 @@ const formatCurrency = (val: number) =>
     : "0.00";
 
 export default function LeasingDisbursementList() {
-  const { user, isHeadOffice } = useAuth();
   const [items, setItems] = useState<DisbursementItem[]>([]);
   const [loading, setLoading] = useState(true);
 
