@@ -1,6 +1,15 @@
 import { useState, useEffect, useRef } from "react";
 import PageMeta from "../../components/common/PageMeta";
 import apiClient from "../../api/apiClient";
+import { Input } from "@/components/ui/input";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+
 
 // ─── Types ───────────────────────────────────────────────────────────────────
 type OccupationEntry = {
@@ -253,8 +262,6 @@ export default function CreateCustomer() {
   }
 
   // ─── Styles ─────────────────────────────────────────────────────────────────
-  const inputCls = "w-full rounded-lg border border-gray-200 bg-white px-3 py-2 text-sm text-gray-800 placeholder-gray-400 focus:border-brand-500 focus:ring-2 focus:ring-brand-100 focus:outline-none dark:border-gray-700 dark:bg-gray-900 dark:text-gray-100 transition";
-  const selectCls = `${inputCls} appearance-none`;
   const cardCls = "rounded-2xl border border-gray-100 bg-white p-5 shadow-sm dark:border-gray-700 dark:bg-gray-900";
   const labelCls = "block mb-1 text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wide";
   const sectionTitle = "flex items-center gap-2 text-sm font-bold text-gray-700 dark:text-gray-200 uppercase tracking-wide mb-4";
@@ -339,26 +346,30 @@ export default function CreateCustomer() {
                   <div className="grid grid-cols-3 gap-3">
                     <div>
                       <label className={labelCls}>Title *</label>
-                      <select className={selectCls} value={profile.title} onChange={e => setProfile(p => ({ ...p, title: e.target.value }))}>
-                        <option value="">Select</option>
-                        {TITLES.map(t => <option key={t}>{t}</option>)}
-                      </select>
+                      <Select value={profile.title || undefined} onValueChange={val => setProfile(p => ({ ...p, title: val }))}>
+                        <SelectTrigger className="w-full">
+                          <SelectValue placeholder="Select" />
+                        </SelectTrigger>
+                        <SelectContent className="bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-800 rounded-xl shadow-theme-md">
+                          {TITLES.map(t => <SelectItem key={t} value={t}>{t}</SelectItem>)}
+                        </SelectContent>
+                      </Select>
                     </div>
                     <div className="col-span-2">
                       <label className={labelCls}>Full Name *</label>
-                      <input className={inputCls} placeholder="Full Name" value={profile.fullName}
+                      <Input placeholder="Full Name" value={profile.fullName}
                         onChange={e => setProfile(p => ({ ...p, fullName: e.target.value.toUpperCase() }))} />
                     </div>
                   </div>
                   <div className="grid grid-cols-2 gap-3">
                     <div>
                       <label className={labelCls}>First Name *</label>
-                      <input className={inputCls} placeholder="First Name" value={profile.firstName}
+                      <Input placeholder="First Name" value={profile.firstName}
                         onChange={e => setProfile(p => ({ ...p, firstName: e.target.value }))} />
                     </div>
                     <div>
                       <label className={labelCls}>Last Name *</label>
-                      <input className={inputCls} placeholder="Last Name" value={profile.lastName}
+                      <Input placeholder="Last Name" value={profile.lastName}
                         onChange={e => setProfile(p => ({ ...p, lastName: e.target.value }))} />
                     </div>
                   </div>
@@ -368,13 +379,13 @@ export default function CreateCustomer() {
               <div className="mt-3 space-y-3">
                 <div>
                   <label className={labelCls}>Name with Initials *</label>
-                  <input className={inputCls} placeholder="Name with initials" value={profile.nameWithInitials}
+                  <Input placeholder="Name with initials" value={profile.nameWithInitials}
                     onChange={e => setProfile(p => ({ ...p, nameWithInitials: e.target.value.toUpperCase() }))} />
                 </div>
                 <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
                   <div>
                     <label className={labelCls}>NIC Number *</label>
-                    <input ref={nicRef} className={inputCls} placeholder="NIC Number" value={profile.nic}
+                    <Input ref={nicRef} placeholder="NIC Number" value={profile.nic}
                       onChange={e => {
                         const val = e.target.value.toUpperCase();
                         setProfile(p => ({ ...p, nic: val }));
@@ -383,22 +394,30 @@ export default function CreateCustomer() {
                   </div>
                   <div>
                     <label className={labelCls}>Date of Birth *</label>
-                    <input type="date" className={inputCls} value={profile.dob}
+                    <Input type="date" value={profile.dob}
                       onChange={e => setProfile(p => ({ ...p, dob: e.target.value }))} />
                   </div>
                   <div>
                     <label className={labelCls}>Gender *</label>
-                    <select className={selectCls} value={profile.gender} onChange={e => setProfile(p => ({ ...p, gender: e.target.value }))}>
-                      <option value="">Select</option>
-                      {GENDERS.map(g => <option key={g}>{g}</option>)}
-                    </select>
+                    <Select value={profile.gender || undefined} onValueChange={val => setProfile(p => ({ ...p, gender: val }))}>
+                      <SelectTrigger className="w-full">
+                        <SelectValue placeholder="Select" />
+                      </SelectTrigger>
+                      <SelectContent className="bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-800 rounded-xl shadow-theme-md">
+                        {GENDERS.map(g => <SelectItem key={g} value={g}>{g}</SelectItem>)}
+                      </SelectContent>
+                    </Select>
                   </div>
                   <div>
                     <label className={labelCls}>Status *</label>
-                    <select className={selectCls} value={profile.status} onChange={e => setProfile(p => ({ ...p, status: e.target.value }))}>
-                      <option value="">Select</option>
-                      {STATUSES.map(s => <option key={s}>{s}</option>)}
-                    </select>
+                    <Select value={profile.status || undefined} onValueChange={val => setProfile(p => ({ ...p, status: val }))}>
+                      <SelectTrigger className="w-full">
+                        <SelectValue placeholder="Select" />
+                      </SelectTrigger>
+                      <SelectContent className="bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-800 rounded-xl shadow-theme-md">
+                        {STATUSES.map(s => <SelectItem key={s} value={s}>{s}</SelectItem>)}
+                      </SelectContent>
+                    </Select>
                   </div>
                 </div>
               </div>
@@ -415,9 +434,9 @@ export default function CreateCustomer() {
                 <div>
                   <label className={labelCls}>Permanent Address *</label>
                   <div className="grid grid-cols-3 gap-3">
-                    <input className={inputCls} placeholder="Line 1" value={address.permLine1} onChange={e => setAddress(a => ({ ...a, permLine1: e.target.value }))} />
-                    <input className={inputCls} placeholder="Line 2" value={address.permLine2} onChange={e => setAddress(a => ({ ...a, permLine2: e.target.value }))} />
-                    <input className={inputCls} placeholder="Line 3" value={address.permLine3} onChange={e => setAddress(a => ({ ...a, permLine3: e.target.value }))} />
+                    <Input placeholder="Line 1" value={address.permLine1} onChange={e => setAddress(a => ({ ...a, permLine1: e.target.value }))} />
+                    <Input placeholder="Line 2" value={address.permLine2} onChange={e => setAddress(a => ({ ...a, permLine2: e.target.value }))} />
+                    <Input placeholder="Line 3" value={address.permLine3} onChange={e => setAddress(a => ({ ...a, permLine3: e.target.value }))} />
                   </div>
                 </div>
 
@@ -432,11 +451,11 @@ export default function CreateCustomer() {
                       </label>
                     </div>
                     <div className="grid grid-cols-3 gap-3">
-                      <input className={inputCls} placeholder="Line 1" value={address.postalLine1} disabled={address.sameAsPerm}
+                      <Input placeholder="Line 1" value={address.postalLine1} disabled={address.sameAsPerm}
                         onChange={e => setAddress(a => ({ ...a, postalLine1: e.target.value }))} />
-                      <input className={inputCls} placeholder="Line 2" value={address.postalLine2} disabled={address.sameAsPerm}
+                      <Input placeholder="Line 2" value={address.postalLine2} disabled={address.sameAsPerm}
                         onChange={e => setAddress(a => ({ ...a, postalLine2: e.target.value }))} />
-                      <input className={inputCls} placeholder="Line 3" value={address.postalLine3} disabled={address.sameAsPerm}
+                      <Input placeholder="Line 3" value={address.postalLine3} disabled={address.sameAsPerm}
                         onChange={e => setAddress(a => ({ ...a, postalLine3: e.target.value }))} />
                     </div>
                   </div>
@@ -445,14 +464,18 @@ export default function CreateCustomer() {
                 <div className="grid grid-cols-2 gap-3">
                   <div>
                     <label className={labelCls}>Province *</label>
-                    <select className={selectCls} value={address.province} onChange={e => setAddress(a => ({ ...a, province: e.target.value }))}>
-                      <option value="">Select Province</option>
-                      {PROVINCES.map(p => <option key={p}>{p}</option>)}
-                    </select>
+                    <Select value={address.province || undefined} onValueChange={val => setAddress(a => ({ ...a, province: val }))}>
+                      <SelectTrigger className="w-full">
+                        <SelectValue placeholder="Select Province" />
+                      </SelectTrigger>
+                      <SelectContent className="bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-800 rounded-xl shadow-theme-md">
+                        {PROVINCES.map(p => <SelectItem key={p} value={p}>{p}</SelectItem>)}
+                      </SelectContent>
+                    </Select>
                   </div>
                   <div>
                     <label className={labelCls}>City *</label>
-                    <input className={inputCls} placeholder="Select City / Town" value={address.city}
+                    <Input placeholder="Select City / Town" value={address.city}
                       onChange={e => setAddress(a => ({ ...a, city: e.target.value }))} />
                   </div>
                 </div>
@@ -488,24 +511,24 @@ export default function CreateCustomer() {
               <div className="space-y-3">
                 <div>
                   <label className={labelCls}>Mobile Primary *</label>
-                  <input className={inputCls} placeholder="07XXXXXXXX" value={contact.mobilePrimary}
+                  <Input placeholder="07XXXXXXXX" value={contact.mobilePrimary}
                     onChange={e => setContact(c => ({ ...c, mobilePrimary: e.target.value }))} />
                 </div>
                 {!requiredFieldsOnly && (
                   <>
                     <div>
                       <label className={labelCls}>Mobile Secondary</label>
-                      <input className={inputCls} placeholder="07XXXXXXXX" value={contact.mobileSecondary}
+                      <Input placeholder="07XXXXXXXX" value={contact.mobileSecondary}
                         onChange={e => setContact(c => ({ ...c, mobileSecondary: e.target.value }))} />
                     </div>
                     <div>
                       <label className={labelCls}>Landline</label>
-                      <input className={inputCls} placeholder="0XXXXXXXXX" value={contact.landline}
+                      <Input placeholder="0XXXXXXXXX" value={contact.landline}
                         onChange={e => setContact(c => ({ ...c, landline: e.target.value }))} />
                     </div>
                     <div>
                       <label className={labelCls}>Email Address</label>
-                      <input type="email" className={inputCls} placeholder="example@email.com" value={contact.email}
+                      <Input type="email" placeholder="example@email.com" value={contact.email}
                         onChange={e => setContact(c => ({ ...c, email: e.target.value }))} />
                     </div>
                   </>
@@ -520,7 +543,7 @@ export default function CreateCustomer() {
                   <span className="w-7 h-7 rounded-full bg-brand-100 text-brand-600 flex items-center justify-center text-xs">✏</span>
                   REMARKS
                 </div>
-                <textarea className={`${inputCls} resize-none`} rows={4} placeholder="Enter any specific notes about this customer..."
+                <textarea className="flex w-full rounded-xl border border-gray-200 bg-white px-4 py-2.5 text-sm outline-none transition-colors placeholder:text-gray-400 focus:border-brand-500 disabled:cursor-not-allowed disabled:opacity-50 dark:border-gray-700 dark:bg-gray-900 dark:text-white dark:focus:border-brand-500 resize-none" rows={4} placeholder="Enter any specific notes about this customer..."
                   value={remarks} onChange={e => setRemarks(e.target.value)} />
               </div>
             )}
@@ -539,24 +562,29 @@ export default function CreateCustomer() {
             <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
               <div>
                 <label className={labelCls}>Engagement Type</label>
-                <select className={selectCls} value={occForm.engagementType} onChange={e => setOccForm(f => ({ ...f, engagementType: e.target.value }))}>
-                  <option>Job / Employment</option>
-                  <option>Business Owner</option>
-                </select>
+                <Select value={occForm.engagementType} onValueChange={val => setOccForm(f => ({ ...f, engagementType: val }))}>
+                  <SelectTrigger className="w-full">
+                    <SelectValue placeholder="Select Type" />
+                  </SelectTrigger>
+                  <SelectContent className="bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-800 rounded-xl shadow-theme-md">
+                    <SelectItem value="Job / Employment">Job / Employment</SelectItem>
+                    <SelectItem value="Business Owner">Business Owner</SelectItem>
+                  </SelectContent>
+                </Select>
               </div>
               
               {occForm.engagementType === "Job / Employment" ? (
                 <>
                   <div>
                     <label className={labelCls}>Position / Designation</label>
-                    <input className={inputCls} placeholder="e.g. Senior Project Manager" value={occForm.position}
+                    <Input placeholder="e.g. Senior Project Manager" value={occForm.position}
                       onChange={e => setOccForm(f => ({ ...f, position: e.target.value }))} />
                   </div>
                   <div>
                     <label className={labelCls}>Net Monthly Income</label>
                     <div className="relative">
                       <span className="absolute left-3 top-1/2 -translate-y-1/2 text-xs text-gray-400 font-semibold">Rs.</span>
-                      <input type="number" className={`${inputCls} pl-9`} placeholder="0.00" value={occForm.netMonthlyIncome}
+                      <Input type="number" className="pl-9" placeholder="0.00" value={occForm.netMonthlyIncome}
                         onChange={e => setOccForm(f => ({ ...f, netMonthlyIncome: e.target.value }))} />
                     </div>
                   </div>
@@ -565,24 +593,24 @@ export default function CreateCustomer() {
                 <>
                   <div>
                     <label className={labelCls}>Business Name</label>
-                    <input className={inputCls} placeholder="Business Name" value={occForm.businessName}
+                    <Input placeholder="Business Name" value={occForm.businessName}
                       onChange={e => setOccForm(f => ({ ...f, businessName: e.target.value }))} />
                   </div>
                   <div>
                     <label className={labelCls}>Registration Number</label>
-                    <input className={inputCls} placeholder="BR Number" value={occForm.registrationNumber}
+                    <Input placeholder="BR Number" value={occForm.registrationNumber}
                       onChange={e => setOccForm(f => ({ ...f, registrationNumber: e.target.value }))} />
                   </div>
                   <div className="sm:col-span-3 lg:col-span-1">
                     <label className={labelCls}>Nature of Business</label>
-                    <input className={inputCls} placeholder="e.g. Retail, Service" value={occForm.natureOfBusiness}
+                    <Input placeholder="e.g. Retail, Service" value={occForm.natureOfBusiness}
                       onChange={e => setOccForm(f => ({ ...f, natureOfBusiness: e.target.value }))} />
                   </div>
                   <div>
                     <label className={labelCls}>Net Monthly Income</label>
                     <div className="relative">
                       <span className="absolute left-3 top-1/2 -translate-y-1/2 text-xs text-gray-400 font-semibold">Rs.</span>
-                      <input type="number" className={`${inputCls} pl-9`} placeholder="0.00" value={occForm.netMonthlyIncome}
+                      <Input type="number" className="pl-9" placeholder="0.00" value={occForm.netMonthlyIncome}
                         onChange={e => setOccForm(f => ({ ...f, netMonthlyIncome: e.target.value }))} />
                     </div>
                   </div>
@@ -593,12 +621,12 @@ export default function CreateCustomer() {
             <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 items-end">
               <div>
                 <label className={labelCls}>Start Date</label>
-                <input type="date" className={inputCls} value={occForm.startDate}
+                <Input type="date" value={occForm.startDate}
                   onChange={e => setOccForm(f => ({ ...f, startDate: e.target.value }))} />
               </div>
               <div>
                 <label className={labelCls}>End Date (if applicable)</label>
-                <input type="date" className={inputCls} placeholder="Present" value={occForm.endDate}
+                <Input type="date" placeholder="Present" value={occForm.endDate}
                   onChange={e => setOccForm(f => ({ ...f, endDate: e.target.value }))} />
               </div>
               <div>
@@ -657,22 +685,20 @@ export default function CreateCustomer() {
             <div className="bg-gray-50 dark:bg-gray-800/50 rounded-xl p-4 mb-4 space-y-3 border border-dashed border-gray-200 dark:border-gray-700">
               <div>
                 <label className={labelCls}>Select Document Category</label>
-                <select className={selectCls} value={docCategory} onChange={e => setDocCategory(e.target.value)}>
-                  <option value="">Select</option>
-                  <option>NIC (Front)</option>
-                  <option>NIC (Back)</option>
-                  <option>Passport</option>
-                  <option>Driving License</option>
-                  <option>Birth Certificate</option>
-                  <option>Utility Bill</option>
-                  <option>Bank Statement</option>
-                  <option>Salary Slip</option>
-                  <option>Other</option>
-                </select>
+                <Select value={docCategory || undefined} onValueChange={val => setDocCategory(val)}>
+                  <SelectTrigger className="w-full">
+                    <SelectValue placeholder="Select" />
+                  </SelectTrigger>
+                  <SelectContent className="bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-800 rounded-xl shadow-theme-md">
+                    {["NIC (Front)", "NIC (Back)", "Passport", "Driving License", "Birth Certificate", "Utility Bill", "Bank Statement", "Salary Slip", "Other"].map(cat => (
+                      <SelectItem key={cat} value={cat}>{cat}</SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
               </div>
               <div>
                 <label className={labelCls}>Upload Document</label>
-                <input type="file" className={`${inputCls} file:mr-3 file:rounded file:border-0 file:bg-brand-50 file:px-2 file:py-1 file:text-xs file:font-semibold file:text-brand-600`}
+                <Input type="file" className="file:mr-3 file:rounded file:border-0 file:bg-brand-50 file:px-2 file:py-1 file:text-xs file:font-semibold file:text-brand-600 dark:file:bg-gray-800 dark:file:text-brand-400"
                   onChange={e => setDocFile(e.target.files?.[0] ?? null)} />
               </div>
               <button type="button" onClick={addDocument}
@@ -722,39 +748,43 @@ export default function CreateCustomer() {
             <div className="bg-gray-50 dark:bg-gray-800/50 rounded-xl p-4 mb-4 space-y-3 border border-dashed border-gray-200 dark:border-gray-700">
               <div>
                 <label className={labelCls}>Select Bank</label>
-                <select 
-                  className={selectCls} 
-                  value={bankForm.bank} 
-                  onChange={e => handleBankChange(e.target.value)}
-                >
-                  <option value="">{loadingBanks ? "Loading banks..." : "Select Bank"}</option>
-                  {bankList.map(b => (
-                    <option key={b.id || b.ID} value={b.name || b.Name}>
-                      {b.name || b.Name}
-                    </option>
-                  ))}
-                </select>
+                <Select value={bankForm.bank || undefined} onValueChange={val => handleBankChange(val)}>
+                  <SelectTrigger className="w-full">
+                    <SelectValue placeholder={loadingBanks ? "Loading banks..." : "Select Bank"} />
+                  </SelectTrigger>
+                  <SelectContent className="bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-800 rounded-xl shadow-theme-md">
+                    {bankList.map(b => {
+                      const name = b.name || b.Name;
+                      const id = b.id || b.ID;
+                      return <SelectItem key={id} value={name}>{name}</SelectItem>;
+                    })}
+                  </SelectContent>
+                </Select>
               </div>
               <div className="grid grid-cols-2 gap-3">
                 <div>
                   <label className={labelCls}>Account Number</label>
-                  <input className={inputCls} placeholder="Account Number" value={bankForm.accountNumber}
+                  <Input placeholder="Account Number" value={bankForm.accountNumber}
                     onChange={e => setBankForm(f => ({ ...f, accountNumber: e.target.value }))} />
                 </div>
                 <div>
                   <label className={labelCls}>Account Type</label>
-                  <select className={selectCls} value={bankForm.type} onChange={e => setBankForm(f => ({ ...f, type: e.target.value }))}>
-                    <option value="">Select</option>
-                    <option>Savings</option>
-                    <option>Current</option>
-                    <option>Fixed Deposit</option>
-                  </select>
+                  <Select value={bankForm.type || undefined} onValueChange={val => setBankForm(f => ({ ...f, type: val }))}>
+                    <SelectTrigger className="w-full">
+                      <SelectValue placeholder="Select" />
+                    </SelectTrigger>
+                    <SelectContent className="bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-800 rounded-xl shadow-theme-md">
+                      {["Savings", "Current", "Fixed Deposit"].map(type => (
+                        <SelectItem key={type} value={type}>{type}</SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
                 </div>
               </div>
               <div>
                 <label className={labelCls}>Beneficiary / Account Name</label>
                 <div className="flex gap-2">
-                  <input className={`${inputCls} flex-1`} placeholder="Beneficiary Account Name" value={bankForm.beneficiary}
+                  <Input className="flex-1" placeholder="Beneficiary Account Name" value={bankForm.beneficiary}
                     onChange={e => setBankForm(f => ({ ...f, beneficiary: e.target.value }))} />
                   <button type="button" onClick={addBank}
                     className="flex-shrink-0 rounded-lg bg-brand-500 text-white text-xs font-semibold px-4 py-2.5 hover:bg-brand-600 transition">
@@ -764,21 +794,22 @@ export default function CreateCustomer() {
               </div>
               <div>
                 <label className={labelCls}>Branch</label>
-                <select 
-                  className={selectCls} 
-                  value={bankForm.branch} 
-                  onChange={e => setBankForm(f => ({ ...f, branch: e.target.value }))}
+                <Select 
+                  value={bankForm.branch || undefined} 
+                  onValueChange={val => setBankForm(f => ({ ...f, branch: val }))}
                   disabled={!bankForm.bank || loadingBranches}
                 >
-                  <option value="">
-                    {loadingBranches ? "Loading branches..." : !bankForm.bank ? "Select Bank First" : "Select Branch"}
-                  </option>
-                  {branchList.map(br => (
-                    <option key={br.id || br.ID} value={br.name || br.Name}>
-                      {br.name || br.Name}
-                    </option>
-                  ))}
-                </select>
+                  <SelectTrigger className="w-full">
+                    <SelectValue placeholder={loadingBranches ? "Loading branches..." : !bankForm.bank ? "Select Bank First" : "Select Branch"} />
+                  </SelectTrigger>
+                  <SelectContent className="bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-800 rounded-xl shadow-theme-md">
+                    {branchList.map(br => {
+                      const name = br.name || br.Name;
+                      const id = br.id || br.ID;
+                      return <SelectItem key={id} value={name}>{name}</SelectItem>;
+                    })}
+                  </SelectContent>
+                </Select>
               </div>
             </div>
 
