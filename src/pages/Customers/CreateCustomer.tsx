@@ -58,6 +58,10 @@ export default function CreateCustomer() {
   const [submitSuccess, setSubmitSuccess] = useState<string | null>(null);
   const [generatedId] = useState(`CUS-${Date.now().toString().slice(-6)}`);
 
+  const [validationErrors, setValidationErrors] = useState<Record<string, boolean>>({});
+  const [nicError, setNicError] = useState<string | null>(null);
+  const [nicDecoded, setNicDecoded] = useState(false);
+
   const formRef = useRef<HTMLFormElement>(null);
 
   useEffect(() => {
@@ -75,23 +79,48 @@ export default function CreateCustomer() {
   const nicRef = useRef<HTMLInputElement>(null);
 
   function decodeNIC(nic: string) {
-    if (!nic) return;
+    setNicError(null);
+    if (!nic) {
+      setProfile(p => ({ ...p, dob: "", gender: "" }));
+      return;
+    }
+
+    const oldNicRegex = /^[0-9]{9}[vVxX]$/;
+    const newNicRegex = /^[0-9]{12}$/;
+    
+    if (!oldNicRegex.test(nic) && !newNicRegex.test(nic)) {
+      setNicError("Invalid NIC format. Must be 9 digits + V/X or 12 digits.");
+      setProfile(p => ({ ...p, dob: "", gender: "" }));
+      return;
+    }
+
     let dob = "";
     let gender = "";
-    if (nic.length === 10) {
-      let days = Number(nic.substring(2, 5));
-      const year = `19${nic.substring(0, 2)}`;
-      if (days > 500) { gender = "Female"; days -= 500; } else { gender = "Male"; }
-      const d = new Date(Number(year), 0, days);
-      dob = d.toISOString().split("T")[0];
-    } else if (nic.length === 12) {
-      let days = Number(nic.substring(4, 7));
-      const year = nic.substring(0, 4);
-      if (days > 500) { gender = "Female"; days -= 500; } else { gender = "Male"; }
-      const d = new Date(Number(year), 0, days);
-      dob = d.toISOString().split("T")[0];
+    try {
+      if (nic.length === 10) {
+        let days = Number(nic.substring(2, 5));
+        const year = `19${nic.substring(0, 2)}`;
+        if (days > 500) { gender = "Female"; days -= 500; } else { gender = "Male"; }
+        if (days < 1 || days > 366) throw new Error("Invalid days");
+        const d = new Date(Number(year), 0, days);
+        dob = d.toISOString().split("T")[0];
+      } else if (nic.length === 12) {
+        let days = Number(nic.substring(4, 7));
+        const year = nic.substring(0, 4);
+        if (days > 500) { gender = "Female"; days -= 500; } else { gender = "Male"; }
+        if (days < 1 || days > 366) throw new Error("Invalid days");
+        const d = new Date(Number(year), 0, days);
+        dob = d.toISOString().split("T")[0];
+      }
+
+      setProfile(p => ({ ...p, dob, gender }));
+      setNicDecoded(true);
+      setTimeout(() => setNicDecoded(false), 1500);
+      setValidationErrors(prev => ({ ...prev, nic: false }));
+    } catch (err) {
+      setNicError("Could not decode NIC. Check digits.");
+      setProfile(p => ({ ...p, dob: "", gender: "" }));
     }
-    setProfile(p => ({ ...p, dob, gender }));
   }
 
   // ── Address ──
@@ -212,6 +241,90 @@ export default function CreateCustomer() {
     setSubmitError(null);
     setSubmitSuccess(null);
     setIsSubmitting(true);
+
+    // 1. Uncommitted sub-form handling
+    let finalOccupations = [...occupations];
+    if (occForm.position || occForm.businessName) {
+      if (occForm.engagementType === "Job / Employment" && occForm.position) {
+        finalOccupations.push({ id: uid(), ...occForm });
+        setOccForm({ engagementType: occForm.engagementType, position: "", netMonthlyIncome: "", startDate: "", endDate: "", businessName: "", registrationNumber: "", natureOfBusiness: "" });
+      } else if (occForm.engagementType === "Business Owner" && occForm.businessName) {
+        finalOccupations.push({ id: uid(), ...occForm });
+        setOccForm({ engagementType: occForm.engagementType, position: "", netMonthlyIncome: "", startDate: "", endDate: "", businessName: "", registrationNumber: "", natureOfBusiness: "" });
+      } else {
+        setSubmitError("Please add or clear the uncommitted Professional Profile draft.");
+        setIsSubmitting(false);
+        return;
+      }
+    }
+
+    let finalDocEntries = [...docEntries];
+    if (docCategory || docFile) {
+      if (docCategory && docFile) {
+        finalDocEntries.push({ id: uid(), category: docCategory, fileName: docFile.name });
+        setDocCategory("");
+        setDocFile(null);
+      } else {
+        setSubmitError("Please add or clear the uncommitted Document draft.");
+        setIsSubmitting(false);
+        return;
+      }
+    }
+
+    let finalBanks = [...banks];
+    if (bankForm.bank || bankForm.accountNumber) {
+      if (bankForm.bank && bankForm.accountNumber) {
+        finalBanks.push({ id: uid(), ...bankForm });
+        setBankForm({ bank: "", accountNumber: "", beneficiary: "", type: "", branch: "" });
+      } else {
+        setSubmitError("Please add or clear the uncommitted Bank Account draft.");
+        setIsSubmitting(false);
+        return;
+      }
+    }
+
+    // 2. Field validation checks
+    const errors: Record<string, boolean> = {};
+    if (!profile.title) errors.title = true;
+    if (!profile.fullName) errors.fullName = true;
+    if (!profile.firstName) errors.firstName = true;
+    if (!profile.lastName) errors.lastName = true;
+    if (!profile.nameWithInitials) errors.nameWithInitials = true;
+    if (!profile.nic || nicError) errors.nic = true;
+    if (!profile.dob) errors.dob = true;
+    if (!profile.gender) errors.gender = true;
+    if (!profile.status) errors.status = true;
+    if (!address.permLine1) errors.permLine1 = true;
+    if (!address.province) errors.province = true;
+    if (!address.city) errors.city = true;
+    if (!contact.mobilePrimary) errors.mobilePrimary = true;
+
+    setValidationErrors(errors);
+
+    if (Object.keys(errors).length > 0) {
+      setSubmitError("Please fill in all required fields and correct errors.");
+      setIsSubmitting(false);
+      
+      // Auto scroll to first error card
+      setTimeout(() => {
+        const firstErrorKey = Object.keys(errors)[0];
+        let targetId = "";
+        if (["title", "fullName", "firstName", "lastName", "nameWithInitials", "nic", "dob", "gender", "status"].includes(firstErrorKey)) {
+          targetId = "profile-section";
+        } else if (["permLine1", "province", "city"].includes(firstErrorKey)) {
+          targetId = "address-section";
+        } else if (firstErrorKey === "mobilePrimary") {
+          targetId = "contact-section";
+        }
+        
+        const el = document.getElementById(targetId);
+        if (el) {
+          el.scrollIntoView({ behavior: "smooth", block: "center" });
+        }
+      }, 100);
+      return;
+    }
+
     try {
       const payload = {
         customer_id: generatedId,
@@ -237,11 +350,12 @@ export default function CreateCustomer() {
         landline: contact.landline,
         email: contact.email,
         remarks,
-        occupations,
-        bank_accounts: banks,
+        occupations: finalOccupations,
+        bank_accounts: finalBanks,
       };
       await apiClient.post("/customers", payload);
       setSubmitSuccess("Customer registered successfully!");
+      setValidationErrors({});
     } catch {
       setSubmitError("Failed to register customer. Please check the details and try again.");
     } finally {
@@ -259,6 +373,8 @@ export default function CreateCustomer() {
     setDocEntries([]);
     setSubmitError(null);
     setSubmitSuccess(null);
+    setValidationErrors({});
+    setNicError(null);
   }
 
   // ─── Styles ─────────────────────────────────────────────────────────────────
@@ -286,11 +402,11 @@ export default function CreateCustomer() {
           )}
 
           <div className="flex items-center gap-4">
-            <label className="flex items-center gap-2 cursor-pointer">
+            <label className="flex items-center gap-2 cursor-pointer focus-within:outline-none">
               <span className="text-xs font-semibold text-gray-700 dark:text-gray-300">Required Fields Only</span>
               <div className="relative">
-                <input type="checkbox" className="sr-only" checked={requiredFieldsOnly} onChange={e => setRequiredFieldsOnly(e.target.checked)} />
-                <div className={`block w-10 h-6 rounded-full transition ${requiredFieldsOnly ? 'bg-brand-500' : 'bg-gray-300 dark:bg-gray-700'}`}></div>
+                <input type="checkbox" className="sr-only peer" checked={requiredFieldsOnly} onChange={e => setRequiredFieldsOnly(e.target.checked)} />
+                <div className={`block w-10 h-6 rounded-full transition peer-focus-visible:ring-2 peer-focus-visible:ring-brand-500 peer-focus-visible:ring-offset-2 ${requiredFieldsOnly ? 'bg-brand-500' : 'bg-gray-300 dark:bg-gray-700'}`}></div>
                 <div className={`absolute left-1 top-1 bg-white w-4 h-4 rounded-full transition transform ${requiredFieldsOnly ? 'translate-x-4' : ''}`}></div>
               </div>
             </label>
@@ -322,17 +438,17 @@ export default function CreateCustomer() {
           <div className="lg:col-span-2 space-y-4">
 
             {/* Profile & Identity */}
-            <div className={cardCls}>
+            <div id="profile-section" className={cardCls}>
               <p className="text-[10px] text-right text-red-400 mb-2">* REQUIRED</p>
               <div className={sectionTitle}>
                 <span className="w-7 h-7 rounded-full bg-brand-100 text-brand-600 flex items-center justify-center text-xs">👤</span>
                 PROFILE &amp; IDENTITY
               </div>
 
-              <div className="flex gap-5 items-start">
+              <div className="flex flex-col md:flex-row gap-5 items-start">
                 {/* Avatar placeholder */}
-                <div className="flex flex-col items-center gap-2 flex-shrink-0">
-                  <div className="w-20 h-20 rounded-full bg-brand-500 flex items-center justify-center text-white text-2xl font-bold select-none">
+                <div className="flex flex-col items-center gap-2 flex-shrink-0 mx-auto md:mx-0">
+                  <div className="w-20 h-20 rounded-full bg-brand-500 flex items-center justify-center text-white text-2xl font-bold select-none shadow-theme-sm">
                     {profile.firstName ? profile.firstName[0].toUpperCase() : (profile.fullName ? profile.fullName[0].toUpperCase() : "NC")}
                   </div>
                   <label className="cursor-pointer text-[11px] text-brand-600 font-semibold hover:underline">
@@ -342,12 +458,12 @@ export default function CreateCustomer() {
                 </div>
 
                 {/* Name fields */}
-                <div className="flex-1 space-y-3">
-                  <div className="grid grid-cols-3 gap-3">
-                    <div>
+                <div className="flex-1 w-full space-y-3">
+                  <div className="grid grid-cols-1 md:grid-cols-4 gap-3">
+                    <div className="md:col-span-1">
                       <label className={labelCls}>Title *</label>
-                      <Select value={profile.title || undefined} onValueChange={val => setProfile(p => ({ ...p, title: val }))}>
-                        <SelectTrigger className="w-full">
+                      <Select value={profile.title || undefined} onValueChange={val => { setProfile(p => ({ ...p, title: val })); setValidationErrors(prev => ({ ...prev, title: false })); }}>
+                        <SelectTrigger className={`w-full ${validationErrors.title ? "border-red-500 focus:border-red-500 focus:ring-red-100 dark:border-red-500" : ""}`}>
                           <SelectValue placeholder="Select" />
                         </SelectTrigger>
                         <SelectContent className="bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-800 rounded-xl shadow-theme-md">
@@ -355,52 +471,59 @@ export default function CreateCustomer() {
                         </SelectContent>
                       </Select>
                     </div>
-                    <div className="col-span-2">
+                    <div className="md:col-span-3">
                       <label className={labelCls}>Full Name *</label>
                       <Input placeholder="Full Name" value={profile.fullName}
-                        onChange={e => setProfile(p => ({ ...p, fullName: e.target.value.toUpperCase() }))} />
+                        className={validationErrors.fullName ? "border-red-500 focus:border-red-500 focus:ring-red-100 dark:border-red-500" : ""}
+                        onChange={e => { setProfile(p => ({ ...p, fullName: e.target.value.toUpperCase() })); setValidationErrors(prev => ({ ...prev, fullName: false })); }} />
                     </div>
                   </div>
-                  <div className="grid grid-cols-2 gap-3">
+                  <div>
+                    <label className={labelCls}>Name with Initials *</label>
+                    <Input placeholder="Name with initials" value={profile.nameWithInitials}
+                      className={validationErrors.nameWithInitials ? "border-red-500 focus:border-red-500 focus:ring-red-100 dark:border-red-500" : ""}
+                      onChange={e => { setProfile(p => ({ ...p, nameWithInitials: e.target.value.toUpperCase() })); setValidationErrors(prev => ({ ...prev, nameWithInitials: false })); }} />
+                  </div>
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
                     <div>
                       <label className={labelCls}>First Name *</label>
                       <Input placeholder="First Name" value={profile.firstName}
-                        onChange={e => setProfile(p => ({ ...p, firstName: e.target.value }))} />
+                        className={validationErrors.firstName ? "border-red-500 focus:border-red-500 focus:ring-red-100 dark:border-red-500" : ""}
+                        onChange={e => { setProfile(p => ({ ...p, firstName: e.target.value })); setValidationErrors(prev => ({ ...prev, firstName: false })); }} />
                     </div>
                     <div>
                       <label className={labelCls}>Last Name *</label>
                       <Input placeholder="Last Name" value={profile.lastName}
-                        onChange={e => setProfile(p => ({ ...p, lastName: e.target.value }))} />
+                        className={validationErrors.lastName ? "border-red-500 focus:border-red-500 focus:ring-red-100 dark:border-red-500" : ""}
+                        onChange={e => { setProfile(p => ({ ...p, lastName: e.target.value })); setValidationErrors(prev => ({ ...prev, lastName: false })); }} />
                     </div>
                   </div>
                 </div>
               </div>
 
-              <div className="mt-3 space-y-3">
-                <div>
-                  <label className={labelCls}>Name with Initials *</label>
-                  <Input placeholder="Name with initials" value={profile.nameWithInitials}
-                    onChange={e => setProfile(p => ({ ...p, nameWithInitials: e.target.value.toUpperCase() }))} />
-                </div>
-                <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+              <div className="mt-4 space-y-3">
+                <div className="grid grid-cols-1 md:grid-cols-4 gap-3">
                   <div>
                     <label className={labelCls}>NIC Number *</label>
                     <Input ref={nicRef} placeholder="NIC Number" value={profile.nic}
+                      className={validationErrors.nic ? "border-red-500 focus:border-red-500 focus:ring-red-100 dark:border-red-500" : ""}
                       onChange={e => {
                         const val = e.target.value.toUpperCase();
                         setProfile(p => ({ ...p, nic: val }));
                         decodeNIC(val);
                       }} />
+                    {nicError && <p className="text-[10px] text-red-500 mt-1 font-semibold">{nicError}</p>}
                   </div>
                   <div>
                     <label className={labelCls}>Date of Birth *</label>
                     <Input type="date" value={profile.dob}
-                      onChange={e => setProfile(p => ({ ...p, dob: e.target.value }))} />
+                      className={`${validationErrors.dob ? "border-red-500 focus:border-red-500 focus:ring-red-100 dark:border-red-500" : ""} ${nicDecoded ? "border-green-500 focus:border-green-500 focus:ring-green-100 dark:border-green-500 transition-all duration-500 scale-[1.02] shadow-sm" : "transition-all duration-500"}`}
+                      onChange={e => { setProfile(p => ({ ...p, dob: e.target.value })); setValidationErrors(prev => ({ ...prev, dob: false })); }} />
                   </div>
                   <div>
                     <label className={labelCls}>Gender *</label>
-                    <Select value={profile.gender || undefined} onValueChange={val => setProfile(p => ({ ...p, gender: val }))}>
-                      <SelectTrigger className="w-full">
+                    <Select value={profile.gender || undefined} onValueChange={val => { setProfile(p => ({ ...p, gender: val })); setValidationErrors(prev => ({ ...prev, gender: false })); }}>
+                      <SelectTrigger className={`w-full ${validationErrors.gender ? "border-red-500 focus:border-red-500 focus:ring-red-100 dark:border-red-500" : ""} ${nicDecoded ? "border-green-500 focus:border-green-500 focus:ring-green-100 dark:border-green-500 transition-all duration-500 scale-[1.02] shadow-sm" : "transition-all duration-500"}`}>
                         <SelectValue placeholder="Select" />
                       </SelectTrigger>
                       <SelectContent className="bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-800 rounded-xl shadow-theme-md">
@@ -410,8 +533,8 @@ export default function CreateCustomer() {
                   </div>
                   <div>
                     <label className={labelCls}>Status *</label>
-                    <Select value={profile.status || undefined} onValueChange={val => setProfile(p => ({ ...p, status: val }))}>
-                      <SelectTrigger className="w-full">
+                    <Select value={profile.status || undefined} onValueChange={val => { setProfile(p => ({ ...p, status: val })); setValidationErrors(prev => ({ ...prev, status: false })); }}>
+                      <SelectTrigger className={`w-full ${validationErrors.status ? "border-red-500 focus:border-red-500 focus:ring-red-100 dark:border-red-500" : ""}`}>
                         <SelectValue placeholder="Select" />
                       </SelectTrigger>
                       <SelectContent className="bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-800 rounded-xl shadow-theme-md">
@@ -424,7 +547,7 @@ export default function CreateCustomer() {
             </div>
 
             {/* Address & Location */}
-            <div className={cardCls}>
+            <div id="address-section" className={cardCls}>
               <div className={sectionTitle}>
                 <span className="w-7 h-7 rounded-full bg-brand-100 text-brand-600 flex items-center justify-center text-xs">📍</span>
                 ADDRESS &amp; LOCATION
@@ -433,24 +556,26 @@ export default function CreateCustomer() {
               <div className="space-y-3">
                 <div>
                   <label className={labelCls}>Permanent Address *</label>
-                  <div className="grid grid-cols-3 gap-3">
-                    <Input placeholder="Line 1" value={address.permLine1} onChange={e => setAddress(a => ({ ...a, permLine1: e.target.value }))} />
+                  <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
+                    <Input placeholder="Line 1" value={address.permLine1}
+                      className={validationErrors.permLine1 ? "border-red-500 focus:border-red-500 focus:ring-red-100 dark:border-red-500" : ""}
+                      onChange={e => { setAddress(a => ({ ...a, permLine1: e.target.value })); setValidationErrors(prev => ({ ...prev, permLine1: false })); }} />
                     <Input placeholder="Line 2" value={address.permLine2} onChange={e => setAddress(a => ({ ...a, permLine2: e.target.value }))} />
                     <Input placeholder="Line 3" value={address.permLine3} onChange={e => setAddress(a => ({ ...a, permLine3: e.target.value }))} />
                   </div>
                 </div>
 
-                {!requiredFieldsOnly && (
-                  <div>
+                <div className={`transition-all duration-300 ease-in-out overflow-hidden ${requiredFieldsOnly ? 'max-h-0 opacity-0 pointer-events-none' : 'max-h-[500px] opacity-100'}`}>
+                  <div className="pt-2">
                     <div className="flex items-center justify-between mb-1">
                       <label className={labelCls}>Postal Address</label>
-                      <label className="flex items-center gap-1.5 text-[11px] text-brand-600 font-semibold cursor-pointer">
+                      <label className="flex items-center gap-1.5 text-[11px] text-brand-600 font-semibold cursor-pointer p-3 -m-3 select-none focus-within:outline-none">
                         <input type="checkbox" checked={address.sameAsPerm} onChange={e => handleSameAsPerm(e.target.checked)}
-                          className="accent-brand-500 rounded" />
+                          className="accent-brand-500 rounded cursor-pointer w-4 h-4 focus:ring-2 focus:ring-brand-500 focus:ring-offset-2" />
                         Same as Permanent
                       </label>
                     </div>
-                    <div className="grid grid-cols-3 gap-3">
+                    <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
                       <Input placeholder="Line 1" value={address.postalLine1} disabled={address.sameAsPerm}
                         onChange={e => setAddress(a => ({ ...a, postalLine1: e.target.value }))} />
                       <Input placeholder="Line 2" value={address.postalLine2} disabled={address.sameAsPerm}
@@ -459,13 +584,13 @@ export default function CreateCustomer() {
                         onChange={e => setAddress(a => ({ ...a, postalLine3: e.target.value }))} />
                     </div>
                   </div>
-                )}
+                </div>
 
-                <div className="grid grid-cols-2 gap-3">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
                   <div>
                     <label className={labelCls}>Province *</label>
-                    <Select value={address.province || undefined} onValueChange={val => setAddress(a => ({ ...a, province: val }))}>
-                      <SelectTrigger className="w-full">
+                    <Select value={address.province || undefined} onValueChange={val => { setAddress(a => ({ ...a, province: val })); setValidationErrors(prev => ({ ...prev, province: false })); }}>
+                      <SelectTrigger className={`w-full ${validationErrors.province ? "border-red-500 focus:border-red-500 focus:ring-red-100 dark:border-red-500" : ""}`}>
                         <SelectValue placeholder="Select Province" />
                       </SelectTrigger>
                       <SelectContent className="bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-800 rounded-xl shadow-theme-md">
@@ -476,7 +601,8 @@ export default function CreateCustomer() {
                   <div>
                     <label className={labelCls}>City *</label>
                     <Input placeholder="Select City / Town" value={address.city}
-                      onChange={e => setAddress(a => ({ ...a, city: e.target.value }))} />
+                      className={validationErrors.city ? "border-red-500 focus:border-red-500 focus:ring-red-100 dark:border-red-500" : ""}
+                      onChange={e => { setAddress(a => ({ ...a, city: e.target.value })); setValidationErrors(prev => ({ ...prev, city: false })); }} />
                   </div>
                 </div>
               </div>
@@ -487,7 +613,7 @@ export default function CreateCustomer() {
           <div className="space-y-4">
 
             {/* System Context */}
-            {!requiredFieldsOnly && (
+            <div className={`transition-all duration-300 ease-in-out overflow-hidden ${requiredFieldsOnly ? 'max-h-0 opacity-0 pointer-events-none mb-0' : 'max-h-[200px] opacity-100 mb-4'}`}>
               <div className={cardCls}>
                 <div className={sectionTitle}>
                   <span className="w-7 h-7 rounded-full bg-brand-100 text-brand-600 flex items-center justify-center text-xs">⚙</span>
@@ -500,10 +626,10 @@ export default function CreateCustomer() {
                   </div>
                 </div>
               </div>
-            )}
+            </div>
 
             {/* Contact Info */}
-            <div className={cardCls}>
+            <div id="contact-section" className={cardCls}>
               <div className={sectionTitle}>
                 <span className="w-7 h-7 rounded-full bg-brand-100 text-brand-600 flex items-center justify-center text-xs">📞</span>
                 CONTACT INFO
@@ -512,10 +638,11 @@ export default function CreateCustomer() {
                 <div>
                   <label className={labelCls}>Mobile Primary *</label>
                   <Input placeholder="07XXXXXXXX" value={contact.mobilePrimary}
-                    onChange={e => setContact(c => ({ ...c, mobilePrimary: e.target.value }))} />
+                    className={validationErrors.mobilePrimary ? "border-red-500 focus:border-red-500 focus:ring-red-100 dark:border-red-500" : ""}
+                    onChange={e => { setContact(c => ({ ...c, mobilePrimary: e.target.value })); setValidationErrors(prev => ({ ...prev, mobilePrimary: false })); }} />
                 </div>
-                {!requiredFieldsOnly && (
-                  <>
+                <div className={`transition-all duration-300 ease-in-out overflow-hidden ${requiredFieldsOnly ? 'max-h-0 opacity-0 pointer-events-none' : 'max-h-[500px] opacity-100'}`}>
+                  <div className="space-y-3 pt-2">
                     <div>
                       <label className={labelCls}>Mobile Secondary</label>
                       <Input placeholder="07XXXXXXXX" value={contact.mobileSecondary}
@@ -531,22 +658,22 @@ export default function CreateCustomer() {
                       <Input type="email" placeholder="example@email.com" value={contact.email}
                         onChange={e => setContact(c => ({ ...c, email: e.target.value }))} />
                     </div>
-                  </>
-                )}
+                  </div>
+                </div>
               </div>
             </div>
 
             {/* Remarks */}
-            {!requiredFieldsOnly && (
+            <div className={`transition-all duration-300 ease-in-out overflow-hidden ${requiredFieldsOnly ? 'max-h-0 opacity-0 pointer-events-none mb-0' : 'max-h-[300px] opacity-100 mb-4'}`}>
               <div className={cardCls}>
                 <div className={sectionTitle}>
                   <span className="w-7 h-7 rounded-full bg-brand-100 text-brand-600 flex items-center justify-center text-xs">✏</span>
                   REMARKS
                 </div>
-                <textarea className="flex w-full rounded-xl border border-gray-200 bg-white px-4 py-2.5 text-sm outline-none transition-colors placeholder:text-gray-400 focus:border-brand-500 disabled:cursor-not-allowed disabled:opacity-50 dark:border-gray-700 dark:bg-gray-900 dark:text-white dark:focus:border-brand-500 resize-none" rows={4} placeholder="Enter any specific notes about this customer..."
+                <textarea className="flex w-full rounded-xl border border-gray-200 bg-white px-4 py-2.5 text-sm outline-none transition-colors placeholder:text-gray-400 focus:border-brand-500 focus:ring-2 focus:ring-brand-100 dark:focus:ring-brand-900/50 disabled:cursor-not-allowed disabled:opacity-50 dark:border-gray-700 dark:bg-gray-900 dark:text-white dark:focus:border-brand-500 resize-none" rows={4} placeholder="Enter any specific notes about this customer..."
                   value={remarks} onChange={e => setRemarks(e.target.value)} />
               </div>
-            )}
+            </div>
           </div>
         </div>
 
@@ -666,9 +793,10 @@ export default function CreateCustomer() {
               </table>
             </div>
           ) : (
-            <p className="text-xs text-center text-gray-400 py-4 border border-dashed border-gray-200 dark:border-gray-700 rounded-xl">
-              No professional entries added yet.
-            </p>
+            <div className="text-xs text-center text-gray-400 py-6 border border-dashed border-gray-200 dark:border-gray-700 rounded-xl bg-gray-50/30 dark:bg-gray-900/10">
+              <p className="font-semibold text-gray-500 dark:text-gray-400">No professional entries added yet.</p>
+              <p className="text-[10px] text-gray-400 mt-1">Note: Providing accurate employment details helps accelerate customer verification.</p>
+            </div>
           )}
         </div>
 
@@ -698,8 +826,16 @@ export default function CreateCustomer() {
               </div>
               <div>
                 <label className={labelCls}>Upload Document</label>
-                <Input type="file" className="file:mr-3 file:rounded file:border-0 file:bg-brand-50 file:px-2 file:py-1 file:text-xs file:font-semibold file:text-brand-600 dark:file:bg-gray-800 dark:file:text-brand-400"
-                  onChange={e => setDocFile(e.target.files?.[0] ?? null)} />
+                <div className="border border-dashed border-gray-300 dark:border-gray-700 rounded-xl p-4 flex flex-col items-center justify-center bg-gray-50/50 dark:bg-gray-900/10 hover:bg-gray-100/50 dark:hover:bg-gray-800/20 transition relative cursor-pointer group">
+                  <span className="text-2xl mb-1 text-gray-400 group-hover:text-brand-500 transition">📤</span>
+                  <span className="text-xs font-semibold text-gray-500 dark:text-gray-400">Drag &amp; Drop file or Click to upload</span>
+                  {docFile ? (
+                    <span className="text-xs font-bold text-brand-600 dark:text-brand-400 mt-1">{docFile.name}</span>
+                  ) : (
+                    <span className="text-[10px] text-gray-400">PDF, PNG, JPG (Max 5MB)</span>
+                  )}
+                  <input type="file" className="absolute inset-0 opacity-0 cursor-pointer" onChange={e => setDocFile(e.target.files?.[0] ?? null)} />
+                </div>
               </div>
               <button type="button" onClick={addDocument}
                 className="w-full rounded-lg bg-brand-500 text-white text-xs font-semibold px-4 py-2.5 hover:bg-brand-600 transition">
@@ -732,9 +868,10 @@ export default function CreateCustomer() {
                 </table>
               </div>
             ) : (
-              <p className="text-xs text-center text-gray-400 py-4 border border-dashed border-gray-200 dark:border-gray-700 rounded-xl">
-                No documents attached yet.
-              </p>
+              <div className="text-xs text-center text-gray-400 py-6 border border-dashed border-gray-200 dark:border-gray-700 rounded-xl bg-gray-50/30 dark:bg-gray-900/10">
+                <p className="font-semibold text-gray-500 dark:text-gray-400">No documents attached yet.</p>
+                <p className="text-[10px] text-gray-400 mt-1">Note: Uploading NIC front &amp; back is required for identification approval.</p>
+              </div>
             )}
           </div>
 
@@ -783,14 +920,8 @@ export default function CreateCustomer() {
               </div>
               <div>
                 <label className={labelCls}>Beneficiary / Account Name</label>
-                <div className="flex gap-2">
-                  <Input className="flex-1" placeholder="Beneficiary Account Name" value={bankForm.beneficiary}
-                    onChange={e => setBankForm(f => ({ ...f, beneficiary: e.target.value }))} />
-                  <button type="button" onClick={addBank}
-                    className="flex-shrink-0 rounded-lg bg-brand-500 text-white text-xs font-semibold px-4 py-2.5 hover:bg-brand-600 transition">
-                    +
-                  </button>
-                </div>
+                <Input placeholder="Beneficiary Account Name" value={bankForm.beneficiary}
+                  onChange={e => setBankForm(f => ({ ...f, beneficiary: e.target.value }))} />
               </div>
               <div>
                 <label className={labelCls}>Branch</label>
@@ -800,7 +931,10 @@ export default function CreateCustomer() {
                   disabled={!bankForm.bank || loadingBranches}
                 >
                   <SelectTrigger className="w-full">
-                    <SelectValue placeholder={loadingBranches ? "Loading branches..." : !bankForm.bank ? "Select Bank First" : "Select Branch"} />
+                    <div className="flex items-center gap-2">
+                      {loadingBranches && <span className="w-3.5 h-3.5 border-2 border-brand-500/30 border-t-brand-500 rounded-full animate-spin"></span>}
+                      <SelectValue placeholder={loadingBranches ? "Loading branches..." : !bankForm.bank ? "Select Bank First" : "Select Branch"} />
+                    </div>
                   </SelectTrigger>
                   <SelectContent className="bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-800 rounded-xl shadow-theme-md">
                     {branchList.map(br => {
@@ -811,6 +945,10 @@ export default function CreateCustomer() {
                   </SelectContent>
                 </Select>
               </div>
+              <button type="button" onClick={addBank}
+                className="w-full rounded-lg bg-brand-500 text-white text-xs font-semibold px-4 py-2.5 hover:bg-brand-600 transition">
+                + Add Bank Account
+              </button>
             </div>
 
             {banks.length > 0 ? (
@@ -841,9 +979,10 @@ export default function CreateCustomer() {
                 </table>
               </div>
             ) : (
-              <p className="text-xs text-center text-gray-400 py-4 border border-dashed border-gray-200 dark:border-gray-700 rounded-xl">
-                No bank accounts added yet.
-              </p>
+              <div className="text-xs text-center text-gray-400 py-6 border border-dashed border-gray-200 dark:border-gray-700 rounded-xl bg-gray-50/30 dark:bg-gray-900/10">
+                <p className="font-semibold text-gray-500 dark:text-gray-400">No bank accounts added yet.</p>
+                <p className="text-[10px] text-gray-400 mt-1">Note: At least one active bank account is required for leasing disbursement clearance.</p>
+              </div>
             )}
           </div>
         </div>
