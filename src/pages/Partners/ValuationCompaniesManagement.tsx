@@ -3,6 +3,7 @@ import PageMeta from "../../components/common/PageMeta";
 import apiClient from "../../api/apiClient";
 import { DataTable } from "../../components/ui/table";
 import { PlusIcon } from "../../icons";
+import { Drawer, DrawerContent, DrawerHeader, DrawerTitle, DrawerFooter } from "../../components/ui/drawer";
 
 
 type ValuationCompany = {
@@ -227,79 +228,79 @@ export default function ValuationCompaniesManagement() {
         }}
       />
 
-
-      {isModalOpen && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center overflow-y-auto overflow-x-hidden bg-black/50 p-4">
-          <div className="relative w-full max-w-4xl rounded-2xl bg-white shadow-2xl dark:bg-gray-800 my-8">
-            <div className="flex items-center justify-between border-b border-gray-100 p-5 dark:border-gray-700">
-              <h3 className="text-xl font-bold text-gray-900 dark:text-white flex items-center gap-2">
-                <PlusIcon className="w-5 h-5 text-brand-500" />
-                {editId ? "Edit Valuation Company" : "Add Valuation Company"}
-              </h3>
-              <button onClick={() => setIsModalOpen(false)} className="rounded-lg p-1.5 text-gray-400 hover:bg-gray-100 hover:text-gray-900 dark:hover:bg-gray-700 dark:hover:text-white transition-colors">
-                <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M6 18L18 6M6 6l12 12" /></svg>
-              </button>
-            </div>
+      {/* CREATE/EDIT DRAWER */}
+      <Drawer open={isModalOpen} onOpenChange={setIsModalOpen} direction="right">
+        <DrawerContent className="h-full flex flex-col">
+          <DrawerHeader className="px-6 py-5 border-b border-gray-100 dark:border-gray-700 flex justify-between items-center bg-gray-50/50 dark:bg-gray-800/50 shrink-0">
+            <DrawerTitle className="text-lg font-bold text-gray-900 dark:text-white flex items-center gap-2">
+              <PlusIcon className="w-5 h-5 text-brand-500" />
+              {editId ? "Edit Valuation Company" : "Add Valuation Company"}
+            </DrawerTitle>
+            <button onClick={() => setIsModalOpen(false)} className="rounded-lg p-1.5 text-gray-400 hover:bg-gray-100 hover:text-gray-900 dark:hover:bg-gray-700 dark:hover:text-white transition-colors">
+              <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M6 18L18 6M6 6l12 12" /></svg>
+            </button>
+          </DrawerHeader>
+          
+          <form onSubmit={handleSubmit} className="flex-1 flex flex-col overflow-hidden">
+            <div className="flex-1 overflow-y-auto p-6 space-y-5 custom-scrollbar">
             
-            <form onSubmit={handleSubmit} className="p-6">
-              
-              <div className="mb-5 text-sm">
-                <label className="mb-1.5 block font-medium text-gray-700 dark:text-gray-300">Company Name <span className="text-red-500">*</span></label>
-                <input type="text" name="company_name" value={formData.company_name} onChange={handleInputChange} className="w-full rounded-xl border border-gray-200 bg-white px-4 py-2.5 outline-none focus:border-brand-500 dark:border-gray-700 dark:bg-gray-800" placeholder="Enter Company Name" required/>
+            <div className="mb-5 text-sm">
+              <label className="mb-1.5 block font-medium text-gray-700 dark:text-gray-300">Company Name <span className="text-red-500">*</span></label>
+              <input type="text" name="company_name" value={formData.company_name} onChange={handleInputChange} className="w-full rounded-xl border border-gray-200 bg-white px-4 py-2.5 outline-none focus:border-brand-500 dark:border-gray-700 dark:bg-gray-800" placeholder="Enter Company Name" required/>
+            </div>
+
+            <div className="mb-5 mt-6 border-b border-gray-200 dark:border-gray-700 pb-2">
+              <h6 className="font-bold text-gray-900 dark:text-white">Primary Contact Person</h6>
+            </div>
+
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-5 mb-5 text-sm">
+              <div>
+                <label className="mb-1.5 block font-medium text-gray-700 dark:text-gray-300">Name</label>
+                <input type="text" name="contact_person_1_name" value={formData.contact_person_1_name} onChange={handleInputChange} className="w-full rounded-xl border border-gray-200 bg-white px-4 py-2.5 outline-none focus:border-brand-500 dark:border-gray-700 dark:bg-gray-800" placeholder="e.g. John Doe" />
               </div>
-
-              <div className="mb-5 mt-6 border-b border-gray-200 dark:border-gray-700 pb-2">
-			          <h6 className="font-bold text-gray-900 dark:text-white">Primary Contact Person</h6>
-		          </div>
-
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-5 mb-5 text-sm">
-                <div>
-                  <label className="mb-1.5 block font-medium text-gray-700 dark:text-gray-300">Name</label>
-                  <input type="text" name="contact_person_1_name" value={formData.contact_person_1_name} onChange={handleInputChange} className="w-full rounded-xl border border-gray-200 bg-white px-4 py-2.5 outline-none focus:border-brand-500 dark:border-gray-700 dark:bg-gray-800" placeholder="e.g. John Doe" />
-                </div>
-                <div>
-                  <label className="mb-1.5 block font-medium text-gray-700 dark:text-gray-300">Mobile Number</label>
-                  <input type="text" name="contact_person_1_mobile" value={formData.contact_person_1_mobile} onChange={handleInputChange} className="w-full rounded-xl border border-gray-200 bg-white px-4 py-2.5 outline-none focus:border-brand-500 dark:border-gray-700 dark:bg-gray-800" placeholder="e.g. 0771234567" />
-                </div>
+              <div>
+                <label className="mb-1.5 block font-medium text-gray-700 dark:text-gray-300">Mobile Number</label>
+                <input type="text" name="contact_person_1_mobile" value={formData.contact_person_1_mobile} onChange={handleInputChange} className="w-full rounded-xl border border-gray-200 bg-white px-4 py-2.5 outline-none focus:border-brand-500 dark:border-gray-700 dark:bg-gray-800" placeholder="e.g. 0771234567" />
               </div>
+            </div>
 
-              <div className="mb-5 mt-6 border-b border-gray-200 dark:border-gray-700 pb-2">
-			          <h6 className="font-bold text-gray-900 dark:text-white">Secondary Contact Person</h6>
-		          </div>
+            <div className="mb-5 mt-6 border-b border-gray-200 dark:border-gray-700 pb-2">
+              <h6 className="font-bold text-gray-900 dark:text-white">Secondary Contact Person</h6>
+            </div>
 
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-5 mb-5 text-sm">
-                <div>
-                  <label className="mb-1.5 block font-medium text-gray-700 dark:text-gray-300">Name</label>
-                  <input type="text" name="contact_person_2_name" value={formData.contact_person_2_name} onChange={handleInputChange} className="w-full rounded-xl border border-gray-200 bg-white px-4 py-2.5 outline-none focus:border-brand-500 dark:border-gray-700 dark:bg-gray-800" placeholder="e.g. Jane Doe" />
-                </div>
-                <div>
-                  <label className="mb-1.5 block font-medium text-gray-700 dark:text-gray-300">Mobile Number</label>
-                  <input type="text" name="contact_person_2_mobile" value={formData.contact_person_2_mobile} onChange={handleInputChange} className="w-full rounded-xl border border-gray-200 bg-white px-4 py-2.5 outline-none focus:border-brand-500 dark:border-gray-700 dark:bg-gray-800" placeholder="e.g. 0711234567" />
-                </div>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-5 mb-5 text-sm">
+              <div>
+                <label className="mb-1.5 block font-medium text-gray-700 dark:text-gray-300">Name</label>
+                <input type="text" name="contact_person_2_name" value={formData.contact_person_2_name} onChange={handleInputChange} className="w-full rounded-xl border border-gray-200 bg-white px-4 py-2.5 outline-none focus:border-brand-500 dark:border-gray-700 dark:bg-gray-800" placeholder="e.g. Jane Doe" />
               </div>
-
-              <div className="mb-5 text-sm">
-                <label className="mb-1.5 block font-medium text-gray-700 dark:text-gray-300">Address</label>
-                <textarea rows={2} name="address" value={formData.address} onChange={handleInputChange} className="w-full rounded-xl border border-gray-200 bg-white px-4 py-2.5 outline-none focus:border-brand-500 dark:border-gray-700 dark:bg-gray-800" placeholder="Full address" />
+              <div>
+                <label className="mb-1.5 block font-medium text-gray-700 dark:text-gray-300">Mobile Number</label>
+                <input type="text" name="contact_person_2_mobile" value={formData.contact_person_2_mobile} onChange={handleInputChange} className="w-full rounded-xl border border-gray-200 bg-white px-4 py-2.5 outline-none focus:border-brand-500 dark:border-gray-700 dark:bg-gray-800" placeholder="e.g. 0711234567" />
               </div>
+            </div>
 
-              <div className="mb-5 text-sm">
-                <label className="mb-1.5 block font-medium text-gray-700 dark:text-gray-300">Note</label>
-                <textarea rows={2} name="note" value={formData.note} onChange={handleInputChange} className="w-full rounded-xl border border-gray-200 bg-white px-4 py-2.5 outline-none focus:border-brand-500 dark:border-gray-700 dark:bg-gray-800" placeholder="Any remarks..." />
-              </div>
+            <div className="mb-5 text-sm">
+              <label className="mb-1.5 block font-medium text-gray-700 dark:text-gray-300">Address</label>
+              <textarea rows={2} name="address" value={formData.address} onChange={handleInputChange} className="w-full rounded-xl border border-gray-200 bg-white px-4 py-2.5 outline-none focus:border-brand-500 dark:border-gray-700 dark:bg-gray-800" placeholder="Full address" />
+            </div>
 
-              <div className="mt-8 flex justify-end gap-3 pt-5 border-t border-gray-100 dark:border-gray-700">
-                <button type="button" onClick={() => setIsModalOpen(false)} className="rounded-xl border border-gray-200 bg-white px-5 py-2.5 text-sm font-semibold text-gray-700 hover:bg-gray-50 focus:bg-gray-50 dark:border-gray-700 dark:bg-gray-800 dark:text-gray-300 dark:hover:bg-gray-700 transition-colors">
-                  Cancel
-                </button>
-                <button type="submit" disabled={isSaving} className="rounded-xl border border-transparent bg-brand-500 px-5 py-2.5 text-sm font-semibold text-white hover:bg-brand-600 focus:bg-brand-600 focus:ring-4 focus:ring-brand-500/20 disabled:opacity-50 transition-all flex items-center gap-2">
-                  {isSaving ? "Saving..." : (editId ? "Update Company" : "Save Company")}
-                </button>
-              </div>
-            </form>
-          </div>
-        </div>
-      )}
+            <div className="mb-5 text-sm">
+              <label className="mb-1.5 block font-medium text-gray-700 dark:text-gray-300">Note</label>
+              <textarea rows={2} name="note" value={formData.note} onChange={handleInputChange} className="w-full rounded-xl border border-gray-200 bg-white px-4 py-2.5 outline-none focus:border-brand-500 dark:border-gray-700 dark:bg-gray-800" placeholder="Any remarks..." />
+            </div>
+
+            </div>
+            <DrawerFooter className="p-4 flex justify-end gap-3 border-t border-gray-100 dark:border-gray-700 bg-gray-50/50 dark:bg-gray-800/50 shrink-0">
+              <button type="button" onClick={() => setIsModalOpen(false)} className="rounded-xl border border-gray-200 bg-white px-5 py-2.5 text-sm font-semibold text-gray-700 hover:bg-gray-50 focus:bg-gray-50 dark:border-gray-700 dark:bg-gray-800 dark:text-gray-300 dark:hover:bg-gray-700 transition-colors">
+                Cancel
+              </button>
+              <button type="submit" disabled={isSaving} className="rounded-xl border border-transparent bg-brand-500 px-5 py-2.5 text-sm font-semibold text-white hover:bg-brand-600 focus:bg-brand-600 focus:ring-4 focus:ring-brand-500/20 disabled:opacity-50 transition-all flex items-center gap-2">
+                {isSaving ? "Saving..." : (editId ? "Update Company" : "Save Company")}
+              </button>
+            </DrawerFooter>
+          </form>
+        </DrawerContent>
+      </Drawer>
 
     </div>
   );

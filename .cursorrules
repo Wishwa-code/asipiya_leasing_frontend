@@ -70,3 +70,54 @@ Whenever you are tasked with **creating a new form** or **modifying an existing 
 * **Self-Contained Heights:** Hardcoding random heights like `h-10` or `h-11` on select components instead of letting them default to `42px` or overriding with `h-9` (`36px`).
 * **Misaligned Dropdowns:** Forgetting `position="popper"` or the trigger-width mapping, causing dropdown lists to render at arbitrary auto-widths.
 * **Contrast Bugs:** Overriding background colors inside forms without ensuring contrast compatibility with dark mode text properties.
+
+---
+
+# Modal and Drawer Standardization Guide
+
+## Overview
+This guideline ensures all dialogs, pop-up confirmation modals, and right-side drawers in the Asipiya Leasing frontend match the premium design system. It details when to use a centered modal vs a right-side drawer slide-out, standard specifications, and properties.
+
+## Choosing the Layout Style
+
+### 1. Right-Side Drawer (Slide-over)
+Use right-side slide-over drawers for **complex forms, detailed previews, side-overs, list views, or creation wizards** (e.g., adding/editing partner details, viewing loan installment simulation schedules, and sub-product configurations).
+* **Option A: Shadcn Drawer component**
+  * Import: `import { Drawer, DrawerContent, DrawerHeader, DrawerTitle, DrawerFooter } from "../../components/ui/drawer";`
+  * Structure:
+    ```tsx
+    <Drawer open={isOpen} onOpenChange={setIsOpen} direction="right">
+      <DrawerContent className="h-full flex flex-col">
+        <DrawerHeader className="px-6 py-5 border-b border-gray-100 dark:border-gray-700 flex justify-between items-center bg-gray-50/50 dark:bg-gray-800/50 shrink-0">
+          <DrawerTitle className="text-lg font-bold text-gray-900 dark:text-white flex items-center gap-2">...</DrawerTitle>
+          {/* Close button */}
+        </DrawerHeader>
+        <form onSubmit={handleSubmit} className="flex-1 flex flex-col overflow-hidden">
+          <div className="flex-1 overflow-y-auto p-6 space-y-5 custom-scrollbar">
+            {/* Scrollable form inputs */}
+          </div>
+          <DrawerFooter className="p-4 flex justify-end gap-3 border-t border-gray-100 dark:border-gray-700 bg-gray-50/50 dark:bg-gray-800/50 shrink-0">
+            {/* Action buttons */}
+          </DrawerFooter>
+        </form>
+      </DrawerContent>
+    </Drawer>
+    ```
+* **Option B: Global Modal component with `position="right"`**
+  * Import: `import { Modal } from "@/components/ui/modal";`
+  * Parameters:
+    * `position="right"`
+    * `className="max-w-4xl w-full"` (do not add margins like `mx-4 my-8` as they disrupt full-height drawers)
+    * `showCloseButton={false}` (when using custom header or footer close triggers)
+
+### 2. Centered Modal (Dialog)
+Use centered dialog pop-ups for **simple confirm notifications, location pickers (e.g., map coordinate selection), or calendar scheduling events**.
+* Import: `import { Modal } from "@/components/ui/modal";`
+* Parameters:
+  * `position="center"` (default behavior)
+  * `className="max-w-md w-full rounded-3xl bg-white dark:bg-gray-900 shadow-2xl"`
+
+## Standard Backdrop Blur specs
+* Both the global Modal and Drawer overlays use a lightweight glassmorphic blur to keep the background visible so the user maintains context of their current screen:
+  * **Overlay background**: `bg-gray-900/15` (light mode) / `dark:bg-gray-950/25` (dark mode)
+  * **Blur intensity**: `backdrop-blur-[2px]` (soft 2px texture)

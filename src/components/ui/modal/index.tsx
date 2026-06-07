@@ -7,6 +7,7 @@ interface ModalProps {
   children: React.ReactNode;
   showCloseButton?: boolean; // New prop to control close button visibility
   isFullscreen?: boolean; // Default to false for backwards compatibility
+  position?: "center" | "right"; // "center" (default) or "right" (drawer)
 }
 
 export const Modal: React.FC<ModalProps> = ({
@@ -16,6 +17,7 @@ export const Modal: React.FC<ModalProps> = ({
   className,
   showCloseButton = true, // Default to true for backwards compatibility
   isFullscreen = false,
+  position = "center",
 }) => {
   const modalRef = useRef<HTMLDivElement>(null);
 
@@ -49,21 +51,29 @@ export const Modal: React.FC<ModalProps> = ({
 
   if (!isOpen) return null;
 
+  const isRight = position === "right";
+
+  const containerClasses = isRight
+    ? "fixed inset-0 flex justify-end z-99999"
+    : "fixed inset-0 flex items-center justify-center overflow-y-auto modal z-99999";
+
   const contentClasses = isFullscreen
     ? "w-full h-full"
-    : "relative w-full rounded-3xl bg-white  dark:bg-gray-900";
+    : isRight
+    ? "relative w-full bg-white dark:bg-gray-900 h-screen shadow-2xl flex flex-col border-l border-gray-100 dark:border-gray-800 animate-slide-in"
+    : "relative w-full rounded-3xl bg-white dark:bg-gray-900";
 
   return (
-    <div className="fixed inset-0 flex items-center justify-center overflow-y-auto modal z-99999">
+    <div className={containerClasses}>
       {!isFullscreen && (
         <div
-          className="fixed inset-0 h-full w-full bg-gray-400/50 backdrop-blur-[32px]"
+          className="fixed inset-0 h-full w-full bg-gray-900/15 dark:bg-gray-950/25 backdrop-blur-[2px]"
           onClick={onClose}
         ></div>
       )}
       <div
         ref={modalRef}
-        className={`${contentClasses}  ${className}`}
+        className={`${contentClasses} ${className || ""}`}
         onClick={(e) => e.stopPropagation()}
       >
         {showCloseButton && (
@@ -87,8 +97,11 @@ export const Modal: React.FC<ModalProps> = ({
             </svg>
           </button>
         )}
-        <div>{children}</div>
+        <div className={isRight ? "h-full flex flex-col overflow-hidden" : ""}>{children}</div>
       </div>
     </div>
   );
 };
+
+
+

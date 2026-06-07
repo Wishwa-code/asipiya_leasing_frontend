@@ -21,7 +21,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { Modal } from "@/components/ui/modal";
+import { Drawer, DrawerContent, DrawerHeader, DrawerTitle, DrawerFooter } from "@/components/ui/drawer";
 import { generateRepaymentSchedule } from "../../utils/leasingUtils";
 
 // Types for our internal lists
@@ -837,239 +837,236 @@ export default function CreateProduct() {
       </div>
     )}
 
-    {/* Sub-product Repayment Schedule Preview Modal */}
-    {previewingSubProduct && (
-      <Modal
-        isOpen={!!previewingSubProduct}
-        onClose={() => setPreviewingSubProduct(null)}
-        className="max-w-4xl w-full mx-4 my-8"
-      >
-        {/* Accent Header */}
-        <div className="bg-brand-600 px-6 py-4 rounded-t-3xl border-b border-brand-500/10">
+    {/* Sub-product Repayment Schedule Preview Drawer */}
+    <Drawer open={!!previewingSubProduct} onOpenChange={(open) => !open && setPreviewingSubProduct(null)} direction="right">
+      <DrawerContent className="h-full flex flex-col data-[direction=right]:max-w-5xl">
+        <DrawerHeader className="bg-brand-600 px-6 py-4 rounded-tl-[20px] border-b border-brand-500/10 flex items-center justify-between shrink-0">
           <div className="flex items-center gap-3">
             <div className="w-8 h-8 rounded-full bg-white/20 flex items-center justify-center text-white shrink-0">
               <EyeIcon className="w-4 h-4 fill-current" />
             </div>
-            <div>
-              <h3 className="text-sm font-bold text-white">Loan Installment Preview</h3>
+            <div className="text-left">
+              <DrawerTitle className="text-sm font-bold text-white">Loan Installment Preview</DrawerTitle>
               <p className="text-[11px] text-brand-100 uppercase tracking-wider font-semibold">
-                {previewingSubProduct.label}
+                {previewingSubProduct?.label}
               </p>
             </div>
           </div>
-        </div>
+          <button onClick={() => setPreviewingSubProduct(null)} className="rounded-lg p-1.5 text-white/70 hover:bg-white/10 hover:text-white transition-colors">
+            <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M6 18L18 6M6 6l12 12" /></svg>
+          </button>
+        </DrawerHeader>
 
-        {/* Modal Body */}
-        <div className="p-6">
-          <div className="grid grid-cols-1 md:grid-cols-12 gap-6">
-            
-            {/* Left Column: Simulation parameters */}
-            <div className="md:col-span-5 space-y-4">
-              <h4 className="text-[11px] font-bold text-gray-400 dark:text-gray-500 uppercase tracking-wider">
-                Simulation Inputs
-              </h4>
-              <div className="border border-gray-150 dark:border-gray-800 rounded-2xl p-4 space-y-4 bg-gray-55 dark:bg-gray-850/30">
-                
-                {/* Loan Amount */}
-                <div>
-                  <div className="flex justify-between items-center mb-1.5">
-                    <label className="text-xs font-bold text-gray-700 dark:text-gray-300 uppercase tracking-wide">
-                      Loan Amount (LKR)
-                    </label>
-                    <span className="text-[10px] text-gray-450 dark:text-gray-500 font-semibold">
-                      Limit: {parseFloat(previewingSubProduct.minLoan).toLocaleString()} - {parseFloat(previewingSubProduct.maxLoan).toLocaleString()}
-                    </span>
-                  </div>
-                  <Input
-                    type="number"
-                    value={previewForm.amount || ""}
-                    onChange={(e) => {
-                      const val = parseFloat(e.target.value) || 0;
-                      setPreviewForm(prev => ({ ...prev, amount: val }));
-                    }}
-                    className="w-full bg-white dark:bg-gray-900 border-gray-200 dark:border-gray-750 text-gray-900 dark:text-white"
-                  />
-                  {(previewForm.amount < parseFloat(previewingSubProduct.minLoan) ||
-                    previewForm.amount > parseFloat(previewingSubProduct.maxLoan)) && (
-                    <p className="text-[10px] text-error-500 mt-1 font-semibold">
-                      Amount must be between {parseFloat(previewingSubProduct.minLoan).toLocaleString()} and {parseFloat(previewingSubProduct.maxLoan).toLocaleString()}
-                    </p>
-                  )}
-                </div>
-
-                {/* Interest Rate */}
-                <div>
-                  <div className="flex justify-between items-center mb-1.5">
-                    <label className="text-xs font-bold text-gray-700 dark:text-gray-300 uppercase tracking-wide">
-                      Interest Rate % ({generalForm.interestPeriodType === "per_month" ? "Per Month" : "Per Week"})
-                    </label>
-                    <span className="text-[10px] text-gray-450 dark:text-gray-500 font-semibold">
-                      Limit: {previewingSubProduct.minInt}% - {previewingSubProduct.maxInt}%
-                    </span>
-                  </div>
-                  <Input
-                    type="number"
-                    step="0.01"
-                    value={previewForm.interestRate || ""}
-                    onChange={(e) => {
-                      const val = parseFloat(e.target.value) || 0;
-                      setPreviewForm(prev => ({ ...prev, interestRate: val }));
-                    }}
-                    className="w-full bg-white dark:bg-gray-900 border-gray-200 dark:border-gray-750 text-gray-900 dark:text-white"
-                  />
-                  {(previewForm.interestRate < parseFloat(previewingSubProduct.minInt) ||
-                    previewForm.interestRate > parseFloat(previewingSubProduct.maxInt)) && (
-                    <p className="text-[10px] text-error-500 mt-1 font-semibold">
-                      Interest rate must be between {previewingSubProduct.minInt}% and {previewingSubProduct.maxInt}%
-                    </p>
-                  )}
-                </div>
-
-                {/* Loan Period */}
-                <div>
-                  <div className="flex justify-between items-center mb-1.5">
-                    <label className="text-xs font-bold text-gray-700 dark:text-gray-300 uppercase tracking-wide">
-                      Loan Period ({generalForm.loanPeriodType})
-                    </label>
-                    <span className="text-[10px] text-gray-450 dark:text-gray-500 font-semibold">
-                      Limit: {previewingSubProduct.minPeriod} - {previewingSubProduct.maxPeriod}
-                    </span>
-                  </div>
-                  <Input
-                    type="number"
-                    value={previewForm.period || ""}
-                    onChange={(e) => {
-                      const val = parseInt(e.target.value, 10) || 0;
-                      setPreviewForm(prev => ({ ...prev, period: val }));
-                    }}
-                    className="w-full bg-white dark:bg-gray-900 border-gray-200 dark:border-gray-750 text-gray-900 dark:text-white"
-                  />
-                  {(previewForm.period < parseInt(previewingSubProduct.minPeriod, 10) ||
-                    previewForm.period > parseInt(previewingSubProduct.maxPeriod, 10)) && (
-                    <p className="text-[10px] text-error-500 mt-1 font-semibold">
-                      Period must be between {previewingSubProduct.minPeriod} and {previewingSubProduct.maxPeriod}
-                    </p>
-                  )}
-                </div>
-
-                {/* Recalculate Button */}
-                <button
-                  type="button"
-                  disabled={
-                    previewForm.amount < parseFloat(previewingSubProduct.minLoan) ||
-                    previewForm.amount > parseFloat(previewingSubProduct.maxLoan) ||
-                    previewForm.interestRate < parseFloat(previewingSubProduct.minInt) ||
-                    previewForm.interestRate > parseFloat(previewingSubProduct.maxInt) ||
-                    previewForm.period < parseInt(previewingSubProduct.minPeriod, 10) ||
-                    previewForm.period > parseInt(previewingSubProduct.maxPeriod, 10)
-                  }
-                  onClick={() =>
-                    calculateAndSetPreview(
-                      previewForm.amount,
-                      previewForm.interestRate,
-                      previewForm.period
-                    )
-                  }
-                  className="w-full py-2.5 px-4 bg-brand-600 hover:bg-brand-700 active:bg-brand-800 disabled:opacity-50 disabled:cursor-not-allowed text-white text-sm font-bold rounded-xl transition-all shadow-sm flex items-center justify-center gap-2"
-                >
-                  Recalculate Preview
-                </button>
-              </div>
-            </div>
-
-            {/* Right Column: Calculations & Results */}
-            <div className="md:col-span-7 space-y-4">
-              <h4 className="text-[11px] font-bold text-gray-400 dark:text-gray-500 uppercase tracking-wider">
-                Simulation Results
-              </h4>
+        {previewingSubProduct && (
+          <div className="flex-1 overflow-y-auto p-6 space-y-5 custom-scrollbar">
+            <div className="grid grid-cols-1 md:grid-cols-12 gap-6">
               
-              {/* Financial details box matching the confirmation modal style */}
-              <div className="border border-gray-150 dark:border-gray-800 rounded-2xl p-4 space-y-2.5 bg-white dark:bg-gray-900 shadow-sm">
-                {[
-                  { label: "Interest Method", value: generalForm.interestMethod.replace("_", " ").toUpperCase(), accent: true },
-                  { label: "Loan Principal", value: `LKR ${previewSummary.totalPrincipal.toLocaleString("en-LK", { minimumFractionDigits: 2 })}` },
-                  { label: "Total Interest", value: `LKR ${previewSummary.totalInterest.toLocaleString("en-LK", { minimumFractionDigits: 2 })}` },
-                  { label: "Upfront Charges (Deducted)", value: `LKR ${previewSummary.disbursementCharges.toLocaleString("en-LK", { minimumFractionDigits: 2 })}` },
-                  { label: "Net Disbursement Amount", value: `LKR ${previewSummary.netDisbursement.toLocaleString("en-LK", { minimumFractionDigits: 2 })}`, highlight: true, emerald: true },
-                  { label: "Total Payable", value: `LKR ${previewSummary.totalPayable.toLocaleString("en-LK", { minimumFractionDigits: 2 })}` },
-                  { label: "Per-Installment Amount", value: `LKR ${previewSummary.installmentAmount.toLocaleString("en-LK", { minimumFractionDigits: 2 })}`, highlight: true, gold: true }
-                ].map(({ label, value, accent, highlight, emerald, gold }) => (
-                  <div
-                    key={label}
-                    className="flex justify-between items-center border-t first:border-t-0 border-gray-100 dark:border-gray-800 pt-2.5 first:pt-0"
-                  >
-                    <span className="text-[11px] font-medium text-gray-400 dark:text-gray-500">{label}</span>
-                    <span
-                      className={`text-xs font-bold ${
-                        accent
-                          ? "text-amber-600 dark:text-amber-400 text-xs"
-                          : highlight
-                          ? emerald
-                            ? "text-emerald-600 dark:text-emerald-400 text-sm"
-                            : gold
-                            ? "text-amber-600 dark:text-amber-400 text-sm"
-                            : "text-brand-600 dark:text-brand-400 text-sm"
-                          : "text-gray-800 dark:text-gray-200"
-                      }`}
-                    >
-                      {value}
-                    </span>
-                  </div>
-                ))}
-              </div>
-
-              {/* Installments schedule list */}
-              <div className="space-y-2">
+              {/* Left Column: Simulation parameters */}
+              <div className="md:col-span-5 space-y-4">
                 <h4 className="text-[11px] font-bold text-gray-400 dark:text-gray-500 uppercase tracking-wider">
-                  Repayment Schedule List ({previewSchedule.length} payments)
+                  Simulation Inputs
                 </h4>
-                <div className="border border-gray-150 dark:border-gray-800 rounded-xl overflow-hidden shadow-sm">
-                  <div className="max-h-60 overflow-y-auto no-scrollbar">
-                    <table className="w-full text-left text-xs text-gray-500 dark:text-gray-400">
-                      <thead className="bg-gray-50 dark:bg-gray-850 text-[10px] uppercase font-bold text-gray-400 sticky top-0 z-10 border-b border-gray-150 dark:border-gray-800">
-                        <tr>
-                          <th className="px-3 py-2.5 bg-gray-50 dark:bg-gray-850">No.</th>
-                          <th className="px-3 py-2.5 bg-gray-50 dark:bg-gray-850">Date</th>
-                          <th className="px-3 py-2.5 bg-gray-50 dark:bg-gray-850 text-right">Capital</th>
-                          <th className="px-3 py-2.5 bg-gray-50 dark:bg-gray-850 text-right">Interest</th>
-                          <th className="px-3 py-2.5 bg-gray-50 dark:bg-gray-850 text-right">Charges</th>
-                          <th className="px-3 py-2.5 bg-gray-50 dark:bg-gray-850 text-right">Total Due</th>
-                        </tr>
-                      </thead>
-                      <tbody className="divide-y divide-gray-100 dark:divide-gray-800/80 bg-white dark:bg-gray-900">
-                        {previewSchedule.map((row) => (
-                          <tr key={row.no} className="hover:bg-gray-50 dark:hover:bg-gray-800/30 transition-colors">
-                            <td className="px-3 py-2 font-semibold text-gray-405 dark:text-gray-550">{row.no}</td>
-                            <td className="px-3 py-2 font-semibold text-gray-700 dark:text-gray-300">{row.collection_date}</td>
-                            <td className="px-3 py-2 text-right">LKR {parseFloat(row.capital).toLocaleString("en-LK", { minimumFractionDigits: 2 })}</td>
-                            <td className="px-3 py-2 text-right">LKR {parseFloat(row.interest).toLocaleString("en-LK", { minimumFractionDigits: 2 })}</td>
-                            <td className="px-3 py-2 text-right">LKR {parseFloat(row.charges).toLocaleString("en-LK", { minimumFractionDigits: 2 })}</td>
-                            <td className="px-3 py-2 text-right font-bold text-gray-900 dark:text-white">LKR {parseFloat(row.total_due).toLocaleString("en-LK", { minimumFractionDigits: 2 })}</td>
-                          </tr>
-                        ))}
-                      </tbody>
-                    </table>
+                <div className="border border-gray-150 dark:border-gray-800 rounded-2xl p-4 space-y-4 bg-gray-55 dark:bg-gray-850/30">
+                  
+                  {/* Loan Amount */}
+                  <div>
+                    <div className="flex justify-between items-center mb-1.5">
+                      <label className="text-xs font-bold text-gray-700 dark:text-gray-300 uppercase tracking-wide">
+                        Loan Amount (LKR)
+                      </label>
+                      <span className="text-[10px] text-gray-450 dark:text-gray-500 font-semibold">
+                        Limit: {parseFloat(previewingSubProduct.minLoan).toLocaleString()} - {parseFloat(previewingSubProduct.maxLoan).toLocaleString()}
+                      </span>
+                    </div>
+                    <Input
+                      type="number"
+                      value={previewForm.amount || ""}
+                      onChange={(e) => {
+                        const val = parseFloat(e.target.value) || 0;
+                        setPreviewForm(prev => ({ ...prev, amount: val }));
+                      }}
+                      className="w-full bg-white dark:bg-gray-900 border-gray-200 dark:border-gray-750 text-gray-900 dark:text-white"
+                    />
+                    {(previewForm.amount < parseFloat(previewingSubProduct.minLoan) ||
+                      previewForm.amount > parseFloat(previewingSubProduct.maxLoan)) && (
+                      <p className="text-[10px] text-error-500 mt-1 font-semibold">
+                        Amount must be between {parseFloat(previewingSubProduct.minLoan).toLocaleString()} and {parseFloat(previewingSubProduct.maxLoan).toLocaleString()}
+                      </p>
+                    )}
                   </div>
+
+                  {/* Interest Rate */}
+                  <div>
+                    <div className="flex justify-between items-center mb-1.5">
+                      <label className="text-xs font-bold text-gray-700 dark:text-gray-300 uppercase tracking-wide">
+                        Interest Rate % ({generalForm.interestPeriodType === "per_month" ? "Per Month" : "Per Week"})
+                      </label>
+                      <span className="text-[10px] text-gray-450 dark:text-gray-500 font-semibold">
+                        Limit: {previewingSubProduct.minInt}% - {previewingSubProduct.maxInt}%
+                      </span>
+                    </div>
+                    <Input
+                      type="number"
+                      step="0.01"
+                      value={previewForm.interestRate || ""}
+                      onChange={(e) => {
+                        const val = parseFloat(e.target.value) || 0;
+                        setPreviewForm(prev => ({ ...prev, interestRate: val }));
+                      }}
+                      className="w-full bg-white dark:bg-gray-900 border-gray-200 dark:border-gray-750 text-gray-900 dark:text-white"
+                    />
+                    {(previewForm.interestRate < parseFloat(previewingSubProduct.minInt) ||
+                      previewForm.interestRate > parseFloat(previewingSubProduct.maxInt)) && (
+                      <p className="text-[10px] text-error-500 mt-1 font-semibold">
+                        Interest rate must be between {previewingSubProduct.minInt}% and {previewingSubProduct.maxInt}%
+                      </p>
+                    )}
+                  </div>
+
+                  {/* Loan Period */}
+                  <div>
+                    <div className="flex justify-between items-center mb-1.5">
+                      <label className="text-xs font-bold text-gray-700 dark:text-gray-300 uppercase tracking-wide">
+                        Loan Period ({generalForm.loanPeriodType})
+                      </label>
+                      <span className="text-[10px] text-gray-450 dark:text-gray-500 font-semibold">
+                        Limit: {previewingSubProduct.minPeriod} - {previewingSubProduct.maxPeriod}
+                      </span>
+                    </div>
+                    <Input
+                      type="number"
+                      value={previewForm.period || ""}
+                      onChange={(e) => {
+                        const val = parseInt(e.target.value, 10) || 0;
+                        setPreviewForm(prev => ({ ...prev, period: val }));
+                      }}
+                      className="w-full bg-white dark:bg-gray-900 border-gray-200 dark:border-gray-750 text-gray-900 dark:text-white"
+                    />
+                    {(previewForm.period < parseInt(previewingSubProduct.minPeriod, 10) ||
+                      previewForm.period > parseInt(previewingSubProduct.maxPeriod, 10)) && (
+                      <p className="text-[10px] text-error-500 mt-1 font-semibold">
+                        Period must be between {previewingSubProduct.minPeriod} and {previewingSubProduct.maxPeriod}
+                      </p>
+                    )}
+                  </div>
+
+                  {/* Recalculate Button */}
+                  <button
+                    type="button"
+                    disabled={
+                      previewForm.amount < parseFloat(previewingSubProduct.minLoan) ||
+                      previewForm.amount > parseFloat(previewingSubProduct.maxLoan) ||
+                      previewForm.interestRate < parseFloat(previewingSubProduct.minInt) ||
+                      previewForm.interestRate > parseFloat(previewingSubProduct.maxInt) ||
+                      previewForm.period < parseInt(previewingSubProduct.minPeriod, 10) ||
+                      previewForm.period > parseInt(previewingSubProduct.maxPeriod, 10)
+                    }
+                    onClick={() =>
+                      calculateAndSetPreview(
+                        previewForm.amount,
+                        previewForm.interestRate,
+                        previewForm.period
+                      )
+                    }
+                    className="w-full py-2.5 px-4 bg-brand-600 hover:bg-brand-700 active:bg-brand-800 disabled:opacity-50 disabled:cursor-not-allowed text-white text-sm font-bold rounded-xl transition-all shadow-sm flex items-center justify-center gap-2"
+                  >
+                    Recalculate Preview
+                  </button>
                 </div>
               </div>
 
+              {/* Right Column: Calculations & Results */}
+              <div className="md:col-span-7 space-y-4">
+                <h4 className="text-[11px] font-bold text-gray-400 dark:text-gray-500 uppercase tracking-wider">
+                  Simulation Results
+                </h4>
+                
+                {/* Financial details box matching the confirmation modal style */}
+                <div className="border border-gray-150 dark:border-gray-800 rounded-2xl p-4 space-y-2.5 bg-white dark:bg-gray-900 shadow-sm">
+                  {[
+                    { label: "Interest Method", value: generalForm.interestMethod.replace("_", " ").toUpperCase(), accent: true },
+                    { label: "Loan Principal", value: `LKR ${previewSummary.totalPrincipal.toLocaleString("en-LK", { minimumFractionDigits: 2 })}` },
+                    { label: "Total Interest", value: `LKR ${previewSummary.totalInterest.toLocaleString("en-LK", { minimumFractionDigits: 2 })}` },
+                    { label: "Upfront Charges (Deducted)", value: `LKR ${previewSummary.disbursementCharges.toLocaleString("en-LK", { minimumFractionDigits: 2 })}` },
+                    { label: "Net Disbursement Amount", value: `LKR ${previewSummary.netDisbursement.toLocaleString("en-LK", { minimumFractionDigits: 2 })}`, highlight: true, emerald: true },
+                    { label: "Total Payable", value: `LKR ${previewSummary.totalPayable.toLocaleString("en-LK", { minimumFractionDigits: 2 })}` },
+                    { label: "Per-Installment Amount", value: `LKR ${previewSummary.installmentAmount.toLocaleString("en-LK", { minimumFractionDigits: 2 })}`, highlight: true, gold: true }
+                  ].map(({ label, value, accent, highlight, emerald, gold }) => (
+                    <div
+                      key={label}
+                      className="flex justify-between items-center border-t first:border-t-0 border-gray-100 dark:border-gray-800 pt-2.5 first:pt-0"
+                    >
+                      <span className="text-[11px] font-medium text-gray-400 dark:text-gray-500">{label}</span>
+                      <span
+                        className={`text-xs font-bold ${
+                          accent
+                            ? "text-amber-600 dark:text-amber-400 text-xs"
+                            : highlight
+                            ? emerald
+                              ? "text-emerald-600 dark:text-emerald-400 text-sm"
+                              : gold
+                              ? "text-amber-600 dark:text-amber-400 text-sm"
+                              : "text-brand-600 dark:text-brand-400 text-sm"
+                            : "text-gray-800 dark:text-gray-200"
+                        }`}
+                      >
+                        {value}
+                      </span>
+                    </div>
+                  ))}
+                </div>
+
+                {/* Installments schedule list */}
+                <div className="space-y-2">
+                  <h4 className="text-[11px] font-bold text-gray-400 dark:text-gray-500 uppercase tracking-wider">
+                    Repayment Schedule List ({previewSchedule.length} payments)
+                  </h4>
+                  <div className="border border-gray-150 dark:border-gray-800 rounded-xl overflow-hidden shadow-sm">
+                    <div className="max-h-60 overflow-y-auto no-scrollbar">
+                      <table className="w-full text-left text-xs text-gray-500 dark:text-gray-400">
+                        <thead className="bg-gray-50 dark:bg-gray-850 text-[10px] uppercase font-bold text-gray-400 sticky top-0 z-10 border-b border-gray-150 dark:border-gray-800">
+                          <tr>
+                            <th className="px-3 py-2.5 bg-gray-50 dark:bg-gray-850">No.</th>
+                            <th className="px-3 py-2.5 bg-gray-50 dark:bg-gray-850">Date</th>
+                            <th className="px-3 py-2.5 bg-gray-50 dark:bg-gray-850 text-right">Capital</th>
+                            <th className="px-3 py-2.5 bg-gray-50 dark:bg-gray-850 text-right">Interest</th>
+                            <th className="px-3 py-2.5 bg-gray-50 dark:bg-gray-850 text-right">Charges</th>
+                            <th className="px-3 py-2.5 bg-gray-50 dark:bg-gray-850 text-right">Total Due</th>
+                          </tr>
+                        </thead>
+                        <tbody className="divide-y divide-gray-100 dark:divide-gray-800/80 bg-white dark:bg-gray-900">
+                          {previewSchedule.map((row) => (
+                            <tr key={row.no} className="hover:bg-gray-50 dark:hover:bg-gray-800/30 transition-colors">
+                              <td className="px-3 py-2 font-semibold text-gray-700 dark:text-gray-300">{row.no}</td>
+                              <td className="px-3 py-2 font-semibold text-gray-700 dark:text-gray-300">{row.collection_date}</td>
+                              <td className="px-3 py-2 text-right">LKR {parseFloat(row.capital).toLocaleString("en-LK", { minimumFractionDigits: 2 })}</td>
+                              <td className="px-3 py-2 text-right">LKR {parseFloat(row.interest).toLocaleString("en-LK", { minimumFractionDigits: 2 })}</td>
+                              <td className="px-3 py-2 text-right">LKR {parseFloat(row.charges).toLocaleString("en-LK", { minimumFractionDigits: 2 })}</td>
+                              <td className="px-3 py-2 text-right font-bold text-gray-900 dark:text-white">LKR {parseFloat(row.total_due).toLocaleString("en-LK", { minimumFractionDigits: 2 })}</td>
+                            </tr>
+                          ))}
+                        </tbody>
+                      </table>
+                    </div>
+                  </div>
+                </div>
+
+              </div>
             </div>
           </div>
+        )}
 
-          {/* Footer Close Button */}
-          <div className="flex justify-end pt-5 mt-5 border-t border-gray-150 dark:border-gray-800">
-            <button
-              type="button"
-              onClick={() => setPreviewingSubProduct(null)}
-              className="py-2.5 px-5 text-sm font-semibold text-gray-600 dark:text-gray-400 bg-gray-100 dark:bg-gray-850 hover:bg-gray-200 dark:hover:bg-gray-800 rounded-xl transition-all"
-            >
-              Close Preview
-            </button>
-          </div>
-
-        </div>
-      </Modal>
-    )}
+        <DrawerFooter className="p-4 flex justify-end gap-3 border-t border-gray-100 dark:border-gray-700 bg-gray-50/50 dark:bg-gray-800/50 shrink-0">
+          <button
+            type="button"
+            onClick={() => setPreviewingSubProduct(null)}
+            className="py-2.5 px-5 text-sm font-semibold text-gray-600 dark:text-gray-400 bg-gray-100 dark:bg-gray-850 hover:bg-gray-200 dark:hover:bg-gray-800 rounded-xl transition-all"
+          >
+            Close Preview
+          </button>
+        </DrawerFooter>
+      </DrawerContent>
+    </Drawer>
   </div>
   );
 }
