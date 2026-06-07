@@ -376,7 +376,6 @@ const StepLeaseDetails: React.FC<StepLeaseDetailsProps> = ({ formData, updateFor
           loanAmt,
           rate,
           period,
-          period,
           startDate,
           selectedProduct,
           selectedItem ? (selectedItem.id || selectedItem.ID) : null

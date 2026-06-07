@@ -31,13 +31,52 @@ export const calculateMaxLoanAmount = (marketValue: number, ltvPercentage: numbe
 };
 
 /**
- * Client-side loan schedule generator matching legacy LoanScheduleService.php and FinanceLeaseController.php
+ * Derives the number of installments from the repayment period and
+ * the collection (installment date) frequency type.
+ *
+ * - loanPeriod:           numeric period value (e.g. 12 for 12 months)
+ * - loanPeriodType:       "months" | "weeks" | "days"
+ * - collectionPeriodType: "daily" | "weekly" | "monthly" | "first_of_month" | …
+ */
+export const deriveInstallmentCount = (
+  loanPeriod: number,
+  loanPeriodType: string,
+  collectionPeriodType: string
+): number => {
+  const lpType = loanPeriodType.toLowerCase();
+  const cpType = collectionPeriodType.toLowerCase();
+
+  if (lpType === "months") {
+    if (cpType === "daily") return loanPeriod * 30;
+    if (cpType === "weekly" || cpType === "by_weekly") return Math.round(loanPeriod * 52 / 12); // 4.333 weeks/month
+    // monthly / first_of_month / end_of_month / on_selected_date
+    return loanPeriod;
+  }
+
+  if (lpType === "weeks") {
+    if (cpType === "daily") return loanPeriod * 7;
+    // weekly
+    return loanPeriod;
+  }
+
+  if (lpType === "days") {
+    // daily collection only meaningful match
+    return loanPeriod;
+  }
+
+  return loanPeriod;
+};
+
+/**
+ * Client-side loan schedule generator matching LoanScheduleService.php.
+ *
+ * The `collectionPeriod` parameter is intentionally removed.
+ * Installment count is derived from loanPeriod + product types.
  */
 export const generateRepaymentSchedule = (
   loanAmount: number,
   interestRate: number,
   loanPeriod: number,
-  collectionPeriod: number,
   startDateStr: string,
   product: any,
   _productItemId?: number | null
@@ -46,43 +85,86 @@ export const generateRepaymentSchedule = (
     return [];
   }
 
-  // Interest Normalization
-  const unitDays: Record<string, number> = {
-    days: 1,
-    per_day: 1,
-    per_days: 1,
-    weeks: 7.5,
-    per_week: 7.5,
-    months: 30,
-    per_month: 30,
-    per_months: 30,
-    year: 360,
-    per_year: 360,
-  };
+  // ── Interest Normalization ────────────────────────────────────────────────
+  // Mirrors the PHP backend's explicit conversion matrix in LoanScheduleService.php
+  const loanPeriodType     = (product.loan_period_type     ?? "months").toLowerCase();
+  const interestPeriodType = (product.interest_period_type ?? "per_month").toLowerCase();
 
-  const loanUnitDays = unitDays[product.loan_period_type ?? "months"] ?? 30;
-  const interestUnitDays = unitDays[product.interest_period_type ?? "per_month"] ?? 30;
+  let totalInterestRate: number;
 
-  const totalInterestRate = interestRate * (loanUnitDays / interestUnitDays);
+  switch (interestPeriodType) {
+    case "per_month":
+    case "per_months":
+      switch (loanPeriodType) {
+        case "months": totalInterestRate = interestRate;          break;
+        case "weeks":  totalInterestRate = interestRate / 4;      break;
+        case "days":   totalInterestRate = interestRate / 30;     break;
+        default:       totalInterestRate = interestRate;
+      }
+      break;
 
-  const isReducing =
-    product.interest_method === "Reducing Balance" ||
-    product.interest_method === "reducing_balance";
+    case "per_week":
+      switch (loanPeriodType) {
+        case "months": totalInterestRate = interestRate * 4;      break;
+        case "weeks":  totalInterestRate = interestRate;          break;
+        case "days":   totalInterestRate = interestRate / 7;      break;
+        default:       totalInterestRate = interestRate;
+      }
+      break;
+
+    case "per_day":
+    case "per_days":
+      switch (loanPeriodType) {
+        case "months": totalInterestRate = (interestRate * 365) / 12; break;
+        case "weeks":  totalInterestRate = interestRate * 7;          break;
+        case "days":   totalInterestRate = interestRate;              break;
+        default:       totalInterestRate = interestRate;
+      }
+      break;
+
+    case "per_year":
+    case "per_years":
+      switch (loanPeriodType) {
+        case "months": totalInterestRate = interestRate / 12;     break;
+        case "weeks":  totalInterestRate = interestRate / 52;     break;
+        case "days":   totalInterestRate = interestRate / 365;    break;
+        default:       totalInterestRate = interestRate;
+      }
+      break;
+
+    case "per_loan":
+    case "per_loans":
+      totalInterestRate = interestRate;
+      break;
+
+    default:
+      totalInterestRate = interestRate;
+  }
+
+  // ── Derive installment count from repayment period & collection frequency ─
+  const collectionPeriodType = (product.collection_period_type ?? loanPeriodType).toLowerCase();
+  const collectionPeriod = deriveInstallmentCount(loanPeriod, loanPeriodType, collectionPeriodType);
+
+  if (collectionPeriod <= 0) return [];
+
+  // ── Interest method ───────────────────────────────────────────────────────
+  const isReducing = ["reducing balance", "reducing_balance"].includes(
+    (product.interest_method ?? "").toLowerCase().trim()
+  );
+
   let outstandingBalance = loanAmount;
   let periodicRate = 0;
   let emi = 0;
   let totalInterest = 0;
 
   if (isReducing) {
-    if (collectionPeriod > 0) {
-      periodicRate = (totalInterestRate * loanPeriod) / (100 * collectionPeriod);
-      if (periodicRate > 0) {
-        emi =
-          (loanAmount * periodicRate * Math.pow(1 + periodicRate, collectionPeriod)) /
-          (Math.pow(1 + periodicRate, collectionPeriod) - 1);
-      } else {
-        emi = loanAmount / collectionPeriod;
-      }
+    periodicRate = (totalInterestRate * loanPeriod) / (100 * collectionPeriod);
+    if (periodicRate > 0) {
+      emi =
+        (loanAmount * periodicRate * Math.pow(1 + periodicRate, collectionPeriod)) /
+        (Math.pow(1 + periodicRate, collectionPeriod) - 1);
+    } else {
+      emi = loanAmount / collectionPeriod;
     }
     totalInterest = emi * collectionPeriod - loanAmount;
   } else {
@@ -90,21 +172,19 @@ export const generateRepaymentSchedule = (
     totalInterest = loanAmount * (totalInterestRate / 100) * loanPeriod;
   }
 
-  if (collectionPeriod <= 0) return [];
-
-  // Per Installment Allocations
-  const capitalPerMainInst = loanAmount / collectionPeriod;
+  // ── Per-installment allocations ───────────────────────────────────────────
+  const capitalPerMainInst  = loanAmount    / collectionPeriod;
   const interestPerMainInst = totalInterest / collectionPeriod;
 
-  // Charges
-  let perInstCharges = 0;
+  // ── Charges ───────────────────────────────────────────────────────────────
+  let perInstCharges  = 0;
   let firstInstCharges = 0;
 
   const chargesList = product.additional_charges || [];
   chargesList.forEach((charge: any) => {
     const deductionType = (charge.deduction_type || "").toLowerCase();
-    const isPercent = (charge.value_type || "").toLowerCase() === "percentage";
-    const amount = isPercent
+    const isPercent     = (charge.value_type     || "").toLowerCase() === "percentage";
+    const amount        = isPercent
       ? loanAmount * (parseFloat(charge.value) / 100)
       : parseFloat(charge.value) || 0;
 
@@ -115,73 +195,84 @@ export const generateRepaymentSchedule = (
     }
   });
 
-  // Determine if there should be an additional Setup Row (0 Capital/Interest)
-  const isSetupInstallment = firstInstCharges > 0; // In leasing context, savings are stripped, so only firstInstCharges matters
+  // ── Setup row (0-capital) check ───────────────────────────────────────────
+  const isSetupInstallment = firstInstCharges > 0;
   const totalInstallmentCount = isSetupInstallment ? collectionPeriod + 1 : collectionPeriod;
 
-  const schedule = [];
+  // ── Date generation ───────────────────────────────────────────────────────
+  // Use the collection_period_type to decide the interval between due dates,
+  // matching how the PHP backend uses its $pType variable.
+  const pType = collectionPeriodType;
+
   let currentDate = startDateStr ? new Date(startDateStr) : new Date();
-  const pType = (product.collection_period_type || "months").toLowerCase();
 
   const addOffset = (date: Date, type: string): Date => {
     const d = new Date(date);
-    if (type.includes("day") || type === "daily") {
+    if (type === "daily" || type.includes("day")) {
       d.setDate(d.getDate() + 1);
-    } else if (type.includes("week") || type === "weekly" || type === "by_weekly") {
+    } else if (type === "weekly" || type === "by_weekly" || type.includes("week")) {
       d.setDate(d.getDate() + 7);
-    } else if (type.includes("month") || type === "monthly") {
-      d.setMonth(d.getMonth() + 1);
     } else {
+      // monthly / first_of_month / end_of_month / on_selected_date / default
       d.setMonth(d.getMonth() + 1);
     }
     return d;
   };
 
   const formatDate = (d: Date): string => {
-    const y = d.getFullYear();
-    const m = String(d.getMonth() + 1).padStart(2, "0");
+    const y   = d.getFullYear();
+    const m   = String(d.getMonth() + 1).padStart(2, "0");
     const day = String(d.getDate()).padStart(2, "0");
     return `${y}-${m}-${day}`;
   };
+
+  const schedule = [];
 
   for (let i = 1; i <= totalInstallmentCount; i++) {
     if (i > 1) {
       currentDate = addOffset(currentDate, pType);
     }
 
-    const currentCharges = i === 1 ? perInstCharges + firstInstCharges : perInstCharges;
-
-    let currentCapital = 0;
+    let currentCharges  = perInstCharges;
+    let currentCapital  = 0;
     let currentInterest = 0;
 
     if (isSetupInstallment && i === 1) {
-      currentCapital = 0;
-      currentInterest = 0;
+      // Setup row: charges only, no capital/interest
+      currentCharges = firstInstCharges;
     } else {
+      // Merge one-time first-installment charges into the first main row when
+      // there is no dedicated setup row
+      if (i === 1 && !isSetupInstallment) {
+        currentCharges += firstInstCharges;
+      }
+
       if (isReducing) {
         currentInterest = outstandingBalance * periodicRate;
-        currentCapital = emi - currentInterest;
+        currentCapital  = emi - currentInterest;
 
-        // Last row adjustment
+        // Last row: clear the remaining balance exactly
         if (i === totalInstallmentCount) {
           currentCapital = outstandingBalance;
         }
         outstandingBalance -= currentCapital;
       } else {
-        currentCapital = capitalPerMainInst;
+        currentCapital  = capitalPerMainInst;
         currentInterest = interestPerMainInst;
+        outstandingBalance -= currentCapital;
       }
     }
 
     const totalDue = currentCapital + currentInterest + currentCharges;
 
     schedule.push({
-      no: i,
+      no:              i,
       collection_date: formatDate(currentDate),
-      capital: currentCapital.toFixed(2),
-      interest: currentInterest.toFixed(2),
-      charges: currentCharges.toFixed(2),
-      total_due: totalDue.toFixed(2),
+      capital:         currentCapital.toFixed(2),
+      interest:        currentInterest.toFixed(2),
+      charges:         currentCharges.toFixed(2),
+      total_due:       totalDue.toFixed(2),
+      remaining_balance: Math.max(0, outstandingBalance).toFixed(2),
     });
   }
 

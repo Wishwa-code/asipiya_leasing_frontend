@@ -30,7 +30,6 @@ type SubProduct = {
   minLoan: string; maxLoan: string;
   minInt: string; maxInt: string;
   minPeriod: string; maxPeriod: string;
-  minColl?: string; maxColl?: string;
   guarantors: string;
   penaltyType: string;
   penaltyRate: string;
@@ -72,10 +71,9 @@ export default function CreateProduct() {
   // Forms State
   const [generalForm, setGeneralForm] = useState({
     name: "", code: "", interestMethod: "flat_rate", loanPeriodType: "months",
-    interestPeriodType: "per_month", collectionPeriodType: "daily",
+    interestPeriodType: "per_month", collectionPeriodType: "monthly",
     collectionDateStrategy: "same_as_installment", globalGuarantors: ""
   });
-  const [diffCollection, setDiffCollection] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [submitSuccess, setSubmitSuccess] = useState<string | null>(null);
   const [submitError, setSubmitError] = useState<string | null>(null);
@@ -98,7 +96,7 @@ export default function CreateProduct() {
   // Sub Product Form
   const [spForm, setSpForm] = useState({
     label: "", minLoan: "", maxLoan: "", minInt: "", maxInt: "",
-    minPeriod: "", maxPeriod: "", minColl: "", maxColl: "",
+    minPeriod: "", maxPeriod: "",
     guarantors: "", penaltyType: "every_installment", penaltyRate: "", savingsAmount: ""
   });
 
@@ -132,7 +130,7 @@ export default function CreateProduct() {
           interestMethod: data.interest_method || "flat_rate",
           loanPeriodType: data.loan_period_type || "months",
           interestPeriodType: data.interest_period_type || "per_month",
-          collectionPeriodType: data.collection_period_type || "daily",
+          collectionPeriodType: data.collection_period_type || "monthly",
           collectionDateStrategy: data.collection_date_strategy || data.collection_date_type || "same_as_installment",
           globalGuarantors: data.guarantors_required?.toString() || data.guarantee_count?.toString() || ""
         });
@@ -193,7 +191,7 @@ export default function CreateProduct() {
     setSubProducts([...subProducts, { ...spForm }]);
     setSpForm({
       label: "", minLoan: "", maxLoan: "", minInt: "", maxInt: "",
-      minPeriod: "", maxPeriod: "", minColl: "", maxColl: "",
+      minPeriod: "", maxPeriod: "",
       guarantors: "", penaltyType: "every_installment", penaltyRate: "", savingsAmount: ""
     });
   };
@@ -262,27 +260,10 @@ export default function CreateProduct() {
       }))
     };
 
-    let collectionPeriod = period;
-    const loanPeriodType = (generalForm.loanPeriodType || "months").toLowerCase();
-    const collectionPeriodType = (generalForm.collectionPeriodType || "first_of_month").toLowerCase();
-
-    if (loanPeriodType === "months") {
-      if (collectionPeriodType === "daily") {
-        collectionPeriod = period * 30;
-      } else if (collectionPeriodType === "weekly") {
-        collectionPeriod = Math.round(period * 4.34);
-      }
-    } else if (loanPeriodType === "weeks") {
-      if (collectionPeriodType === "daily") {
-        collectionPeriod = period * 7;
-      }
-    }
-
     const schedule = generateRepaymentSchedule(
       amount,
       interestRate,
       period,
-      collectionPeriod,
       previewForm.startDate,
       mockProduct
     );
@@ -324,6 +305,7 @@ export default function CreateProduct() {
         interest_method: generalForm.interestMethod,
         loan_period_type: generalForm.loanPeriodType,
         interest_period_type: generalForm.interestPeriodType,
+        // collection_period_type mirrors loan_period_type; installment count is derived from the period
         collection_period_type: generalForm.collectionPeriodType,
         collection_date_strategy: generalForm.collectionDateStrategy,
         guarantors_required: generalForm.globalGuarantors ? parseInt(generalForm.globalGuarantors) : 0,
@@ -517,22 +499,7 @@ export default function CreateProduct() {
                 </SelectContent>
               </Select>
             </div>
-            <div>
-              <label className="mb-1.5 block text-xs font-bold text-gray-700 dark:text-gray-400 uppercase tracking-wide">Collection Period Type</label>
-              <Select
-                value={generalForm.collectionPeriodType}
-                onValueChange={(val) => setGeneralForm({ ...generalForm, collectionPeriodType: val })}
-              >
-                <SelectTrigger className="w-full">
-                  <SelectValue placeholder="Select type" />
-                </SelectTrigger>
-                <SelectContent className="bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-800 rounded-xl shadow-theme-md">
-                  <SelectItem value="daily">Daily</SelectItem>
-                  <SelectItem value="weekly">Weekly</SelectItem>
-                  <SelectItem value="first_of_month">First of Month</SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
+
             <div>
               <label className="mb-1.5 block text-xs font-bold text-gray-700 dark:text-gray-400 uppercase tracking-wide">Collection Date Strategy</label>
               <Select
@@ -592,19 +559,13 @@ export default function CreateProduct() {
                   </div>
                 </div>
 
-                <div className="md:col-span-2">
+                  <div className="md:col-span-2">
                   <label className="mb-1.5 block text-[11px] font-bold text-gray-700 dark:text-gray-400 uppercase tracking-wide">Loan Period</label>
                   <div className="flex bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl overflow-hidden focus-within:border-brand-500">
-                    <input value={spForm.minPeriod} onChange={(e) => setSpForm({ ...spForm, minPeriod: e.target.value })} type="number" placeholder="Min" className="w-1/4 px-3 py-2 text-sm outline-none bg-transparent border-r border-gray-200 dark:border-gray-700" />
-                    <input value={spForm.maxPeriod} onChange={(e) => setSpForm({ ...spForm, maxPeriod: e.target.value })} type="number" placeholder="Max" className="w-1/4 px-3 py-2 text-sm outline-none bg-transparent border-r border-gray-200 dark:border-gray-700" />
-                    <div className="w-1/4 flex items-center justify-center bg-gray-50 dark:bg-gray-800 border-r border-gray-200 dark:border-gray-700">
-                      <span className="text-[12px] text-gray-500 font-bold">Months</span>
-                    </div>
-                    <div className="w-1/4 flex items-center justify-center bg-gray-50 dark:bg-gray-800 px-2">
-                      <label className="flex items-center cursor-pointer gap-2">
-                        <input type="checkbox" checked={diffCollection} onChange={(e) => setDiffCollection(e.target.checked)} className="rounded border-gray-300 text-brand-500 focus:ring-brand-500" />
-                        <span className="text-[10px] font-bold uppercase text-gray-500">Diff Coll</span>
-                      </label>
+                    <input value={spForm.minPeriod} onChange={(e) => setSpForm({ ...spForm, minPeriod: e.target.value })} type="number" placeholder="Min" className="w-1/3 px-3 py-2 text-sm outline-none bg-transparent border-r border-gray-200 dark:border-gray-700" />
+                    <input value={spForm.maxPeriod} onChange={(e) => setSpForm({ ...spForm, maxPeriod: e.target.value })} type="number" placeholder="Max" className="w-1/3 px-3 py-2 text-sm outline-none bg-transparent border-r border-gray-200 dark:border-gray-700" />
+                    <div className="w-1/3 flex items-center justify-center bg-gray-50 dark:bg-gray-800">
+                      <span className="text-[12px] text-gray-500 font-bold capitalize">{generalForm.loanPeriodType}</span>
                     </div>
                   </div>
                 </div>
