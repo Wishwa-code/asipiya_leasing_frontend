@@ -82,12 +82,12 @@ const AppSidebar: React.FC = () => {
         privilege: 'VIEW_CUSTOMER',
         subItems: [
           { name: "Add Customer", path: ROUTES.CREATE_CUSTOMER, privilege: 'ADD_CUSTOMER' },
-          { name: "Customer Draft", path: ROUTES.FORM_ELEMENTS, privilege: 'ADD_CUSTOMER' },
+          // { name: "Customer Draft", path: ROUTES.FORM_ELEMENTS, privilege: 'ADD_CUSTOMER' },
           { name: "Customer List", path: ROUTES.CUSTOMERS_LIST, privilege: 'VIEW_CUSTOMER' },
           { name: "Blacklist Management", path: ROUTES.FORM_ELEMENTS, privilege: 'VIEW_BLACKLIST_CUSTOMER' },
-          { name: "Savings Accounts", path: ROUTES.FORM_ELEMENTS, privilege: 'CUSTOMER_SAVING_ACC' },
-          { name: "Recovery Accounts", path: ROUTES.FORM_ELEMENTS, privilege: 'CUSTOMER_SAVING_ACC' },
-          { name: "Insurance Management", path: ROUTES.FORM_ELEMENTS, privilege: 'INSURANCE' },
+          // { name: "Savings Accounts", path: ROUTES.FORM_ELEMENTS, privilege: 'CUSTOMER_SAVING_ACC' },
+          // { name: "Recovery Accounts", path: ROUTES.FORM_ELEMENTS, privilege: 'CUSTOMER_SAVING_ACC' },
+          // { name: "Insurance Management", path: ROUTES.FORM_ELEMENTS, privilege: 'INSURANCE' },
         ],
       });
 
