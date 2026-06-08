@@ -68,7 +68,7 @@ export default function ViewProductModal({ productId, onClose }: ViewProductModa
   // ── Loan limit band across sub-products ───────────────────────────────────
   let minLoanLimit = 0;
   let maxLoanLimit = 0;
-  if (product?.product_has_items?.length > 0) {
+  if (product && product.product_has_items && product.product_has_items.length > 0) {
     let min = Infinity;
     let max = -Infinity;
     product.product_has_items.forEach((item: Record<string, any>) => {
