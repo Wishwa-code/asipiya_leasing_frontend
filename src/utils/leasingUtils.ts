@@ -151,6 +151,9 @@ export const generateRepaymentSchedule = (
   const isReducing = ["reducing balance", "reducing_balance"].includes(
     (product.interest_method ?? "").toLowerCase().trim()
   );
+  const isDraft = ["draft"].includes(
+    (product.interest_method ?? "").toLowerCase().trim()
+  );
 
   let outstandingBalance = loanAmount;
   let periodicRate = 0;
@@ -247,7 +250,15 @@ export const generateRepaymentSchedule = (
         currentCharges += firstInstCharges;
       }
 
-      if (isReducing) {
+      if (isDraft) {
+        currentInterest = outstandingBalance * (totalInterestRate / 100) * (loanPeriod / collectionPeriod);
+        if (i === totalInstallmentCount) {
+          currentCapital = outstandingBalance;
+        } else {
+          currentCapital = 0;
+        }
+        outstandingBalance -= currentCapital;
+      } else if (isReducing) {
         currentInterest = outstandingBalance * periodicRate;
         currentCapital  = emi - currentInterest;
 
