@@ -819,11 +819,10 @@ export default function CreateProduct() {
         </DrawerHeader>
 
         {previewingSubProduct && (
-          <div className="flex-1 overflow-y-auto p-6 space-y-5 custom-scrollbar">
-            <div className="grid grid-cols-1 md:grid-cols-12 gap-6">
-              
-              {/* Left Column: Simulation parameters */}
-              <div className="md:col-span-5 space-y-4">
+          <div className="flex-1 min-h-0 flex flex-col gap-6 md:flex-row p-6">
+            
+            {/* Left Column: Simulation parameters */}
+            <div className="md:w-[380px] shrink-0 space-y-4 overflow-y-auto custom-scrollbar">
                 <h4 className="text-[11px] font-bold text-gray-400 dark:text-gray-500 uppercase tracking-wider">
                   Simulation Inputs
                 </h4>
@@ -934,10 +933,10 @@ export default function CreateProduct() {
                     Recalculate Preview
                   </button>
                 </div>
-              </div>
+            </div>
 
-              {/* Right Column: Calculations & Results */}
-              <div className="md:col-span-7 space-y-4">
+            {/* Right Column: Calculations & Results */}
+            <div className="flex-1 min-h-0 flex flex-col space-y-4">
                 <h4 className="text-[11px] font-bold text-gray-400 dark:text-gray-500 uppercase tracking-wider">
                   Simulation Results
                 </h4>
@@ -978,12 +977,12 @@ export default function CreateProduct() {
                 </div>
 
                 {/* Installments schedule list */}
-                <div className="space-y-2">
+                <div className="flex flex-col flex-1 min-h-0 space-y-2">
                   <h4 className="text-[11px] font-bold text-gray-400 dark:text-gray-500 uppercase tracking-wider">
                     Repayment Schedule List ({previewSchedule.length} payments)
                   </h4>
-                  <div className="border border-gray-150 dark:border-gray-800 rounded-xl overflow-hidden shadow-sm">
-                    <div className="max-h-60 overflow-y-auto no-scrollbar">
+                  <div className="flex-1 min-h-0 border border-gray-150 dark:border-gray-800 rounded-xl overflow-hidden shadow-sm flex flex-col">
+                    <div className="flex-1 min-h-0 overflow-y-auto custom-scrollbar">
                       <table className="w-full text-left text-xs text-gray-500 dark:text-gray-400">
                         <thead className="bg-gray-50 dark:bg-gray-850 text-[10px] uppercase font-bold text-gray-400 sticky top-0 z-10 border-b border-gray-150 dark:border-gray-800">
                           <tr>
@@ -1014,7 +1013,6 @@ export default function CreateProduct() {
 
               </div>
             </div>
-          </div>
         )}
 
         <DrawerFooter className="p-4 flex justify-end gap-3 border-t border-gray-100 dark:border-gray-700 bg-gray-50/50 dark:bg-gray-800/50 shrink-0">
