@@ -45,11 +45,11 @@ import StepChequeDefine from "../../components/leasing/steps/StepChequeDefine";
 import StepCrDocs from "../../components/leasing/steps/StepCrDocs";
 
 // ─────────────────────────────────────────────────────────────────────────────
-// 🛠️ DEV MODE — Set to `false` before going to production!
-//    When true: bypasses all step validation so you can submit with just
+// 🛠️ DEV MODE — Bypasses all step validation so you can submit with just
 //    Step 1 filled, making it easy to test the approval flow end-to-end.
+//    Configured via VITE_DEV_MODE environment variable.
 // ─────────────────────────────────────────────────────────────────────────────
-const DEV_MODE = true;
+const DEV_MODE = import.meta.env.VITE_DEV_MODE === "true";
 
 const CreateLeasing: React.FC = () => {
   const { formData, activeStep, draftId, stepStatuses, errors, isReadOnly, nextStep, prevStep, goToStep, updateFormData, saveDraft, resetForm } = useLeaseForm();

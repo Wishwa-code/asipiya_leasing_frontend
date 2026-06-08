@@ -20,7 +20,7 @@ interface AuthContextType {
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
 // --- DEV MODE CONFIGURATION ---
-const DEV_MODE = false; // Set to true to bypass SSO and use DEV_USER for local testing
+const DEV_MODE = import.meta.env.VITE_DEV_MODE === "true"; // Set to true via environment variable to bypass SSO and use DEV_USER for local testing
 const DEV_USER: User = {
   id: 1,
   full_name: "Admin",
